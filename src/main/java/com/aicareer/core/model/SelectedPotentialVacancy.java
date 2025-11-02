@@ -2,7 +2,10 @@ package com.aicareer.core.model;
 
 public class SelectedPotentialVacancy {
   private String nameOfVacancy;
-  private int salary;
-  private String infAboutVacancy;
-  int vacancyComplexity;
+  public SelectedPotentialVacancy(String nameOfVacancy){
+    this.nameOfVacancy = nameOfVacancy;
+  }
+  public String getNameOfVacancy() {
+    return nameOfVacancy;
+  }
 }
