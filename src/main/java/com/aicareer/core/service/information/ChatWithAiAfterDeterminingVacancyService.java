@@ -53,13 +53,12 @@ public class ChatWithAiAfterDeterminingVacancyService implements ChatWithAiAfter
                         "Формат вывода:\n" +
                         "Выведи строго в виде строк, разделенных знаком |. Не добавляй никаких дополнительных пояснений, заголовков или заключений после списка.\n" +
                         "\n" +
-                        "Описание вакансии для анализа: " + "\n%s", vacancyRequirements);
+                        "Описание вакансии для анализа: " + "\n%s", vacancyRequirements
+        );
 
         return Arrays.asList(gigaChatApiService.sendMessage(prompt).split("\\|"));
 
     }
-
-
 
     @Override
     public void askingPersonalizedQuestions(List<String> generatedPersonalizedQuestions) {
@@ -73,6 +72,9 @@ public class ChatWithAiAfterDeterminingVacancyService implements ChatWithAiAfter
 
             dialogHistory.add("User: " + userAnswer);
             continueDialogWithUser(userAnswer);
+
+            String userAdditionalAnswer = scanner.nextLine();
+            dialogHistory.add("User: " + userAdditionalAnswer);
         }
     }
 
@@ -134,6 +136,6 @@ public class ChatWithAiAfterDeterminingVacancyService implements ChatWithAiAfter
                         "Формат вывода: структурированное описание курса с четкими требованиями.",
                 vacancyRequirements, context
         );
-        return new CourseRequirements(prompt);
+        return new CourseRequirements(gigaChatApiService.sendMessage(prompt));
     }
 }

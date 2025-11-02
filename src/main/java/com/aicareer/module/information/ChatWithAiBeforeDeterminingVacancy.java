@@ -2,17 +2,23 @@ package com.aicareer.module.information;
 
 import com.aicareer.core.model.UserPreferences;
 
+import java.util.List;
+
 public interface ChatWithAiBeforeDeterminingVacancy {
 
     String starDialogWithUser();
 
-    String askingStandardQuestions();
+    void askingStandardQuestions();
+
+    String askingStandardQuestion(String question);
 
     String continueDialogWithUser(String userAnswer);
 
-    String generatePersonalizedQuestions(ResumeData resumeData);
+    List<String> generatePersonalizedQuestions(ResumeData resumeData);
 
-    String askingPersonalizedQuestions(String generatedPersonalizedQuestions);
+    void askingPersonalizedQuestions(List<String> generatedPersonalizedQuestions);
+
+    String askingPersonalizedQuestion(String question);
 
     UserPreferences analyzeCombinedData(String dialogHistory);
 
