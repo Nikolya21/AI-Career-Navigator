@@ -12,7 +12,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class ParserService {
-  public static List<RealVacancy> getVacancies(String searchText, String area, int perPage){
+
+  public static List<RealVacancy> getVacancies(String searchText, String area, int perPage) {
     List<RealVacancy> vacancies = new ArrayList<>();
     try {
       String apiUrl = String.format(
@@ -21,8 +22,71 @@ public class ParserService {
           area,
           perPage
       );
+      String jsonResponse = sendGetRequest(apiUrl);
+      JSONObject jsonObject = new JSONObject(jsonResponse);
+      JSONArray items = jsonObject.getJSONArray("items");
+      for (int i = 0; i < items.length(); i++) {
+        JSONObject item = items.getJSONObject(i);
+
+        String title = item.getString("name");
+
+        String salary = parseSalary(item.optJSONObject("salary"));
+
+        String experience = item.getJSONObject("experience").getString("name");
+
+        vacancies.add(new RealVacancy(title, experience, salary));
+      }
+    } catch (Exception e) {
+      System.err.println("Ошибка при получении" + e.getMessage());
     }
 
-
+    return vacancies;
   }
+
+  private static String parseSalary(JSONObject salaryObj) {
+    if (salaryObj == null) {
+      return null;
+    }
+    try {
+      String from = salaryObj.has("from") ? String.valueOf(salaryObj.getInt("from")) : null;
+      String to = salaryObj.has("to") ? String.valueOf(salaryObj.getInt("to")) : null;
+      String currency = salaryObj.has("currency") ? salaryObj.getString("currency") : "";
+
+      if (from != null && to != null) {
+        return from + " - " + to + " " + currency;
+      } else if (from != null) {
+        return "от " + from + " " + currency;
+      } else if (to != null) {
+        return "до " + to + " " + currency;
+      }
+
+    } catch (Exception e) {
+    }
+    return null;
+  }
+  private static String sendGetRequest(String urlString) throws Exception {
+    URL url = new URL(urlString);
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+    connection.setRequestMethod("GET");
+    connection.setRequestProperty("User-Agent", "HH-Parser/1.0");
+    connection.setRequestProperty("Accept", "application/json");
+
+    int responseCode = connection.getResponseCode();
+
+    if (responseCode == HttpURLConnection.HTTP_OK) {
+      String inputLine;
+      StringBuilder response = new StringBuilder();
+
+      BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+      while ((inputLine = in.readLine()) != null) {
+        response.append(inputLine);
+      }
+      in.close();
+      return response.toString();
+    } else {
+      throw new RuntimeException("HTTP error: " + responseCode);
+    }
+
+    }
 }
