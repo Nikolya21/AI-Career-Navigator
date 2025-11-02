@@ -1,4 +1,4 @@
-package com.aicareer.module.parsing;
+package com.aicareer.core.model;
 
 public class UserPreferences {
   private String infAboutPerson;
