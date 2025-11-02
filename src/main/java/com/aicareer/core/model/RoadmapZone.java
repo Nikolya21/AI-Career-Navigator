@@ -10,7 +10,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RoadmapZone {
-    private int id;
-    private int sid;
-    private List<WeekCard> weekCardInZone;
+    private String name;
+    private List<Week> weeks;
+    private String learningGoal;
+    private String complexityLevel;
 }

@@ -106,16 +106,12 @@ public class ChatWithAiAfterDeterminingVacancyService implements ChatWithAiAfter
         String vacancyRequirements = requirements.getVacancyAllCompactRequirements();
         String context = String.join("\n", dialogHistory);
 
-        String prompt = String.format(
+        String prompt =
                 "Роль: Ты — эксперт по разработке образовательных программ и карьерный консультант.\n\n" +
 
                         "Контекст:\n" +
                         "Пользователь прошел собеседование-самооценку для подготовки к вакансии. " +
                         "На основе его ответов и требований вакансии нужно создать персонализированную учебную программу.\n\n" +
-
-                        "Исходные данные:\n" +
-                        "1. ТРЕБОВАНИЯ ВАКАНСИИ:\n%s\n\n" +
-                        "2. ИСТОРИЯ ДИАЛОГА С ПОЛЬЗОВАТЕЛЕМ:\n%s\n\n" +
 
                         "Задача:\n" +
                         "Создай детальные требования к образовательному курсу, который подготовит пользователя к этой вакансии.\n\n" +
@@ -133,9 +129,11 @@ public class ChatWithAiAfterDeterminingVacancyService implements ChatWithAiAfter
                         "- Временные возможности\n" +
                         "- Страхи и пробелы в знаниях\n\n" +
 
-                        "Формат вывода: структурированное описание курса с четкими требованиями.",
-                vacancyRequirements, context
-        );
+                        "Формат вывода: структурированное описание курса с четкими требованиями.\n" +
+                        "Исходные данные:\n" +
+                        "1. ТРЕБОВАНИЯ ВАКАНСИИ:\n%s" + vacancyRequirements + "\n"  +
+                        "2. ИСТОРИЯ ДИАЛОГА С ПОЛЬЗОВАТЕЛЕМ:\n%s" + context;
+
         return new CourseRequirements(gigaChatApiService.sendMessage(prompt));
     }
 }
