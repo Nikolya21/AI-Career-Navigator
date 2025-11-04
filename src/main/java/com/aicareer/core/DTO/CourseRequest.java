@@ -1,17 +1,12 @@
 package com.aicareer.core.DTO;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
 public class CourseRequest {
-  private CourseRequirements courseRequirements;
-
-  public CourseRequest(CourseRequirements courseRequirements) {
-    this.courseRequirements = courseRequirements;
-  }
-
-  public CourseRequirements getCourseRequirements() {
-    return courseRequirements;
-  }
-
-  public void setCourseRequirements(CourseRequirements courseRequirements) {
-    this.courseRequirements = courseRequirements;
-  }
+  private String courseRequirements;
 }

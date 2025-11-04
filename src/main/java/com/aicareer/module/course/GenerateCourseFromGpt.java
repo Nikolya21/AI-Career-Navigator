@@ -1,5 +1,7 @@
 package com.aicareer.module.course;
 
+import com.aicareer.core.DTO.CourseRequest;
+
 public interface GenerateCourseFromGpt {
-  String generateCoursePlan(String prompt); //создание курса
+  String generateCoursePlan(CourseRequest courseRequest); //создание курса
 }
