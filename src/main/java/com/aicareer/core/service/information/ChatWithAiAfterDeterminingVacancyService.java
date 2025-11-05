@@ -3,7 +3,7 @@ package com.aicareer.core.service.information;
 import com.aicareer.core.model.CourseRequirements;
 import com.aicareer.core.model.FinalVacancyRequirements;
 import com.aicareer.core.service.gigachat.GigaChatService;
-import com.aicareer.module.information.ChatWithAiAfterDeterminingVacancy;
+import com.aicareer.repository.information.ChatWithAiAfterDeterminingVacancy;
 import lombok.Data;
 
 import java.util.ArrayList;
