@@ -1,3 +1,4 @@
+/*
 package com.aicareer.core.service.ParserOfVacancy;
 
 import com.aicareer.core.model.FinalVacancyRequirements;
@@ -7,6 +8,7 @@ import com.aicareer.core.model.SelectedPotentialVacancy;
 import com.aicareer.core.model.UserPreferences;
 import com.aicareer.module.parsing.SelectOfVacancy;
 import java.util.List;
+import com.aicareer.core.service.gigachat.GigaChatService;
 
 public class SelectVacancy implements SelectOfVacancy {
 
@@ -157,15 +159,9 @@ public class SelectVacancy implements SelectOfVacancy {
         + "\n"
         + "Обоснование: [Развернутое объяснение, связывающее профессию с анализом].\n"
         + "\n");
-    String gigachatAnswer = gigaChatApiService.sendMessage(promtAnalyze);
-     return gigachatAnswer;
-  }
-
-  @Override
-  public List<SelectedPotentialVacancy> createPotentialVacancy(
-      String threeVacancies = gigaChatApiService.sendMessage(gigachatAnswer);
-      String resultOfAnalyzeUserPreference) {
-    return List.of();
+    String gigachatAnswer = GigaChatService.sendMessage(promtAnalyze);
+    String gigachatThreeVacancy = GigaChatService.sendMessage(gigachatAnswer + "");
+    return gigachatAnswer;
   }
 
   @Override
@@ -184,3 +180,4 @@ public class SelectVacancy implements SelectOfVacancy {
     return null;
   }
 }
+*/

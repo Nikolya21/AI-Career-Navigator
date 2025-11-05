@@ -1,11 +1,13 @@
 package com.aicareer.core.model;
 
+import java.util.List;
+
 public class RealVacancy {
   private String nameOfVacancy;
   private String salary;
-  private String vacancyRequirements;
+  private List<String> vacancyRequirements;
 
-  public RealVacancy(String nameOfVacancy, String vacancyRequirements, String salary){
+  public RealVacancy(String nameOfVacancy, List<String> vacancyRequirements, String salary){
     this.nameOfVacancy = nameOfVacancy;
     this.vacancyRequirements = vacancyRequirements;
     this.salary = salary;
@@ -19,7 +21,7 @@ public class RealVacancy {
     return salary;
   }
 
-  public String getVacancyRequirements() {
+  public List<String> getVacancyRequirements() {
     return vacancyRequirements;
   }
   @Override

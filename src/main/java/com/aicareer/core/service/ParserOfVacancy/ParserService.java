@@ -28,19 +28,46 @@ public class ParserService {
       for (int i = 0; i < items.length(); i++) {
         JSONObject item = items.getJSONObject(i);
 
+        String id = item.getString("id");
+
         String title = item.getString("name");
 
         String salary = parseSalary(item.optJSONObject("salary"));
 
         String experience = item.getJSONObject("experience").getString("name");
 
-        vacancies.add(new RealVacancy(title, experience, salary));
+        List<String> keySkills = getKeySkillsForVacancy(id);
+
+        vacancies.add(new RealVacancy(title,  keySkills, salary));
       }
     } catch (Exception e) {
       System.err.println("Ошибка при получении" + e.getMessage());
     }
 
     return vacancies;
+  }
+  private static List<String> getKeySkillsForVacancy(String vacancyId) {
+    List<String> skills = new ArrayList<>();
+
+    try {
+      String vacancyUrl = "https://api.hh.ru/vacancies/" + vacancyId;
+      String vacancyJson = sendGetRequest(vacancyUrl);
+
+      JSONObject vacancyDetail = new JSONObject(vacancyJson);
+
+      if (vacancyDetail.has("key_skills")) {
+        JSONArray keySkillsArray = vacancyDetail.getJSONArray("key_skills");
+
+        for (int i = 0; i < keySkillsArray.length(); i++) {
+          JSONObject skill = keySkillsArray.getJSONObject(i);
+          skills.add(skill.getString("name"));
+        }
+      }
+    } catch (Exception e) {
+      System.err.println("Ошибка при получении навыков для вакансии " + vacancyId + ": " + e.getMessage());
+    }
+
+    return skills;
   }
 
   private static String parseSalary(JSONObject salaryObj) {
