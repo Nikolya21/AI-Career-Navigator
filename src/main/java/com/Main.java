@@ -1,17 +1,64 @@
-package com;
+package com.aicareer;
+import chat.giga.client.GigaChatClient;
+import com.aicareer.core.DTO.CourseRequest;
+import com.aicareer.core.DTO.ResponseByWeek;
+import com.aicareer.core.config.GigaChatConfig;
+import com.aicareer.core.service.*;
+import com.aicareer.core.Validator.LlmResponseValidator;
+import com.aicareer.core.service.course.*;
+import com.aicareer.module.course.AssemblePlan;
+import com.aicareer.module.course.CourseResponse;
+import com.aicareer.module.course.DistributionByWeek;
+import com.aicareer.module.course.GenerateCourseFromGpt;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
   public static void main(String[] args) {
-    //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-    // to see how IntelliJ IDEA suggests fixing it.
-    System.out.printf("Hello and welcome!");
+    try {
+      GigaChatConfig config = new GigaChatConfig(
+        "ваш-client-id",
+        "ваш-client-secret",
+        "GIGACHAT_API_PUB"
+      );
+      GigaChatClient gigaClient = new GigaChatClient(config);
+      ServicePrompt promptService = new ServicePrompt();
+      GenerateCourseFromGpt generator = new ServiceGenerateCourse(promptService, gigaClient);
+      CourseResponse parser = new ServiceWeek();
+      DistributionByWeek distributor = new WeekDistributionService();
 
-    for (int i = 1; i <= 5; i++) {
-      //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-      // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-      System.out.println("i = " + i);
+      AssemblePlan assembler = new LearningPlanAssembler(generator, parser, distributor);
+      String requirements = """
+                Требования к курсу: Full-stack разработчик от Middle до Senior.
+                Модуль 1: Продвинутый Frontend на React.
+                Модуль 2: Интеграция фронтенда и бэкенда.
+                Длительность: 8 недель.
+                Занятость: 10 часов в неделю.
+                """;
+
+      CourseRequest request = new CourseRequest(requirements);
+      ResponseByWeek response = assembler.assemblePlan(request);
+
+      System.out.println("План успешно сгенерирован и распарсен!");
+      System.out.println("Всего недель: " + response.getWeeks().size());
+
+      for (var week : response.getWeeks()) {
+        System.out.println("\n== Неделя " + week.getNumber() + " ==");
+        System.out.println("Цель: " + week.getGoal());
+        for (int i = 0; i < week.getTasks().size(); i++) {
+          var task = week.getTasks().get(i);
+          System.out.println("Задача " + (i + 1) + ": " + task.getDescription());
+          System.out.println("Ресурсы: " + String.join(", ", task.getUrls()));
+        }
+      }
+      String rawResponse = generator.generateCoursePlan(request);
+      if (LlmResponseValidator.validate(rawResponse)) {
+        System.out.println("Ответ прошёл валидацию!");
+      } else {
+        System.out.println("Валидация провалена!");
+      }
+
+    } catch (Exception e) {
+      System.err.println("Ошибка при генерации плана:");
+      e.printStackTrace();
     }
   }
 }
