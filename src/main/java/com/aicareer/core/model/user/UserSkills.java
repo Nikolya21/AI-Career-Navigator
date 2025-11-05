@@ -11,12 +11,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-// Данные обучения, прогресс
+// данные обучения, прогресс
 public class UserSkills {
   private Long id;
   private Long userId;
   private double FullCompliancePercentage;
-  private Map<String, Double> skillGaps; // Проценты по навыкам
+  private Map<String, Double> skillGaps; // проценты по навыкам
   private LocalDateTime calculatedAt;
 
   public void updateTimestamps() {

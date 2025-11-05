@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-// Основная сущность пользователя
+// основная сущность пользователя
 @Data
 @Builder
 @NoArgsConstructor
@@ -14,8 +14,8 @@ public class User {
   private Long id;
   private String name;
   private String email;
-  private String passwordHash; // Храним хеш пароля
+  private String passwordHash; // храним хеш пароля
   private CVData CV;
   private UserSkills skills;
-  private String vacancyNow; // Получаю всю информацию про уже выбранную вакансию
+  private String vacancyNow; // получаю всю информацию про уже выбранную вакансию от Сани
 }

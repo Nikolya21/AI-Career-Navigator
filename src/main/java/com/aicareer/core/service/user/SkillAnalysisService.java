@@ -32,8 +32,8 @@ public class SkillAnalysisService implements SkillAnalysisServiceRepository {
 
   private Map<String, Double> identifySkillGaps(String targetPosition) {
     Map<String, Double> gaps = new HashMap<>();
-    gaps.put("Java", 0.75);
-    gaps.put("Spring Framework", 0.60);
+    gaps.put("Java Spring", 0.75);
+    gaps.put("Python", 0.60);
     gaps.put("SQL", 0.45);
     gaps.put("Docker", 0.80);
     return gaps;
@@ -41,10 +41,10 @@ public class SkillAnalysisService implements SkillAnalysisServiceRepository {
 
   private List<String> generateRecommendations(String targetPosition) {
     return Arrays.asList(
-        "Complete Spring Boot certification",
-        "Practice Docker containerization",
-        "Learn advanced SQL queries",
-        "Build portfolio project with microservices"
+        "Learn Java Spring Boot",
+        "Practice Python lib:Pytorch",
+        "Spend more time for SQL injections",
+        "Remind info about Docker"
     );
   }
 }

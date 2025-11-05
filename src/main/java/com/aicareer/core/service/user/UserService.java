@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 public class UserService implements UserServiceRepository {
 
 
-  // Временное хранилище (потом заменим на реализацию UserRepository)
+  // временное хранилище (потом заменим на реализацию UserRepository)
   private final Map<Long, User> userStore = new ConcurrentHashMap<>();
   private final Map<String, User> emailIndex = new ConcurrentHashMap<>();
   private final AtomicLong idGenerator = new AtomicLong(1);
@@ -45,7 +45,7 @@ public class UserService implements UserServiceRepository {
         .vacancyNow(null)
         .build();
 
-    // Сохраняем во временном хранилище
+    // сохраняем во временном хранилище для тестирования
     userStore.put(user.getId(), user);
     emailIndex.put(user.getEmail(), user);
 
@@ -70,9 +70,9 @@ public class UserService implements UserServiceRepository {
 
   @Override
   public User verifyEmail(String verificationToken) {
-    // Реализация для проверки адреса электронной почты.
+    // реализация для проверки адреса электронной почты(отправка письма с проверкой).
     log.info(String.format("Email verification for token: {%s}", verificationToken));
-    return null; // Потом реализую
+    return null; // потом реализую, сейчас не понимаю как
   }
 
   @Override
