@@ -12,7 +12,6 @@ public class WeekDistributionService implements DistributionByWeek {
   public List<Week> distributionByWeek(List<Week> responseByWeek) {
     // на будущее можно будет сделать:
     // - сортировку по номеру недели,
-    // - валидацию,
     // - ограничение по количеству недель и т.д.
     return responseByWeek;
   }

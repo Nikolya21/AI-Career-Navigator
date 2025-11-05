@@ -45,7 +45,6 @@ public class LlmResponseValidator {
       if (weekMatcher.matches()) {
         weekLines.add(line);
       }
-      // Игнорируем всё, что не соответствует weekN: ...
     }
 
     if (weekLines.size() < 4) {
@@ -63,11 +62,7 @@ public class LlmResponseValidator {
   }
 
   private static boolean isValidWeekLine(String weekLine) {
-    // Удаляем "weekN: "
     String content = weekLine.substring(weekLine.indexOf(':') + 1).trim();
-
-    // Разбиваем на части: goal: "...", task1: "...", urls: "...", ...
-    // Используем lookahead, чтобы разделить по ". слово:"
     String[] parts = content.split("\\.\\s*(?=\\w+:)");
 
     Map<String, String> fields = new LinkedHashMap<>();
@@ -79,20 +74,16 @@ public class LlmResponseValidator {
       }
       String key = part.substring(0, colonIndex).trim();
       String value = part.substring(colonIndex + 1).trim();
-      // Убираем кавычки, если есть
       if (value.startsWith("\"") && value.endsWith("\"")) {
         value = value.substring(1, value.length() - 1).trim();
       }
       fields.put(key.toLowerCase(), value);
     }
 
-    // 1. Проверка: есть ли goal?
     if (!fields.containsKey("goal") || fields.get("goal").isEmpty()) {
       System.err.println("Отсутствует или пустое поле 'goal'");
       return false;
     }
-
-    // 2. Ищем задачи: task1, task2, task3, ...
     int taskCount = 0;
     while (fields.containsKey("task" + (taskCount + 1))) {
       taskCount++;

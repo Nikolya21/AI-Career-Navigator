@@ -44,12 +44,10 @@ public class ServiceWeek implements CourseResponse {
   }
 
   private Week parseWeekContent(int weekNumber, String content) {
-    // Удалим точку в конце, если есть
     if (content.endsWith(".")) {
       content = content.substring(0, content.length() - 1);
     }
 
-    // Разбиваем по ". " (точка + пробел), но только если после неё идёт слово + ":"
     String[] segments = content.split("\\.\\s*(?=\\w+:)");
 
     String goal = null;
@@ -59,7 +57,6 @@ public class ServiceWeek implements CourseResponse {
     for (String segment : segments) {
       segment = segment.trim();
       if (segment.isEmpty()) continue;
-      // Попробуем найти ключ:значение
       Matcher fieldMatcher = FIELD_PATTERN.matcher(segment);
       if (fieldMatcher.find()) {
         String key = fieldMatcher.group(1).toLowerCase();
@@ -71,7 +68,6 @@ public class ServiceWeek implements CourseResponse {
             break;
           case "urls":
             if (currentTaskDescription != null && !currentTaskDescription.isEmpty()) {
-              // Разбиваем URL по запятой
               List<String> urls = Arrays.stream(value.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
@@ -82,7 +78,6 @@ public class ServiceWeek implements CourseResponse {
             break;
           default:
             if (key.startsWith("task")) {
-              // Сохраняем старую задачу, если была
               if (currentTaskDescription != null && !currentTaskDescription.isEmpty()) {
                 tasks.add(new Task(currentTaskDescription, List.of()));
               }
@@ -99,7 +94,6 @@ public class ServiceWeek implements CourseResponse {
         if (value.startsWith("\"") && value.endsWith("\"")) {
           value = value.substring(1, value.length() - 1);
         }
-
         switch (key) {
           case "goal":
             goal = value;
@@ -125,7 +119,6 @@ public class ServiceWeek implements CourseResponse {
         }
       }
     }
-    // Добавляем последнюю задачу, если она осталась
     if (currentTaskDescription != null && !currentTaskDescription.isEmpty()) {
       tasks.add(new Task(currentTaskDescription, List.of()));
     }
