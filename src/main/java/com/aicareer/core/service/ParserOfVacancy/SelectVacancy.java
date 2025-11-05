@@ -1,17 +1,17 @@
-/*
 package com.aicareer.core.service.ParserOfVacancy;
 
+import chat.giga.client.GigaChatClient;
 import com.aicareer.core.model.FinalVacancyRequirements;
-import com.aicareer.core.model.PotentialVacancy;
 import com.aicareer.core.model.RealVacancy;
 import com.aicareer.core.model.SelectedPotentialVacancy;
 import com.aicareer.core.model.UserPreferences;
 import com.aicareer.module.parsing.SelectOfVacancy;
 import java.util.List;
 import com.aicareer.core.service.gigachat.GigaChatService;
+import java.util.Scanner;
 
 public class SelectVacancy implements SelectOfVacancy {
-
+  Scanner scan = new Scanner(System.in);
   @Override
   public String analyzeUserPreference(UserPreferences infoAboutPerson) {
     String promtAnalyze = (infoAboutPerson + "Роль: Ты — опытный HR-аналитик и карьерный психолог. Твоя задача — проанализировать диалог с пользователем, составить его детальный психологический портрет и на его основе подобрать три наиболее подходящие профессии.\n"
@@ -158,26 +158,41 @@ public class SelectVacancy implements SelectOfVacancy {
         + "Профессия 3 (Уровень, если применимо)\n"
         + "\n"
         + "Обоснование: [Развернутое объяснение, связывающее профессию с анализом].\n"
-        + "\n");
+        + "после напиши  ::: и три вакансии через запятую\n");
     String gigachatAnswer = GigaChatService.sendMessage(promtAnalyze);
-    String gigachatThreeVacancy = GigaChatService.sendMessage(gigachatAnswer + "");
     return gigachatAnswer;
   }
 
+  List<String> threeVacancy = analyzeUserPreference(infoAboutperson).split(":::");
+  threeVacancy.remove(0);
+  String stringOfThreeVacancy = threeVacancy.toString();
+  List<String> listOfThreeVacany = List.of(stringOfThreeVacancy.split(","));
+
   @Override
-  public SelectedPotentialVacancy chosenVacancy(List<PotentialVacancy> listPotentialVacancy) {
-    return null;
+  public String chosenVacancy(List<String> listOfThreeVacany) {
+    System.out.println("Choose 1 of three");
+    int chosenNumber = scan.nextInt();
+    return listOfThreeVacany.get(chosenNumber);
   }
 
   @Override
-  public List<RealVacancy> FormingByParsing(SelectedPotentialVacancy selectedVacancy) {
-    return List.of();
+  public String FormingByParsing(SelectedPotentialVacancy selectedVacancy) {
+    List<RealVacancy> vacancies = ParserService.getVacancies("Java middle developer", "1", 10);
+    String newPromt = "";
+    for (int i = 0; i < Math.min(10, vacancies.size()); i++) {
+      RealVacancy vacancy = vacancies.get(i);
+      newPromt += (vacancy + "\n");
+
+    }
+
+    System.out.println(newPromt);
+    return newPromt;
   }
 
   @Override
-  public FinalVacancyRequirements FormingFinalVacancyRequirements(
-      List<RealVacancy> RealParsedVacancy) {
-    return null;
+  public String FormingFinalVacancyRequirements(
+      String newPromt) {
+      String gigachatFinalReqirements = GigaChatService.sendMessage(newPromt);
+    return gigachatFinalReqirements;
   }
 }
-*/
