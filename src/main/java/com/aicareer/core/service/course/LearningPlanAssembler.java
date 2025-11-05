@@ -25,7 +25,9 @@ public class LearningPlanAssembler implements AssemblePlan {
   @Override
   public ResponseByWeek assemblePlan(CourseRequest request) {
     String rawLlmResponse = courseGenerator.generateCoursePlan(request);
+
     List<Week> parsedWeeks = courseResponse.parseCourseResponse(rawLlmResponse);
+
     List<Week> distributedWeeks = distributionByWeek.distributionByWeek(parsedWeeks);
     return new ResponseByWeek(distributedWeeks);
   }
