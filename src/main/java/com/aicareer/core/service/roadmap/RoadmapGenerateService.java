@@ -4,7 +4,7 @@ import com.aicareer.core.model.Roadmap;
 import com.aicareer.core.model.RoadmapZone;
 import com.aicareer.core.model.Week;
 import com.aicareer.core.service.gigachat.GigaChatService;
-import com.aicareer.module.roadmap.RoadmapGenerate;
+import com.aicareer.repository.roadmap.RoadmapGenerate;
 import lombok.Data;
 
 import java.util.ArrayList;

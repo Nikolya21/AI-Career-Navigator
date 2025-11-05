@@ -1,4 +1,4 @@
-package com.aicareer.module.roadmap;
+package com.aicareer.repository.roadmap;
 
 import com.aicareer.core.model.Roadmap;
 import com.aicareer.core.model.RoadmapZone;
