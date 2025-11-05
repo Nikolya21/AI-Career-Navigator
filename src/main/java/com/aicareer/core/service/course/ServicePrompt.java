@@ -2,7 +2,7 @@ package com.aicareer.core.service.course;
 
 import com.aicareer.core.DTO.CourseRequest;
 import com.aicareer.core.Validator.SyntaxValidator;
-import com.aicareer.module.course.PromptGenerator;
+import com.aicareer.repository.course.PromptGenerator;
 
 public class ServicePrompt implements PromptGenerator {
 

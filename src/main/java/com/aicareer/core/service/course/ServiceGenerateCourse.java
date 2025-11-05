@@ -2,7 +2,7 @@
 package com.aicareer.core.service.course;
 
 import com.aicareer.core.DTO.CourseRequest;
-import com.aicareer.module.course.GenerateCourseFromGpt;
+import com.aicareer.repository.course.GenerateCourseFromGpt;
 
 public class ServiceGenerateCourse implements GenerateCourseFromGpt {
 

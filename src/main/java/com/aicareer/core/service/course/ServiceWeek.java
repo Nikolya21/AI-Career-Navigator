@@ -3,7 +3,7 @@ package com.aicareer.core.service.course;
 
 import com.aicareer.core.model.Task;
 import com.aicareer.core.model.Week;
-import com.aicareer.module.course.CourseResponse;
+import com.aicareer.repository.course.CourseResponse;
 
 import java.util.*;
 import java.util.regex.Matcher;

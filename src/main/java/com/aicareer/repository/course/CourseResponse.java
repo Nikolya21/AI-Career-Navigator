@@ -1,4 +1,4 @@
-package com.aicareer.module.course;
+package com.aicareer.repository.course;
 
 import com.aicareer.core.model.Week;
 

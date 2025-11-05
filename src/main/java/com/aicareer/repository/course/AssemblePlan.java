@@ -1,5 +1,5 @@
 // com.aicareer.module.course.AssemblePlan
-package com.aicareer.module.course;
+package com.aicareer.repository.course;
 
 import com.aicareer.core.DTO.CourseRequest;
 import com.aicareer.core.DTO.ResponseByWeek;

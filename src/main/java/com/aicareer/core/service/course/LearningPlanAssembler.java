@@ -4,10 +4,10 @@ package com.aicareer.core.service.course;
 import com.aicareer.core.DTO.CourseRequest;
 import com.aicareer.core.DTO.ResponseByWeek;
 import com.aicareer.core.model.Week;
-import com.aicareer.module.course.AssemblePlan;
-import com.aicareer.module.course.CourseResponse;
-import com.aicareer.module.course.DistributionByWeek;
-import com.aicareer.module.course.GenerateCourseFromGpt;
+import com.aicareer.repository.course.AssemblePlan;
+import com.aicareer.repository.course.CourseResponse;
+import com.aicareer.repository.course.DistributionByWeek;
+import com.aicareer.repository.course.GenerateCourseFromGpt;
 
 import java.util.List;
 
