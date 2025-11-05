@@ -1,6 +1,6 @@
 package com.aicareer.core.service.user;
 
-import com.aicareer.module.user.SkillAnalysisServiceRepository;
+import com.aicareer.repository.user.SkillAnalysisServiceRepository;
 import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 import java.util.*;

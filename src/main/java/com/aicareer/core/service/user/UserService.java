@@ -1,6 +1,6 @@
 package com.aicareer.core.service.user;
 
-import com.aicareer.module.user.UserServiceRepository;
+import com.aicareer.repository.user.UserServiceRepository;
 import com.aicareer.core.model.user.*;
 import com.aicareer.core.DTO.user.*;
 import java.io.File;

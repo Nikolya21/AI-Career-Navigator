@@ -1,4 +1,4 @@
-package com.aicareer.module.user;
+package com.aicareer.repository.user;
 
 import java.util.Map;
 

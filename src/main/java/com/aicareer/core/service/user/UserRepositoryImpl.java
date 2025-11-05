@@ -1,7 +1,7 @@
 package com.aicareer.core.service.user;
 
 import com.aicareer.core.model.user.User;
-import com.aicareer.module.user.UserRepository;
+import com.aicareer.repository.user.UserRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;

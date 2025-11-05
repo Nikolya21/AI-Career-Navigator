@@ -1,4 +1,4 @@
-package com.aicareer.module.user;
+package com.aicareer.repository.user;
 
 import com.aicareer.core.model.user.CVData;
 

@@ -1,7 +1,7 @@
 package com.aicareer.core.service.user;
 
 import com.aicareer.core.model.user.UserSkills;
-import com.aicareer.module.user.UserSkillRepository;
+import com.aicareer.repository.user.UserSkillRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Map;
