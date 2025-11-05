@@ -1,5 +1,6 @@
 package com.aicareer.module.information;
 
+import com.aicareer.core.model.CVData;
 import com.aicareer.core.model.UserPreferences;
 
 import java.util.List;
@@ -14,7 +15,7 @@ public interface ChatWithAiBeforeDeterminingVacancy {
 
     String continueDialogWithUser(String userAnswer);
 
-    List<String> generatePersonalizedQuestions(ResumeData resumeData);
+    List<String> generatePersonalizedQuestions(CVData cvData);
 
     void askingPersonalizedQuestions(List<String> generatedPersonalizedQuestions);
 

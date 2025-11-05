@@ -1,5 +1,6 @@
 package com.aicareer.core.service.information;
 
+import com.aicareer.core.model.CVData;
 import com.aicareer.core.model.UserPreferences;
 import com.aicareer.core.service.gigachat.GigaChatService;
 import com.aicareer.module.information.ChatWithAiBeforeDeterminingVacancy;
@@ -130,8 +131,8 @@ public class ChatWithAiBeforeDeterminingVacancyService implements ChatWithAiBefo
     }
 
     @Override
-    public List<String> generatePersonalizedQuestions(ResumeData resumeData) {
-        String informationAboutResume = resumeData.getInformation();
+    public List<String> generatePersonalizedQuestions(CVData cvData) {
+        String informationAboutResume = cvData.getInformation();
         String prompt = "Роль: Ты — тактичный карьерный консультант, который проводит мягкое интервью. \n" +
                 "Твоя задача — помочь человеку раскрыть свой потенциал через ненавязчивые вопросы.\n" +
                 "\n" +

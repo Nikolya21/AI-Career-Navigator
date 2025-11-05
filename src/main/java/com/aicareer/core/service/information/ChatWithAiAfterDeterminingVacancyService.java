@@ -1,6 +1,7 @@
 package com.aicareer.core.service.information;
 
 import com.aicareer.core.model.CourseRequirements;
+import com.aicareer.core.model.FinalVacancyRequirements;
 import com.aicareer.core.service.gigachat.GigaChatService;
 import com.aicareer.module.information.ChatWithAiAfterDeterminingVacancy;
 import lombok.Data;
@@ -18,7 +19,7 @@ public class ChatWithAiAfterDeterminingVacancyService implements ChatWithAiAfter
     private List<String> dialogHistory = new ArrayList<>();
 
     @Override
-    public List<String> generatePersonalizedQuestions(FinalVacancyRequarements requarements) {
+    public List<String> generatePersonalizedQuestions(FinalVacancyRequirements requarements) {
         String vacancyRequirements = requarements.getVacancyAllCompactRequirements();
 
         String prompt = String.format(
@@ -33,8 +34,6 @@ public class ChatWithAiAfterDeterminingVacancyService implements ChatWithAiAfter
                         "Планирование ресурсов: Определить, сколько времени он готов инвестировать в обучение еженедельно.\n" +
                         "\n" +
                         "Визуализация процесса (\"Onboarding в обучение\"): Создать в его воображении конкретную и понятную картину предстоящего обучения, чтобы снизить страх перед неизвестностью и дать ощущение контроля.\n" +
-                        "\n" +
-                        "Детали и требования к вопросам:\n" +
                         "\n" +
                         "Вопрос 1: Должен быть направлен на самооценку текущего уровня знаний относительно вакансии.\n" +
                         "\n" +
@@ -102,7 +101,7 @@ public class ChatWithAiAfterDeterminingVacancyService implements ChatWithAiAfter
     }
 
     @Override
-    public CourseRequirements analyzeCombinedData(FinalVacancyRequarements requarements) {
+    public CourseRequirements analyzeCombinedData(FinalVacancyRequirements requirements) {
         String vacancyRequirements = requirements.getVacancyAllCompactRequirements();
         String context = String.join("\n", dialogHistory);
 
