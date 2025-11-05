@@ -3,7 +3,6 @@ package com.aicareer.core.service.course;
 
 import com.aicareer.core.model.Week;
 import com.aicareer.module.course.DistributionByWeek;
-
 import java.util.List;
 
 public class WeekDistributionService implements DistributionByWeek {

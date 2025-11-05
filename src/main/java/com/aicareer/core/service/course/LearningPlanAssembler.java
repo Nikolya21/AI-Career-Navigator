@@ -24,16 +24,9 @@ public class LearningPlanAssembler implements AssemblePlan {
   }
   @Override
   public ResponseByWeek assemblePlan(CourseRequest request) {
-    // 1. Генерируем сырой ответ через LLM
     String rawLlmResponse = courseGenerator.generateCoursePlan(request);
-
-    // 2. Парсим
     List<Week> parsedWeeks = courseResponse.parseCourseResponse(rawLlmResponse);
-
-    // 3. Обрабатываем
     List<Week> distributedWeeks = distributionByWeek.distributionByWeek(parsedWeeks);
-
-    // 4. Возвращаем DTO
     return new ResponseByWeek(distributedWeeks);
   }
 }

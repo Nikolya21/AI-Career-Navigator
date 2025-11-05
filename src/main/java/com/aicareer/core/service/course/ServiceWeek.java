@@ -61,7 +61,6 @@ public class ServiceWeek implements CourseResponse {
       if (fieldMatcher.find()) {
         String key = fieldMatcher.group(1).toLowerCase();
         String value = fieldMatcher.group(2);
-
         switch (key) {
           case "goal":
             goal = value;
