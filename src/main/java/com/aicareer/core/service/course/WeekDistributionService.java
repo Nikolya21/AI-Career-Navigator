@@ -1,4 +1,3 @@
-// com.aicareer.core.service.course.WeekDistributionService
 package com.aicareer.core.service.course;
 
 import com.aicareer.core.model.Week;

@@ -1,4 +1,3 @@
-// com.aicareer.core.service.course.LearningPlanAssembler
 package com.aicareer.core.service.course;
 
 import com.aicareer.core.DTO.CourseRequest;

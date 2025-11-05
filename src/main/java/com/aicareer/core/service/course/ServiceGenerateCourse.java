@@ -1,4 +1,3 @@
-// com.aicareer.core.service.course.ServiceGenerateCourse
 package com.aicareer.core.service.course;
 
 import com.aicareer.core.DTO.CourseRequest;

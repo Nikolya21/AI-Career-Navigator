@@ -1,4 +1,3 @@
-// com.aicareer.core.service.course.ServiceWeek
 package com.aicareer.core.service.course;
 
 import com.aicareer.core.model.Task;
