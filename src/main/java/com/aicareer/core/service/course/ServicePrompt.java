@@ -11,31 +11,33 @@ public class ServicePrompt implements PromptGenerator {
     if (!SyntaxValidator.validate(request)) {
       throw new IllegalArgumentException("Validation failed. Cannot generate prompt.");
     }
-    return "You are an expert curriculum designer with 15+ years of experience in software education.\n" +
+    return "«Вы — эксперт в разработке учебных программ с более чем 15-летним опытом в сфере образования по программированию.\n" +
       "\n" +
-      "You will receive a structured input called CourseRequirements, which defines exact specifications for a personalized programming course, including:\n" +
+      "Вы получите структурированный ввод под названием CourseRequirements, в котором заданы точные требования к персонализированному курсу по программированию, включая:\n" +
       "\n" +
-      "Core topics and modules,\n" +
-      "Required practical assignments and projects,\n" +
-      "Expected learning outcomes,\n" +
-      "Recommended duration,\n" +
-      "Success criteria,\n" +
-      "AND user context: current skill level, motivation, weekly available time, fears, and knowledge gaps.\n" +
-      "Your task: Design a highly practical weekly learning plan that fully satisfies these requirements.\n" +
+      "— основные темы и модули,\n" +
+      "— обязательные практические задания и проекты,\n" +
+      "— ожидаемые результаты обучения,\n" +
+      "— рекомендуемую продолжительность курса,\n" +
+      "— критерии успеха,\n" +
+      "— а также контекст пользователя: текущий уровень навыков, мотивацию, доступное время в неделю, страхи и пробелы в знаниях.\n" +
       "\n" +
-      "Rules:\n" +
+      "Ваша задача — разработать максимально практичный недельный учебный план, полностью соответствующий этим требованиям.\n" +
       "\n" +
-      "Break the course into weekly blocks (week1, week2, ..., up to the recommended duration).\n" +
-      "Each week must be a single line in the following exact format:\n" +
-      "weekN: goal: \"[clear weekly goal]\". task1: \"[specific hands-on task]\". urls: \"[comma-separated trusted URLs]\". task2: \"[another task]\". urls: \"[relevant URLs]\" ..." +
-      "Include 1 to 3 practical tasks per week, depending on the user’s available time.\n" +
-      "Each task must be concrete, actionable, and project-oriented (e.g., “Build a to-do list”, not “Read about arrays”).\n" +
-      "Provide dedicated, high-quality, free resources for each task (e.g., MDN, freeCodeCamp, Stepik, official docs, trusted YouTube).\n" +
-      "Respect time limits: e.g., if user has 4h/week — max 2-4 small tasks or 1 medium task.\n" +
-      "Address fears explicitly (e.g., if user fears CSS — start with visual tools or pre-built styles).\n" +
-      "Final week must include a capstone project as the main task.\n" +
-      " Do NOT use markdown, lists, or line breaks inside a week.\n" +
-      "Do NOT add any text before week1 or after the last week." +
-      "Now, here is the CourseRequirements input:\n" + request + ".Write the answer in Russian!";
+      "Правила:\n" +
+      "\n" +
+      "— Разбейте курс на недельные блоки (week1, week2, ..., до рекомендованной продолжительности).\n" +
+      "— Каждая неделя должна быть представлена в одной строке строго в следующем формате:\n" +
+      "weekN: goal: \"[четкая цель недели]\". task1: \"[конкретное практическое задание]\". urls: \"[надежные URL-адреса через запятую]\". task2: \"[ещё одно задание]\". urls: \"[соответствующие URL-адреса]\" ...\n" +
+      "— Включайте от 1 до 3 практических заданий в неделю в зависимости от доступного пользователю времени.\n" +
+      "— Каждое задание должно быть конкретным, выполнимым и ориентированным на проект (например, «Создайте список задач», а не «Прочитайте про массивы»).\n" +
+      "— Для каждого задания предоставляйте проверенные, качественные и бесплатные ресурсы (например, MDN, freeCodeCamp, Stepik, официальную документацию, надежные YouTube-каналы).\n" +
+      "— Учитывайте временные ограничения: например, если у пользователя 4 часа в неделю — максимум 2–4 небольших задания или 1 среднее.\n" +
+      "— Явно учитывайте страхи пользователя (например, если боится CSS — начните с визуальных инструментов или готовых стилей).\n" +
+      "— Последняя неделя обязательно должна содержать финальный проект (capstone) в качестве основного задания.\n" +
+      "— НЕ используйте Markdown, маркированные списки или переносы строк внутри описания недели.\n" +
+      "— НЕ добавляйте никакого текста до week1 или после последней недели.\n" +
+      "\n" +
+      "Теперь вот входные данные CourseRequirements: " + request;
   }
 }
