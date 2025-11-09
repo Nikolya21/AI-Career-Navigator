@@ -9,6 +9,6 @@ import java.util.List;
 @AllArgsConstructor
 @Data
 public class Task {
-  private String description;
-  private List<String> urls;
+    private String description;
+    private List<String> urls;
 }

@@ -1,11 +1,8 @@
 package com.aicareer.core.model;
 
+import lombok.Data;
+
+@Data
 public class FinalVacancyRequirements {
-  private String vacancyAllCompactRequirements;
-  public FinalVacancyRequirements(String vacancyAllCompactRequirements){
-    this.vacancyAllCompactRequirements = vacancyAllCompactRequirements;
-  }
-  public String getFinalVacancyRequirements() {
-    return vacancyAllCompactRequirements;
-  }
+    private String vacancyAllCompactRequirements;
 }

@@ -1,17 +1,21 @@
 package com.aicareer.core.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
+import com.aicareer.core.model.RoadmapZone;
+import lombok.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
-@AllArgsConstructor
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class Roadmap {
-    private List<RoadmapZone> roadmapZones;
+    private Long id;
+    private Long userId;
+    private List<RoadmapZone> roadmapZones = new ArrayList<>();
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public void addRoadmapZone(RoadmapZone zone) {
         if (this.roadmapZones == null) {

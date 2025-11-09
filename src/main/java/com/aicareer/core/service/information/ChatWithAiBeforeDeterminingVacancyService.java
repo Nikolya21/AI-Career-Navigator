@@ -1,21 +1,29 @@
 package com.aicareer.core.service.information;
 
+import com.aicareer.core.model.CVData;
 import com.aicareer.core.model.UserPreferences;
 import com.aicareer.core.service.gigachat.GigaChatService;
+import com.aicareer.core.service.information.prompts.BeforeDeterminingPrompts;
 import com.aicareer.repository.information.ChatWithAiBeforeDeterminingVacancy;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Scanner;
 
 @Data
+@AllArgsConstructor
+@RequiredArgsConstructor
 public class ChatWithAiBeforeDeterminingVacancyService implements ChatWithAiBeforeDeterminingVacancy {
 
     private final GigaChatService gigaChatApiService;
 
+    private final DialogService dialogService;
+
     private List<String> dialogHistory = new ArrayList<>();
+
 
     private List<String> pullStandartQuestions = Arrays.asList(
             "Представь, что мы с тобой встречаемся через год. Какой главный профессиональный результат этого года заставил бы тебя гордиться собой? ",
@@ -26,36 +34,36 @@ public class ChatWithAiBeforeDeterminingVacancyService implements ChatWithAiBefo
             "Как ты думаешь, какие soft skills («гибкие навыки») становятся все более важными на современном рынке труда, независимо от профессии? Какие из них тебе интересно было бы развить в себе?"
     );
 
+    private String firstMessage =
+            "Здравствуйте и добро пожаловать!\n" +
+            "\n" +
+            "Очень рад нашей встрече. Прежде чем мы перейдем к обсуждению вакансий и конкретных шагов, я бы хотел лучше познакомиться с вами и вашей уникальной историей.\n" +
+            "\n" +
+            "Самый важый этап в любом путешествии — это понять, куда мы идем и зачем. Карьера — это не просто список должностей, а история вашего роста, ценностей и устремлений.\n" +
+            "\n" +
+            "Давайте начнем с самого интересного — с вашего будущего. Представьте, что мы с вами встречаемся через год за чашкой кофе, и вы с гордостью и огоньком в глазах делитесь своим главным профессиональным достижением за этот период.\n" +
+            "\n" +
+            "Итак, первый вопрос: ";
+
+
     @Override
     public String starDialogWithUser() {
-        String firstMessage =
-                "Здравствуйте и добро пожаловать!\n" +
-                "\n" +
-                "Очень рад нашей встрече. Прежде чем мы перейдем к обсуждению вакансий и конкретных шагов, я бы хотел лучше познакомиться с вами и вашей уникальной историей.\n" +
-                "\n" +
-                "Самый важый этап в любом путешествии — это понять, куда мы идем и зачем. Карьера — это не просто список должностей, а история вашего роста, ценностей и устремлений.\n" +
-                "\n" +
-                "Давайте начнем с самого интересного — с вашего будущего. Представьте, что мы с вами встречаемся через год за чашкой кофе, и вы с гордостью и огоньком в глазах делитесь своим главным профессиональным достижением за этот период.\n" +
-                "\n" +
-                "Итак, первый вопрос: ";
-        return firstMessage;
+        return this.firstMessage;
     }
 
     @Override
     public void askingStandardQuestions() {
-        Scanner scanner = new Scanner(System.in);
         for (String question : pullStandartQuestions) {
             askingStandardQuestion(question);
 
             dialogHistory.add("AI: " + question);
+            String userAnswer = dialogService.userAnswer(question);
 
-            System.out.print("Вы: ");
-            String userAnswer = scanner.nextLine();
             dialogHistory.add("User: " + userAnswer);
 
             continueDialogWithUser(userAnswer);
 
-            String userAdditionalAnswer = scanner.nextLine();
+            String userAdditionalAnswer = dialogService.userAnswer(question);
             dialogHistory.add("User: " + userAdditionalAnswer);
         }
     }
@@ -70,112 +78,33 @@ public class ChatWithAiBeforeDeterminingVacancyService implements ChatWithAiBefo
     public String continueDialogWithUser(String userAnswer) {
         String context = String.join("\n", dialogHistory);
 
-        String prompt = String.format(
-                "Роль: Ты — эмпатичный карьерный консультант и специалист по педагогическому дизайну. Ведешь глубокий, связный диалог, где каждый следующий вопрос вытекает из предыдущих ответов пользователя.\n" +
-                        "\n" +
-                        "Контекст:\n" +
-                        "Ты проводишь вводную сессию знакомства с пользователем. Цель — помочь ему осознать карьерные цели, мотивацию и ценности, чтобы в дальнейшем построить персонализированный план развития.\n" +
-                        "\n" +
-                        "Задача: Проанализируй всю историю диалога и продолжи беседу, придерживаясь стратегии \"Контекстуальное погружение\":\n" +
-                        "\n" +
-                        "Свяжи с историей (обязательно): Покажи, что ты помнишь и ценишь уже сказанное пользователем. Используй референсы к предыдущим ответам.\n" +
-                        "\n" +
-                        "Выяви паттерны: Отметь проявившиеся темы, ценности, противоречия или глубинные мотивы.\n" +
-                        "\n" +
-                        "Задай единственный уточняющий вопрос, который:\n" +
-                        "\n" +
-                        "Углубляет ключевую тему, поднятую пользователем.\n" +
-                        "\n" +
-                        "Проясняет выявленное противоречие или пробел.\n" +
-                        "\n" +
-                        "Смещает фокус на следующий логический уровень осознанности.\n" +
-                        "\n" +
-                        "Критерии выбора следующего вопроса:\n" +
-                        "\n" +
-                        "Если пользователь противоречит сам себе → задай проясняющий вопрос о приоритетах.\n" +
-                        "\n" +
-                        "Если он дал поверхностный ответ → спроси о конкретных примерах или ощущениях.\n" +
-                        "\n" +
-                        "Если он уже глубоко раскрыл одну тему → переключись на смежную, но еще не затронутую.\n" +
-                        "\n" +
-                        "Если видна сильная эмоциональная заряженность → углубляйся в эту тему.\n" +
-                        "\n" +
-                        "Примеры связок и переходов:\n" +
-                        "\n" +
-                        "«Раньше ты говорил, что ценишь [ценность X], а сейчас упомянул о [ситуации Y]. Как они сочетаются в твоей картине идеальной работы?»\n" +
-                        "\n" +
-                        "«Я заметил, что в нескольких ответах у тебя проходит тема [тема Z]. Почему это для тебя так принципиально важно?»\n" +
-                        "\n" +
-                        "«Сначала ты сказал [утверждение A], а теперь — [утверждение B]. Помоги мне понять, что для тебя является главным приоритетом?»\n" +
-                        "\n" +
-                        "Требования к тону:\n" +
-                        "\n" +
-                        "Поддерживающий, аналитический, но теплый.\n" +
-                        "\n" +
-                        "Демонстрируй, что ты запоминаешь детали из его истории.\n" +
-                        "\n" +
-                        "Избегай общих фраз, будь конкретен в отсылках.\n" +
-                        "\n" +
-                        "Формат ответа:\n" +
-                        "Только текст продолжения диалога (2-4 предложения), содержащий:\n" +
-                        "\n" +
-                        "Контекстуальную связку с предыдущими ответами.\n" +
-                        "\n" +
-                        "Один персонализированный уточняющий вопрос." +
-                        "\n" +
-                        "Полная история диалога: " + "\n%s", context
-        );
+        String prompt = BeforeDeterminingPrompts.CONTINUE_DIALOG + context;
 
         return gigaChatApiService.sendMessage(prompt);
     }
 
     @Override
-    public List<String> generatePersonalizedQuestions(ResumeData resumeData) {
-        String informationAboutResume = resumeData.getInformation();
-        String prompt = "Роль: Ты — тактичный карьерный консультант, который проводит мягкое интервью. \n" +
-                "Твоя задача — помочь человеку раскрыть свой потенциал через ненавязчивые вопросы.\n" +
-                "\n" +
-                "Контекст: \n" +
-                "Ты ведешь диалог с пользователем, который уже поделился базовой информацией о своих карьерных предпочтениях. \n" +
-                "Теперь у тебя есть его резюме, и нужно продолжить разговор, углубляясь в его опыт, но не отпугивая формальностью.\n" +
-                "\n" +
-                "Задача: Сгенерируй 3-5 вопросов, которые:\n" +
-                "1. Основаны на конкретных пунктах резюме (опыт, навыки, проекты)\n" +
-                "2. Продолжают тон предыдущего диалога (поддерживающий, исследовательский)\n" +
-                "3. Помогают раскрыть мотивацию и ценности, а не просто факты\n" +
-                "4. Вызывают интерес к самоанализу, а не ощущение допроса\n" +
-                "\n" +
-                "Стратегия формулировок:\n" +
-                "- Начинай с позитивного наблюдения\n" +
-                "- Связывай с предыдущими темами из диалога\n" +
-                "- Фокусируйся на будущем, а не на прошлом\n" +
-                "- Используй открытые формулировки\n" +
-                "\n" +
-                "Формат вывода:\n" +
-                "Выведи строго в виде строк, разделенных знаком |. Не добавляй никаких дополнительных пояснений, заголовков или заключений после списка.\n" +
-                "\n" +
-                "Исходные данные:\n" +
-                "- Резюме пользователя: %s\n" + informationAboutResume + "\n" +
-                "- История предыдущего диалога: %s\n" + dialogHistory;
+    public List<String> generatePersonalizedQuestions(CVData cvData) {
+        String informationAboutResume = cvData.getInformation();
+        String prompt = BeforeDeterminingPrompts.CONTINUE_DIALOG + informationAboutResume + "\n%s" + dialogHistory;
 
         return Arrays.asList(gigaChatApiService.sendMessage(prompt).split("\\|"));
     }
 
     @Override
     public void askingPersonalizedQuestions(List<String> generatedPersonalizedQuestions) {
-        Scanner scanner = new Scanner(System.in);
         for (String question : generatedPersonalizedQuestions) {
-            askingStandardQuestion(question);
+
+            askingPersonalizedQuestion(question);
 
             dialogHistory.add("AI: " + question);
-
-            System.out.print("Вы: ");
-            String userAnswer = scanner.nextLine();
+            String userAnswer = dialogService.userAnswer(question);
 
             dialogHistory.add("User: " + userAnswer);
+
             continueDialogWithUser(userAnswer);
 
-            String userAdditionalAnswer = scanner.nextLine();
+            String userAdditionalAnswer = dialogService.userAnswer(question);
             dialogHistory.add("User: " + userAdditionalAnswer);
         }
 
@@ -188,60 +117,8 @@ public class ChatWithAiBeforeDeterminingVacancyService implements ChatWithAiBefo
 
 
     @Override
-    public UserPreferences analyzeCombinedData(String dialogHistory) {
-        String prompt = String.format("Роль: Ты — опытный HR-аналитик и карьерный психолог. Твоя задача — проанализировать диалог с пользователем и составить его детальный психологический портрет для точного подбора вакансий.\n" +
-                "\n" +
-                "Контекст:\n" +
-                "Пользователь прошел сессию карьерного консультирования. Тебе нужно глубоко проанализировать его ответы, чтобы понять его истинные мотивы и предпочтения.\n" +
-                "\n" +
-                "История диалога для анализа:\n" +
-                "%s\n" +
-                "\n" +
-                "Задача: Проведи комплексный анализ по следующим направлениям:\n" +
-                "\n" +
-                "    1. Анализ ключевых мотиваторов:\n" +
-                "       - Выяви 3-5 основных ценностей, которые движут пользователем\n" +
-                "       - Определи, что его заряжает энергией в работе\n" +
-                "       - Найди скрытые мотивы в его высказываниях\n" +
-                "       - Отметь, какие достижения он считает значимыми\n" +
-                "    \n" +
-                "    2. Анализ профессиональных предпочтений:\n" +
-                "       - Определи предпочтительный тип работы: индивидуальная, командная или смешанная\n" +
-                "       - Проанализируй отношение к темпу работы: динамичный, стабильный или переменный\n" +
-                "       - Выяви уровень комфорта с риском и неопределенностью\n" +
-                "       - Пойми желаемую роль в команде: исполнитель, координатор, лидер\n" +
-                "    \n" +
-                "    3. Анализ сильных сторон и склонностей:\n" +
-                "       - Составь список проявляющихся сильных качеств\n" +
-                "       - Определи когнитивные предпочтения: аналитик, творческий, практический\n" +
-                "       - Выяви коммуникативные паттерны\n" +
-                "       - Отметь способности к обучению и адаптации\n" +
-                "    \n" +
-                "    4. Анализ ограничений и избеганий:\n" +
-                "       - Определи, какие условия работы демотивируют пользователя\n" +
-                "       - Выяви потенциальные источники стресса\n" +
-                "       - Найди упоминания о том, чего он хочет избежать\n" +
-                "       - Отметь возможные карьерные антипаттерны\n" +
-                "    \n" +
-                "    5. Анализ карьерных амбиций:\n" +
-                "       - Сформулируйте ясные краткосрочные цели (1-2 года)\n" +
-                "       - Выяви долгосрочные карьерные устремления\n" +
-                "       - Оцените готовность к обучению и развитию\n" +
-                "       - Определите желаемый баланс работы и жизни\n" +
-                "    \n" +
-                "    6. Сбор доказательной базы:\n" +
-                "       - Выбери 4-6 наиболее показательных цитат из диалога\n" +
-                "       - Свяжи каждую характеристику с конкретными высказываниями\n" +
-                "       - Отметь противоречия или несоответствия в ответах\n" +
-                "    \n" +
-                "Требования к анализу:\n" +
-                "    - Будь максимально конкретным и опирайся на факты из диалога\n" +
-                "    - Выявляй не только явные, но и имплицитные предпочтения\n" +
-                "    - Сохраняй практическую направленность для подбора вакансий\n" +
-                "    - Отмечай силу выраженности каждой характеристики\n" +
-                "    \n" +
-                "    Формат вывода: Детальный анализ в структурированном текстовом формате", dialogHistory
-        );
+    public UserPreferences analyzeCombinedData() {
+        String prompt = BeforeDeterminingPrompts.ANALYZE_DATA + dialogHistory;
         return new UserPreferences(gigaChatApiService.sendMessage(prompt));
     }
 }

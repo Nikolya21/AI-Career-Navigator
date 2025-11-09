@@ -1,12 +1,13 @@
 package com.aicareer.repository.information;
 
 import com.aicareer.core.model.CourseRequirements;
+import com.aicareer.core.model.FinalVacancyRequirements;
 
 import java.util.List;
 
 public interface ChatWithAiAfterDeterminingVacancy {
 
-  List<String> generatePersonalizedQuestions(FinalVacancyRequarements requarements);
+    List<String> generatePersonalizedQuestions(FinalVacancyRequirements requarements);
 
   void askingPersonalizedQuestions(List<String> generatedPersonalizedQuestions);
 
