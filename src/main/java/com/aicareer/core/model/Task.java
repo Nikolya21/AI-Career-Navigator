@@ -1,13 +1,14 @@
 package com.aicareer.core.model;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class Week {
-  private int number;
-  private String goal;
-  private List<Task> tasks;
+public class Task {
+  private String description;
+  private List<String> urls;
 }
