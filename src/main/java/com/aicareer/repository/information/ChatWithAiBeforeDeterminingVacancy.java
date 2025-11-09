@@ -1,3 +1,5 @@
+/*
+package com.aicareer.module.information;
 package com.aicareer.repository.information;
 
 import com.aicareer.core.model.UserPreferences;
@@ -23,3 +25,4 @@ public interface ChatWithAiBeforeDeterminingVacancy {
     UserPreferences analyzeCombinedData(String dialogHistory);
 
 }
+*/
