@@ -78,7 +78,7 @@ public class Main {
     }
   }
 
-  //  ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
+  // вспомогательные методы
 
   private static GigaChatConfig loadGigaChatConfig() {
     try {
