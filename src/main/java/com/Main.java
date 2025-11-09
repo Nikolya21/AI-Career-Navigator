@@ -1,64 +1,128 @@
-package com.aicareer;
-import chat.giga.client.GigaChatClient;
+package com;
+
+import com.aicareer.core.config.GigaChatConfig;
 import com.aicareer.core.DTO.CourseRequest;
 import com.aicareer.core.DTO.ResponseByWeek;
-import com.aicareer.core.config.GigaChatConfig;
-import com.aicareer.core.service.*;
-import com.aicareer.core.Validator.LlmResponseValidator;
+import com.aicareer.core.model.Week;
 import com.aicareer.core.service.course.*;
-import com.aicareer.module.course.AssemblePlan;
-import com.aicareer.module.course.CourseResponse;
-import com.aicareer.module.course.DistributionByWeek;
-import com.aicareer.module.course.GenerateCourseFromGpt;
+import com.aicareer.core.Validator.LlmResponseValidator;
+import com.aicareer.repository.course.*;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+
+@Slf4j
 public class Main {
+
   public static void main(String[] args) {
+    log.info("ЗАПУСК: ГЕНЕРАЦИЯ ПЕРСОНАЛИЗИРОВАННОГО УЧЕБНОГО ПЛАНА (LLM + VALIDATION)");
+
     try {
-      GigaChatConfig config = new GigaChatConfig(
-        "ваш-client-id",
-        "ваш-client-secret",
-        "GIGACHAT_API_PUB"
-      );
-      GigaChatClient gigaClient = new GigaChatClient(config);
+      // ——— 1. Конфигурация ———
+      GigaChatConfig config = loadGigaChatConfig();
+
+      // ——— 2. Создание компонентов (ручной DI) ———
+      GigaChatService gigaChatService = new GigaChatService(config);
+
       ServicePrompt promptService = new ServicePrompt();
-      GenerateCourseFromGpt generator = new ServiceGenerateCourse(promptService, gigaClient);
-      CourseResponse parser = new ServiceWeek();
-      DistributionByWeek distributor = new WeekDistributionService();
+      ServiceGenerateCourse courseGenerator = new ServiceGenerateCourse(promptService, gigaChatService);
 
-      AssemblePlan assembler = new LearningPlanAssembler(generator, parser, distributor);
-      String requirements = """
-                Требования к курсу: Full-stack разработчик от Middle до Senior.
-                Модуль 1: Продвинутый Frontend на React.
-                Модуль 2: Интеграция фронтенда и бэкенда.
-                Длительность: 8 недель.
-                Занятость: 10 часов в неделю.
-                """;
+      ServiceWeek parser = new ServiceWeek();
+      WeekDistributionService distributor = new WeekDistributionService();
 
-      CourseRequest request = new CourseRequest(requirements);
+      LearningPlanAssembler assembler = new LearningPlanAssembler(
+        courseGenerator,
+        parser,
+        distributor
+      );
+
+      // ——— 3. Подготовка входных данных ———
+      CourseRequest request = buildSampleRequest();
+      log.info("📋 Входные требования:\n{}", request.getCourseRequirements());
+
+      // ——— 4. Генерация и сборка плана ———
+      log.info("Генерация учебного плана через GigaChat...");
       ResponseByWeek response = assembler.assemblePlan(request);
 
-      System.out.println("План успешно сгенерирован и распарсен!");
-      System.out.println("Всего недель: " + response.getWeeks().size());
+      // ——— 5. Валидация ответа (крайне важно!) ———
+      log.info("🔍 Валидация структуры ответа...");
+      List<Week> weeks = response.getWeeks();
+      String llmRawResponse = simulateLlmRawResponse(weeks); // ← для демонстрации; в реале парсер получает raw-строку
 
-      for (var week : response.getWeeks()) {
-        System.out.println("\n== Неделя " + week.getNumber() + " ==");
-        System.out.println("Цель: " + week.getGoal());
-        for (int i = 0; i < week.getTasks().size(); i++) {
-          var task = week.getTasks().get(i);
-          System.out.println("Задача " + (i + 1) + ": " + task.getDescription());
-          System.out.println("Ресурсы: " + String.join(", ", task.getUrls()));
+      if (!LlmResponseValidator.validate(llmRawResponse)) {
+        log.error("Валидация провалена. План отклонён.");
+        System.exit(1);
+      }
+      log.info("Валидация пройдена. План структурно корректен.");
+
+      // ——— 6. Вывод результата ———
+      log.info("СГЕНЕРИРОВАННЫЙ ПЛАН ({} недель):", weeks.size());
+      weeks.forEach(week -> {
+        log.info("Неделя {}: {}", week.getNumber(), week.getGoal());
+        if (week.getTasks() != null && !week.getTasks().isEmpty()) {
+          week.getTasks().forEach(task -> {
+            log.info("    {}", task.getDescription());
+            if (task.getUrls() != null && !task.getUrls().isEmpty()) {
+              task.getUrls().forEach(url -> log.info("        {}", url));
+            }
+          });
         }
-      }
-      String rawResponse = generator.generateCoursePlan(request);
-      if (LlmResponseValidator.validate(rawResponse)) {
-        System.out.println("Ответ прошёл валидацию!");
-      } else {
-        System.out.println("Валидация провалена!");
-      }
+        log.info("");
+      });
+
+      log.info("УСПЕХ: учебный план готов к интеграции в Roadmap!");
 
     } catch (Exception e) {
-      System.err.println("Ошибка при генерации плана:");
-      e.printStackTrace();
+      log.error("КРИТИЧЕСКАЯ ОШИБКА", e);
+      System.exit(1);
     }
+  }
+
+  // ——— ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ———
+
+  private static GigaChatConfig loadGigaChatConfig() {
+    try {
+      GigaChatConfig config = new GigaChatConfig();
+      log.info("GigaChatConfig загружен из переменных окружения");
+      return config;
+    } catch (Exception e) {
+      log.error("    Ошибка загрузки конфигурации. Проверьте переменные окружения:");
+      log.error("    GIGACHAT_CLIENT_ID");
+      log.error("    GIGACHAT_CLIENT_SECRET");
+      log.error("    GIGACHAT_SCOPE");
+      throw e;
+    }
+  }
+
+  private static CourseRequest buildSampleRequest() {
+    //  В реальном приложении — это приходит из UI / API / файла
+    String requirements = """
+            Целевая вакансия: Senior Java Developer
+            Текущий уровень: Middle, 5 лет опыта
+            Пробелы: Spring Security, микросервисы, Kubernetes
+            Доступно в неделю: 6 часов
+            Страхи: не понимаю OAuth2, боюсь production-деплоя
+            Цель: за 8 недель закрыть пробелы и пройти собеседование в Сбер/Тинькофф
+            Продолжительность: 8 недель
+            """;
+    return new CourseRequest(requirements);
+  }
+  private static String simulateLlmRawResponse(List<Week> weeks) {
+    StringBuilder sb = new StringBuilder();
+    for (Week w : weeks) {
+      sb.append("week").append(w.getNumber()).append(": ");
+      sb.append("goal: \"").append(w.getGoal()).append("\"");
+      int taskNum = 1;
+      for (var task : w.getTasks()) {
+        sb.append(". task").append(taskNum).append(": \"").append(task.getDescription()).append("\"");
+        if (task.getUrls() != null && !task.getUrls().isEmpty()) {
+          String urls = String.join(", ", task.getUrls());
+          sb.append(". urls: \"").append(urls).append("\"");
+        }
+        taskNum++;
+      }
+      sb.append("\n");
+    }
+    return sb.toString().trim();
   }
 }
