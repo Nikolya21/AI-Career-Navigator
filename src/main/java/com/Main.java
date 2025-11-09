@@ -44,10 +44,10 @@ public class Main {
       log.info("Генерация учебного плана через GigaChat...");
       ResponseByWeek response = assembler.assemblePlan(request);
 
-      // ——— 5. Валидация ответа (крайне важно!) ———
+      // ——— 5. Валидация ответа ———
       log.info("🔍 Валидация структуры ответа...");
       List<Week> weeks = response.getWeeks();
-      String llmRawResponse = simulateLlmRawResponse(weeks); // ← для демонстрации; в реале парсер получает raw-строку
+      String llmRawResponse = simulateLlmRawResponse(weeks); // ← демонстрации; в реале парсер получает raw-строку
 
       if (!LlmResponseValidator.validate(llmRawResponse)) {
         log.error("Валидация провалена. План отклонён.");
