@@ -20,7 +20,6 @@ public interface ChatWithAiBeforeDeterminingVacancy {
     void askingPersonalizedQuestions(List<String> generatedPersonalizedQuestions);
 
     String askingPersonalizedQuestion(String question);
-
-    UserPreferences analyzeCombinedData(String dialogHistory);
+    UserPreferences analyzeCombinedData();
 
 }
