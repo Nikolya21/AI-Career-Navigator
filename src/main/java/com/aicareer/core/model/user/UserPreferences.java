@@ -1,4 +1,4 @@
-package com.aicareer.core.model.userPreferences;
+package com.aicareer.core.model.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

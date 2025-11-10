@@ -1,7 +1,7 @@
 package com.aicareer.core.service.information;
 
 import com.aicareer.core.model.user.CVData;
-import com.aicareer.core.model.userPreferences.UserPreferences;
+import com.aicareer.core.model.user.UserPreferences;
 import com.aicareer.core.service.gigachat.GigaChatService;
 import com.aicareer.core.service.information.prompts.BeforeDeterminingPrompts;
 import com.aicareer.repository.information.ChatWithAiBeforeDeterminingVacancy;
