@@ -4,7 +4,7 @@ public final class AfterDeterminingPrompts {
 
     private AfterDeterminingPrompts() {
         throw new AssertionError("Cannot instantiate utility class");
-    }git
+    }
     public static final String GENERATE_QUESTIONS =
             "Роль: Ты — опытный карьерный консультант и специалист по педагогическому дизайну. Твоя задача — не просто собрать информацию, а мотивировать человека и помочь ему мысленно \"примерить\" на себя процесс обучения, чтобы повысить его шансы на успешное завершение курса.\n" +
             "\n" +

@@ -34,9 +34,9 @@ public class DialogService {
     }
 
     public String userAnswerTest(String question) { // нейронка имитирует человека
-        System.out.println("AI: " + question);
+        System.out.println("AI: " + question + "\n");
 
-        System.out.print("User: ");
+        System.out.print("User: " + generateAiAnswer(question) + "\n");
         return generateAiAnswer(question);
     }
 
