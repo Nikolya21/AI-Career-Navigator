@@ -1,5 +1,5 @@
 package com.aicareer.repository.course;
-import com.aicareer.core.model.Week;
+import com.aicareer.core.model.courseModel.Week;
 
 import java.util.List;
 

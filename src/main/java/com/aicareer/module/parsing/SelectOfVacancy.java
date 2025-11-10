@@ -1,9 +1,7 @@
 package com.aicareer.module.parsing;
 
-import com.aicareer.core.model.FinalVacancyRequirements;
-import com.aicareer.core.model.RealVacancy;
-import com.aicareer.core.model.SelectedPotentialVacancy;
-import com.aicareer.core.model.UserPreferences;
+import com.aicareer.core.model.vacancy.SelectedPotentialVacancy;
+
 import java.util.List;
 
 public interface SelectOfVacancy {

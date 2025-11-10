@@ -1,6 +1,5 @@
-package com.aicareer.core.model;
+package com.aicareer.core.model.roadmap;
 
-import com.aicareer.core.model.RoadmapZone;
 import lombok.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;

@@ -1,5 +1,5 @@
 
-import com.aicareer.core.model.FinalVacancyRequirements;
+import com.aicareer.core.model.vacancy.FinalVacancyRequirements;
 import java.util.List;
 
 public interface ChatWithAiAfterDeterminingVacancy {

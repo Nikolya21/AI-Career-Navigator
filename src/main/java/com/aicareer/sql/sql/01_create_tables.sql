@@ -15,6 +15,7 @@ CREATE TABLE users (
 );
 
 CREATE TABLE cv_data (
+    id SERIAL PRIMARY KEY,
     user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     data JSONB NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),

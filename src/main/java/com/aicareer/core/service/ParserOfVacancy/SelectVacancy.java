@@ -5,6 +5,8 @@ import com.aicareer.core.model.PotentialVacancy;
 import com.aicareer.core.model.RealVacancy;
 import com.aicareer.core.model.SelectedPotentialVacancy;
 import com.aicareer.core.model.UserPreferences;
+import com.aicareer.core.model.vacancy.RealVacancy;
+import com.aicareer.core.model.vacancy.SelectedPotentialVacancy;
 import com.aicareer.module.parsing.SelectOfVacancy;
 import java.util.List;
 import java.util.ArrayList;

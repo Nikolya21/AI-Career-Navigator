@@ -2,7 +2,7 @@ package com.aicareer.core.service.course;
 
 import com.aicareer.core.DTO.courseDto.CourseRequest;
 import com.aicareer.core.DTO.courseDto.ResponseByWeek;
-import com.aicareer.core.model.Week;
+import com.aicareer.core.model.courseModel.Week;
 import com.aicareer.repository.course.AssemblePlan;
 import com.aicareer.repository.course.CourseResponse;
 import com.aicareer.repository.course.DistributionByWeek;

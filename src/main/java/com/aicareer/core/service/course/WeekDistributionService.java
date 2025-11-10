@@ -1,6 +1,6 @@
 package com.aicareer.core.service.course;
 
-import com.aicareer.core.model.Week;
+import com.aicareer.core.model.courseModel.Week;
 import com.aicareer.repository.course.DistributionByWeek;
 import java.util.List;
 

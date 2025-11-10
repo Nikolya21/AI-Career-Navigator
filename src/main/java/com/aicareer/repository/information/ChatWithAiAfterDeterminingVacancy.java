@@ -1,7 +1,7 @@
 package com.aicareer.repository.information;
 
-import com.aicareer.core.model.CourseRequirements;
-import com.aicareer.core.model.FinalVacancyRequirements;
+import com.aicareer.core.model.courseModel.CourseRequirements;
+import com.aicareer.core.model.vacancy.FinalVacancyRequirements;
 
 import java.util.List;
 
@@ -17,5 +17,5 @@ public interface ChatWithAiAfterDeterminingVacancy {
 
 
 
-  CourseRequirements analyzeCombinedData(FinalVacancyRequarements requarements);
+  CourseRequirements analyzeCombinedData(FinalVacancyRequirements requarements);
 }

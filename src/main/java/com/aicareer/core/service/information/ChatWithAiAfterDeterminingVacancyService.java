@@ -1,7 +1,7 @@
 package com.aicareer.core.service.information;
 
-import com.aicareer.core.model.CourseRequirements;
-import com.aicareer.core.model.FinalVacancyRequirements;
+import com.aicareer.core.model.courseModel.CourseRequirements;
+import com.aicareer.core.model.vacancy.FinalVacancyRequirements;
 import com.aicareer.core.service.gigachat.GigaChatService;
 import com.aicareer.core.service.information.prompts.AfterDeterminingPrompts;
 import com.aicareer.repository.information.ChatWithAiAfterDeterminingVacancy;

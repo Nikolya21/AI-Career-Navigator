@@ -1,6 +1,6 @@
 package com.aicareer.core.service.ParserOfVacancy;
 
-import com.aicareer.core.model.RealVacancy;
+import com.aicareer.core.model.vacancy.RealVacancy;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

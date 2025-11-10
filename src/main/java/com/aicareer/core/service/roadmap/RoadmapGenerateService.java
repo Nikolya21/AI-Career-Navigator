@@ -1,10 +1,10 @@
 package com.aicareer.core.service.roadmap;
 
 import com.aicareer.core.DTO.courseDto.ResponseByWeek;
-import com.aicareer.core.model.Roadmap;
-import com.aicareer.core.model.RoadmapZone;
-import com.aicareer.core.model.Task;
-import com.aicareer.core.model.Week;
+import com.aicareer.core.model.roadmap.Roadmap;
+import com.aicareer.core.model.roadmap.RoadmapZone;
+import com.aicareer.core.model.courseModel.Task;
+import com.aicareer.core.model.courseModel.Week;
 import com.aicareer.core.service.gigachat.GigaChatService;
 import com.aicareer.core.service.roadmap.prompts.RoadmapPrompts;
 import com.aicareer.repository.roadmap.RoadmapGenerate;

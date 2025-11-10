@@ -1,9 +1,9 @@
 package com.aicareer.repository.roadmap;
 
 import com.aicareer.core.DTO.courseDto.ResponseByWeek;
-import com.aicareer.core.model.Roadmap;
-import com.aicareer.core.model.RoadmapZone;
-import com.aicareer.core.model.Week;
+import com.aicareer.core.model.roadmap.Roadmap;
+import com.aicareer.core.model.roadmap.RoadmapZone;
+import com.aicareer.core.model.courseModel.Week;
 
 import java.util.List;
 
