@@ -3,7 +3,6 @@ package com.aicareer.repository.user;
 import com.aicareer.core.model.user.User;
 import com.aicareer.core.DTO.user.UserRegistrationDto;
 import com.aicareer.core.DTO.user.LoginRequestDto;
-import com.aicareer.core.DTO.user.UserProfileDto;
 import com.aicareer.core.model.user.UserSkills;
 import java.io.File;
 import java.util.List;
