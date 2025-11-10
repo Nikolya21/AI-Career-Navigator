@@ -1,6 +1,5 @@
 package com.aicareer.core.service.ParserOfVacancy;
 
-import chat.giga.client.GigaChatClient;
 import com.aicareer.core.model.PotentialVacancy;
 import com.aicareer.core.model.RealVacancy;
 import com.aicareer.core.model.SelectedPotentialVacancy;
@@ -17,6 +16,7 @@ public class SelectVacancy implements SelectOfVacancy {
   private SelectedPotentialVacancy selectedVacancy;
   private List<RealVacancy> parsedVacancies = new ArrayList<>();
   private String analysisResult;
+
 
   @Override
   public String analyzeUserPreference(UserPreferences infoAboutPerson) {
@@ -36,8 +36,8 @@ public class SelectVacancy implements SelectOfVacancy {
     return gigachatAnswer;
   }
 
-
-  private void extractThreeVacancies(String gigachatAnswer) {
+  @Override
+  public List<String> extractThreeVacancies(String gigachatAnswer) {
     if (gigachatAnswer.contains(":::")) {
       String[] parts = gigachatAnswer.split(":::");
       if (parts.length > 1) {
@@ -55,6 +55,7 @@ public class SelectVacancy implements SelectOfVacancy {
       }
     }
     System.out.println("Предложенные вакансии: " + listOfThreeVacancy);
+   return listOfThreeVacancy;
   }
 
   @Override

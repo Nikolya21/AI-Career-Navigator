@@ -9,6 +9,8 @@ import java.util.List;
 public interface SelectOfVacancy {
   String analyzeUserPreference(UserPreferences infoAboutPerson);
 
+  List<String> extractThreeVacancies(String gigachatAnswer);
+
   SelectedPotentialVacancy choosenVacansy(List<String> listPotentialVacancy);
 
   String FormingByParsing(SelectedPotentialVacancy selectedVacancy);
