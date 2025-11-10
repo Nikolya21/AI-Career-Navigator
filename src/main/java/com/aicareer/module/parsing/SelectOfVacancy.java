@@ -9,7 +9,7 @@ import java.util.List;
 public interface SelectOfVacancy {
   String analyzeUserPreference(UserPreferences infoAboutPerson);
 
-  String   chosenVacancy(List<String> listPotentialVacancy);
+  SelectedPotentialVacancy choosenVacansy(List<String> listPotentialVacancy);
 
   String FormingByParsing(SelectedPotentialVacancy selectedVacancy);
 
