@@ -1,10 +1,16 @@
 package com.aicareer.core.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+@Data
+@AllArgsConstructor
 public class SelectedPotentialVacancy {
   private String nameOfVacancy;
-  public SelectedPotentialVacancy(String nameOfVacancy){
-    this.nameOfVacancy = nameOfVacancy;
+  public SelectedPotentialVacancy(PotentialVacancy nameOfVacancy){
+    this.nameOfVacancy = String.valueOf(nameOfVacancy);
   }
+
   public String getNameOfVacancy() {
     return nameOfVacancy;
   }

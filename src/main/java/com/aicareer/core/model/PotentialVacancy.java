@@ -1,22 +1,16 @@
 package com.aicareer.core.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class PotentialVacancy {
   private String nameOfVacancy;
   private String salary;
   private String infAboutVacancy;
-  public PotentialVacancy(String nameOfVacancy, String infAboutVacancy, String salary){
-    this.nameOfVacancy = nameOfVacancy;
-    this.infAboutVacancy = infAboutVacancy;
-    this.salary = salary;
-  }
-
-  public String getNameOfVacancy() {
-    return nameOfVacancy;
-  }
-
-  public String getSalary() {
-    return salary;
-  }
 
   public String getVacancyRequirements() {
     return infAboutVacancy;

@@ -8,6 +8,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import netscape.javascript.JSObject;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -36,7 +37,7 @@ public class ParserService {
 
         String experience = item.getJSONObject("experience").getString("name");
 
-        List<String> keySkills = getKeySkillsForVacancy(id);
+        List<String> keySkills = getKeySkillsForVacancy(item.optJSONObject("key_skills"));
 
         vacancies.add(new RealVacancy(title,  keySkills, salary));
       }
@@ -46,26 +47,21 @@ public class ParserService {
 
     return vacancies;
   }
-  private static List<String> getKeySkillsForVacancy(String vacancyId) {
+  private static List<String> getKeySkillsForVacancy(JSONObject skillsObj) {
     List<String> skills = new ArrayList<>();
-
+    if (skillsObj == null){
+      return null;
+    }
     try {
-      String vacancyUrl = "https://api.hh.ru/vacancies/" + vacancyId;
-      String vacancyJson = sendGetRequest(vacancyUrl);
-
-      JSONObject vacancyDetail = new JSONObject(vacancyJson);
-
-      if (vacancyDetail.has("key_skills")) {
-        JSONArray keySkillsArray = vacancyDetail.getJSONArray("key_skills");
+      if (skillsObj.has("key_skills")) {
+        JSONArray keySkillsArray = skillsObj.getJSONArray("key_skills");
 
         for (int i = 0; i < keySkillsArray.length(); i++) {
           JSONObject skill = keySkillsArray.getJSONObject(i);
           skills.add(skill.getString("name"));
         }
       }
-    } catch (Exception e) {
-      System.err.println("Ошибка при получении навыков для вакансии " + vacancyId + ": " + e.getMessage());
-    }
+    } catch (Exception e) {}
 
     return skills;
   }
