@@ -1,7 +1,7 @@
 package com;
 
-import com.aicareer.core.DTO.CourseRequest;
-import com.aicareer.core.DTO.ResponseByWeek;
+import com.aicareer.core.DTO.courseDto.CourseRequest;
+import com.aicareer.core.DTO.courseDto.ResponseByWeek;
 import com.aicareer.core.Validator.LlmResponseValidator;
 import com.aicareer.core.config.GigaChatConfig;
 import com.aicareer.core.model.*;

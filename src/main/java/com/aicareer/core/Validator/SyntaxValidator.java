@@ -1,7 +1,7 @@
 package com.aicareer.core.Validator;
 
 import com.aicareer.core.Annotation.Syntax;
-import com.aicareer.core.DTO.CourseRequest;
+import com.aicareer.core.DTO.courseDto.CourseRequest;
 
 import java.lang.reflect.Field;
 

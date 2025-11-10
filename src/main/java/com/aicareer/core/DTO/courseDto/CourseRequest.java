@@ -1,4 +1,4 @@
-package com.aicareer.core.DTO;
+package com.aicareer.core.DTO.courseDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

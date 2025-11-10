@@ -1,6 +1,6 @@
 package com.aicareer.core.service.course;
 
-import com.aicareer.core.DTO.CourseRequest;
+import com.aicareer.core.DTO.courseDto.CourseRequest;
 import com.aicareer.core.Validator.SyntaxValidator;
 import com.aicareer.repository.course.PromptGenerator;
 
