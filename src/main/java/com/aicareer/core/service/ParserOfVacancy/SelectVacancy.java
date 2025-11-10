@@ -1,12 +1,9 @@
 package com.aicareer.core.service.ParserOfVacancy;
 
-import chat.giga.client.GigaChatClient;
-import com.aicareer.core.model.PotentialVacancy;
-import com.aicareer.core.model.RealVacancy;
-import com.aicareer.core.model.SelectedPotentialVacancy;
-import com.aicareer.core.model.UserPreferences;
+import com.aicareer.core.model.vacancy.PotentialVacancy;
 import com.aicareer.core.model.vacancy.RealVacancy;
 import com.aicareer.core.model.vacancy.SelectedPotentialVacancy;
+import com.aicareer.core.model.userPreferences.UserPreferences;
 import com.aicareer.module.parsing.SelectOfVacancy;
 import java.util.List;
 import java.util.ArrayList;
@@ -19,20 +16,21 @@ public class SelectVacancy implements SelectOfVacancy {
   private SelectedPotentialVacancy selectedVacancy;
   private List<RealVacancy> parsedVacancies = new ArrayList<>();
   private String analysisResult;
+  private GigaChatService gigaChatService;
 
   @Override
   public String analyzeUserPreference(UserPreferences infoAboutPerson) {
     String promtAnalyze = (infoAboutPerson.toString() + "%s\n\nРоль: Ты — опытный HR-аналитик и карьерный психолог. Твоя задача — проанализировать диалог с пользователем, составить его детальный психологический портрет и на его основе подобрать три наиболее подходящие профессии.\n"
-        + "\nКонтекст:\n"
-        + "Пользователь прошел сессию карьерного консультирования. Тебе нужно глубоко проанализировать его ответы, чтобы понять его истинные мотивы, предпочтения и на основе этого предложить конкретные вакансии.\n"
-        + "\nЗадача: Проведи комплексный анализ, а затем подбери профессии.\n"
-        + "\nФормат вывода:\n"
-        + "ПСИХОЛОГИЧЕСКИЙ ПОРТРЕТ ДЛЯ ПОДБОРА ВАКАНСИЙ\n"
-        + "[анализ...]\n"
-        + "ПОДБОР ПРОФЕССИЙ\n"
-        + "[профессии...]\n"
-        + ":::Профессия1,Профессия2,Профессия3");
-    String gigachatAnswer = GigaChatService.sendMessage(promtAnalyze);
+      + "\nКонтекст:\n"
+      + "Пользователь прошел сессию карьерного консультирования. Тебе нужно глубоко проанализировать его ответы, чтобы понять его истинные мотивы, предпочтения и на основе этого предложить конкретные вакансии.\n"
+      + "\nЗадача: Проведи комплексный анализ, а затем подбери профессии.\n"
+      + "\nФормат вывода:\n"
+      + "ПСИХОЛОГИЧЕСКИЙ ПОРТРЕТ ДЛЯ ПОДБОРА ВАКАНСИЙ\n"
+      + "[анализ...]\n"
+      + "ПОДБОР ПРОФЕССИЙ\n"
+      + "[профессии...]\n"
+      + ":::Профессия1,Профессия2,Профессия3");
+    String gigachatAnswer = gigaChatService.sendMessage(promtAnalyze);
     this.analysisResult = gigachatAnswer;
     extractThreeVacancies(gigachatAnswer);
     return gigachatAnswer;
@@ -58,6 +56,7 @@ public class SelectVacancy implements SelectOfVacancy {
     }
     System.out.println("Предложенные вакансии: " + listOfThreeVacancy);
   }
+
 
   @Override
   public SelectedPotentialVacancy choosenVacansy(List<String> listOfThreeVacancy) {
@@ -107,7 +106,7 @@ public class SelectVacancy implements SelectOfVacancy {
   @Override
   public String FormingFinalVacancyRequirements(
       String newPromt) {
-      String gigachatFinalReqirements = GigaChatService.sendMessage(newPromt);
+      String gigachatFinalReqirements = gigaChatService.sendMessage(newPromt);
     return gigachatFinalReqirements;
   }
 }

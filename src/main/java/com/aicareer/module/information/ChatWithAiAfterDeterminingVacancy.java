@@ -1,4 +1,6 @@
+package com.aicareer.module.information;
 
+import com.aicareer.core.model.courseModel.CourseRequirements;
 import com.aicareer.core.model.vacancy.FinalVacancyRequirements;
 import java.util.List;
 

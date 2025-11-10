@@ -1,5 +1,6 @@
 package com.aicareer.module.parsing;
 
+import com.aicareer.core.model.userPreferences.UserPreferences;
 import com.aicareer.core.model.vacancy.SelectedPotentialVacancy;
 
 import java.util.List;
