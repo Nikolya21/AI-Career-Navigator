@@ -18,6 +18,7 @@ public class SelectVacancy implements SelectOfVacancy {
   private String analysisResult;
   private GigaChatService gigaChatService;
 
+
   @Override
   public String analyzeUserPreference(UserPreferences infoAboutPerson) {
     String promtAnalyze = (infoAboutPerson.toString() + "%s\n\nРоль: Ты — опытный HR-аналитик и карьерный психолог. Твоя задача — проанализировать диалог с пользователем, составить его детальный психологический портрет и на его основе подобрать три наиболее подходящие профессии.\n"
@@ -36,8 +37,8 @@ public class SelectVacancy implements SelectOfVacancy {
     return gigachatAnswer;
   }
 
-
-  private void extractThreeVacancies(String gigachatAnswer) {
+  @Override
+  public List<String> extractThreeVacancies(String gigachatAnswer) {
     if (gigachatAnswer.contains(":::")) {
       String[] parts = gigachatAnswer.split(":::");
       if (parts.length > 1) {
@@ -55,6 +56,7 @@ public class SelectVacancy implements SelectOfVacancy {
       }
     }
     System.out.println("Предложенные вакансии: " + listOfThreeVacancy);
+   return listOfThreeVacancy;
   }
 
 
