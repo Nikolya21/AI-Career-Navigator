@@ -5,12 +5,13 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
-public class PasswordEncoder {
+@UtilityClass
+public final class PasswordEncoder {
 
   private static final int SALT_LENGTH = 16;
   private static final int ITERATIONS = 10000;
 
-  public String encode(String password) {
+  public static String encode(String password) {
     try {
       byte[] salt = generateSalt();
       byte[] hash = hashPassword(password, salt);
@@ -26,7 +27,7 @@ public class PasswordEncoder {
     }
   }
 
-  public boolean matches(String password, String encodedPassword) {
+  public static boolean matches(String password, String encodedPassword) {
     try {
       byte[] combined = Base64.getDecoder().decode(encodedPassword);
       byte[] salt = new byte[SALT_LENGTH];
@@ -44,13 +45,13 @@ public class PasswordEncoder {
     }
   }
 
-  private byte[] generateSalt() {
+  private static byte[] generateSalt() {
     byte[] salt = new byte[SALT_LENGTH];
     new SecureRandom().nextBytes(salt);
     return salt;
   }
 
-  private byte[] hashPassword(String password, byte[] salt) throws NoSuchAlgorithmException {
+  private static byte[] hashPassword(String password, byte[] salt) throws NoSuchAlgorithmException {
     MessageDigest digest = MessageDigest.getInstance("SHA-256");
     digest.reset();
     digest.update(salt);
