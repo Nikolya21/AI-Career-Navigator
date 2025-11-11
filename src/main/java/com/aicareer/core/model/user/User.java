@@ -25,9 +25,9 @@ public class User {
   private Instant updatedAt;
 
   public void updateTimestamps() {
-    if (id == null) {
-      createdAt = Instant.now();
-    }
+    // if (id == null) {
+    //   createdAt = Instant.now();
+    // }
     updatedAt = Instant.now();
   }
 }
