@@ -1,9 +1,9 @@
 package com.aicareer.repository.user;
 
 import com.aicareer.core.model.user.CVData;
+import java.util.Optional;
 
 public interface CVDataRepository {
-  void save(CVData CVData);
-  CVData findByUserId(Long userId);
-  void deleteByUserId(Long userId);
+  CVData save(CVData cvData);
+  Optional<CVData> findByUserId(Long userId);
 }

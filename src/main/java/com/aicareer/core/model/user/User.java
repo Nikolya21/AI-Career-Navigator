@@ -1,6 +1,6 @@
 package com.aicareer.core.model.user;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,13 +21,13 @@ public class User {
   private String vacancyNow; // получаю всю информацию про уже выбранную вакансию от Сани
   private UserPreferences userPreferences; // от Луки
   private Long roadmapId;
-  private LocalDateTime createdAt;
-  private LocalDateTime updatedAt;
+  private Instant createdAt;
+  private Instant updatedAt;
 
   public void updateTimestamps() {
     if (id == null) {
-      createdAt = LocalDateTime.now();
+      createdAt = Instant.now();
     }
-    updatedAt = LocalDateTime.now();
+    updatedAt = Instant.now();
   }
 }

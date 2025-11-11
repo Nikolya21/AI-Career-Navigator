@@ -1,5 +1,8 @@
-package com;
+package com.aicareer;
 
+import com.aicareer.core.DTO.LoginRequestDto;
+import com.aicareer.core.DTO.UserRegistrationDto;
+import com.aicareer.core.Validator.LlmResponseValidator;
 import com.aicareer.core.config.GigaChatConfig;
 import com.aicareer.core.DTO.courseDto.CourseRequest;
 import com.aicareer.core.DTO.courseDto.ResponseByWeek;
@@ -8,35 +11,45 @@ import com.aicareer.core.model.courseModel.Task;
 import com.aicareer.core.model.courseModel.Week;
 import com.aicareer.core.model.roadmap.Roadmap;
 import com.aicareer.core.model.user.CVData;
+import com.aicareer.core.model.user.User;
 import com.aicareer.core.model.user.UserPreferences;
 import com.aicareer.core.model.vacancy.FinalVacancyRequirements;
 import com.aicareer.core.model.vacancy.SelectedPotentialVacancy;
 import com.aicareer.core.service.ParserOfVacancy.SelectVacancy;
 import com.aicareer.core.service.course.*;
 import com.aicareer.core.service.gigachat.GigaChatService;
-import com.aicareer.core.Validator.LlmResponseValidator;
 import com.aicareer.core.service.information.ChatWithAiAfterDeterminingVacancyService;
 import com.aicareer.core.service.information.ChatWithAiBeforeDeterminingVacancyService;
 import com.aicareer.core.service.information.DialogService;
 import com.aicareer.core.service.roadmap.RoadmapGenerateService;
+import com.aicareer.core.service.user.UserService;
+import com.aicareer.core.validation.AuthenticationValidator;
+import com.aicareer.core.validation.RegistrationValidator;
 import com.aicareer.repository.information.ChatWithAiBeforeDeterminingVacancy;
 
 import java.util.List;
 import java.util.Scanner;
 
+// Предполагаемые классы (не импортированы в оригинале, но используются):
+// Добавьте их в core, если ещё не сделано:
+// import com.aicareer.core.service.user.AuthenticationResult;
+// import com.aicareer.core.service.user.RegistrationResult;
+
 public class Main {
 
-  // Сервисы — объявляем как поля, инициализируем в main()
+  // === Сервисы — объявляем один раз ===
   private static GigaChatService gigaChatService;
   private static DialogService dialogService;
   private static ChatWithAiBeforeDeterminingVacancyService chatBeforeVacancyService;
   private static ChatWithAiAfterDeterminingVacancyService chatAfterVacancyService;
   private static RoadmapGenerateService roadmapGenerateService;
+  private static UserService userService; // ← добавлено
 
-  // Результаты этапов
+  // === Результаты этапов ===
   private static FinalVacancyRequirements vacancyRequirements;
   private static CVData cvData;
   private static ResponseByWeek responseByWeek;
+  private static User currentUser;
 
   public static void main(String[] args) {
     System.out.println("🚀 AI-Career Navigator: Полный end-to-end цикл");
@@ -48,35 +61,41 @@ public class Main {
       initializeData(scanner);
       initializeServices();
 
-      // 2. Цикл: AI-знакомство → UserPreferences
+      // 2. Цикл регистрации/аутентификации → User currentUser
+      if (!runAuthCycle(scanner)) {
+        System.err.println("❌ Не удалось пройти аутентификацию. Прерывание.");
+        return;
+      }
+
+      // 3. Цикл: AI-знакомство → UserPreferences
       UserPreferences userPreferences = runBeginAiChatCycle();
       if (userPreferences == null) {
         System.err.println("❌ Не удалось получить UserPreferences. Прерывание.");
         return;
       }
 
-      // 3. Цикл: подбор вакансии → FinalVacancyRequirements
+      // 4. Цикл: подбор вакансии → FinalVacancyRequirements
       vacancyRequirements = runVacancySelectionCycle(userPreferences);
       if (vacancyRequirements == null) {
         System.err.println("❌ Не удалось получить требования вакансии. Прерывание.");
         return;
       }
 
-      // 4. Цикл: финальный чат → CourseRequirements
+      // 5. Цикл: финальный чат → CourseRequirements
       CourseRequirements courseRequirements = runCourseRequirementsCycle();
       if (courseRequirements == null) {
         System.err.println("❌ Не удалось сформировать CourseRequirements. Прерывание.");
         return;
       }
 
-      // 5. Цикл: генерация учебного плана + Roadmap
+      // 6. Цикл: генерация учебного плана + Roadmap
       Roadmap roadmap = runCourseAndRoadmapGenerationCycle(courseRequirements);
       if (roadmap == null) {
         System.err.println("❌ Не удалось сгенерировать Roadmap.");
         return;
       }
 
-      // 6. Вывод результата
+      // 7. Вывод результата
       System.out.println("\n✅ УСПЕХ: полный цикл завершён!");
       System.out.println("📋 Сгенерированная дорожная карта:");
       System.out.println(roadmap.getRoadmapZones());
@@ -104,7 +123,6 @@ public class Main {
         "Навыки: Java, Kotlin, Spring Boot, Hibernate, Git, Docker, PostgreSQL\n" +
         "Английский: Upper-Intermediate"
     );
-
     // Для тестов используем заглушку (реально — из этапа 5)
     responseByWeek = createTestResponse();
   }
@@ -112,15 +130,104 @@ public class Main {
   // === 2. Инициализация сервисов ===
   private static void initializeServices() {
     System.out.println("🔧 Инициализация сервисов...");
-    gigaChatService = new GigaChatService(new GigaChatConfig()); // ← передаём конфиг
+    GigaChatConfig config = new GigaChatConfig();
+    gigaChatService = new GigaChatService(config);
     dialogService = new DialogService(gigaChatService, true);
     chatBeforeVacancyService = new ChatWithAiBeforeDeterminingVacancyService(gigaChatService, dialogService);
     chatAfterVacancyService = new ChatWithAiAfterDeterminingVacancyService(gigaChatService, dialogService);
     roadmapGenerateService = new RoadmapGenerateService(gigaChatService);
+    userService = new UserService(); // ← добавлено (инициализация)
     System.out.println("✅ Сервисы инициализированы");
   }
 
-  // === 3. AI-знакомство с пользователем ===
+  // === 3. Цикл регистрации/аутентификации ===
+  private static boolean runAuthCycle(Scanner scanner) {
+    System.out.println("\n🔐 Цикл: Регистрация/Аутентификация");
+
+    while (true) {
+      System.out.println("\nВыберите действие:");
+      System.out.println("1 - Регистрация");
+      System.out.println("2 - Вход");
+      System.out.println("3 - Выход");
+      System.out.print("Ваш выбор: ");
+      String choice = scanner.nextLine().trim();
+
+      switch (choice) {
+        case "1":
+          if (registerUser(scanner)) {
+            return true;
+          }
+          break;
+        case "2":
+          if (authenticateUser(scanner)) {
+            return true;
+          }
+          break;
+        case "3":
+          System.out.println("👋 До свидания!");
+          return false;
+        default:
+          System.out.println("❌ Неверный выбор. Попробуйте снова.");
+      }
+    }
+  }
+
+  private static boolean registerUser(Scanner scanner) {
+    System.out.println("\n📝 Регистрация нового пользователя");
+
+    UserRegistrationDto registrationDto = new UserRegistrationDto();
+
+    System.out.print("Введите email: ");
+    registrationDto.setEmail(scanner.nextLine().trim());
+
+    System.out.print("Введите пароль: ");
+    registrationDto.setPassword(scanner.nextLine().trim());
+
+    System.out.print("Введите имя: ");
+    registrationDto.setName(scanner.nextLine().trim());
+
+    // Регистрация пользователя
+    // Предполагается, что RegistrationResult существует в core/service/user/
+    var result = userService.registerUser(registrationDto);
+
+    if (result.isSuccess()) {
+      currentUser = result.getUser();
+      System.out.println("✅ Регистрация успешна! ID пользователя: " + currentUser.getId());
+      return true;
+    } else {
+      System.out.println("❌ Ошибка регистрации:");
+      result.getErrors().forEach(System.out::println);
+      return false;
+    }
+  }
+
+  private static boolean authenticateUser(Scanner scanner) {
+    System.out.println("\n🔑 Аутентификация пользователя");
+
+    LoginRequestDto loginRequest = new LoginRequestDto();
+
+    System.out.print("Введите email: ");
+    loginRequest.setEmail(scanner.nextLine().trim());
+
+    System.out.print("Введите пароль: ");
+    loginRequest.setPassword(scanner.nextLine().trim());
+
+    // Аутентификация пользователя
+    // Предполагается, что AuthenticationResult существует в core/service/user/
+    var result = userService.authenticateUser(loginRequest);
+
+    if (result.isSuccess()) {
+      currentUser = result.getUser();
+      System.out.println("✅ Аутентификация успешна! Добро пожаловать, " + currentUser.getName());
+      return true;
+    } else {
+      System.out.println("❌ Ошибка аутентификации:");
+      result.getErrors().forEach(System.out::println);
+      return false;
+    }
+  }
+
+  // === 4. AI-знакомство с пользователем ===
   private static UserPreferences runBeginAiChatCycle() {
     System.out.println("\n💬 Цикл: Знакомство с пользователем (AI-чат)");
     try {
@@ -137,7 +244,7 @@ public class Main {
     }
   }
 
-  // === 4. Подбор вакансии (SelectVacancy) ===
+  // === 5. Подбор вакансии (SelectVacancy) ===
   private static FinalVacancyRequirements runVacancySelectionCycle(UserPreferences userPreferences) {
     System.out.println("\n🎯 Цикл: Подбор и анализ вакансии");
     try {
@@ -149,7 +256,6 @@ public class Main {
       String parsingResults = selectVacancy.FormingByParsing(selected);
       String finalReqStr = selectVacancy.FormingFinalVacancyRequirements(parsingResults);
 
-      // Оборачиваем в FinalVacancyRequirements (если конструктор принимает строку)
       return new FinalVacancyRequirements(finalReqStr);
     } catch (Exception e) {
       System.err.println("❌ Ошибка при подборе вакансии: " + e.getMessage());
@@ -157,7 +263,7 @@ public class Main {
     }
   }
 
-  // === 5. Формирование требований к курсу ===
+  // === 6. Формирование требований к курсу ===
   private static CourseRequirements runCourseRequirementsCycle() {
     System.out.println("\n🎓 Цикл: Формирование требований к курсу");
     try {
@@ -170,12 +276,11 @@ public class Main {
     }
   }
 
-  // 6. Генерация учебного плана и Roadmap
+  // === 7. Генерация учебного плана и Roadmap ===
   private static Roadmap runCourseAndRoadmapGenerationCycle(CourseRequirements courseRequirements) {
     System.out.println("\n🗺️ Цикл: Генерация учебного плана и дорожной карты");
 
     try {
-      // DI
       GigaChatConfig config = new GigaChatConfig();
       GigaChatService localGigaChat = new GigaChatService(config);
       ServicePrompt promptService = new ServicePrompt();
@@ -185,21 +290,18 @@ public class Main {
 
       LearningPlanAssembler assembler = new LearningPlanAssembler(generator, parser, distributor);
 
-      // Подготовка запроса
       CourseRequest request = new CourseRequest(courseRequirements.getCourseRequirements());
       ResponseByWeek response = assembler.assemblePlan(request);
       List<Week> weeks = response.getWeeks();
 
-      // Валидация
+      // Валидация через LLM-валидатор
       String raw = simulateLlmRawResponse(weeks);
       if (!LlmResponseValidator.validate(raw)) {
         System.err.println("❌ Валидация учебного плана провалена");
         return null;
       }
 
-      // Генерация Roadmap (предполагается, что сервис принимает ResponseByWeek)
       return roadmapGenerateService.generateRoadmap(response);
-
     } catch (Exception e) {
       System.err.println("❌ Ошибка при генерации Roadmap: " + e.getMessage());
       return null;
@@ -215,7 +317,10 @@ public class Main {
 
     Task t1 = new Task();
     t1.setDescription("Изучить базовый синтаксис Python");
-    t1.setUrls(List.of("https://docs.python.org/3/tutorial/", "https://www.learnpython.org/"));
+    t1.setUrls(List.of(
+      "https://docs.python.org/3/tutorial/",
+      "https://www.learnpython.org/"
+    ));
 
     Task t2 = new Task();
     t2.setDescription("Установить Jupyter Notebook");
@@ -226,9 +331,14 @@ public class Main {
     Week week2 = new Week();
     week2.setNumber(2);
     week2.setGoal("Pandas и NumPy");
+
     Task t3 = new Task();
     t3.setDescription("Освоить Pandas");
-    t3.setUrls(List.of("https://pandas.pydata.org/docs/", "https://www.w3schools.com/python/pandas/"));
+    t3.setUrls(List.of(
+      "https://pandas.pydata.org/docs/",
+      "https://www.w3schools.com/python/pandas/"
+    ));
+
     week2.setTasks(List.of(t3));
 
     ResponseByWeek res = new ResponseByWeek();
@@ -239,12 +349,16 @@ public class Main {
   private static String simulateLlmRawResponse(List<Week> weeks) {
     StringBuilder sb = new StringBuilder();
     for (Week w : weeks) {
-      sb.append("week").append(w.getNumber()).append(": goal: \"").append(w.getGoal()).append("\"");
+      sb.append("week").append(w.getNumber())
+        .append(": goal: \"").append(w.getGoal()).append("\"");
       for (int i = 0; i < w.getTasks().size(); i++) {
         Task t = w.getTasks().get(i);
-        sb.append(". task").append(i + 1).append(": \"").append(t.getDescription()).append("\"");
+        sb.append(". task").append(i + 1)
+          .append(": \"").append(t.getDescription()).append("\"");
         if (!t.getUrls().isEmpty()) {
-          sb.append(". urls: \"").append(String.join(", ", t.getUrls())).append("\"");
+          sb.append(". urls: \"")
+            .append(String.join(", ", t.getUrls().stream().map(String::trim).toList()))
+            .append("\"");
         }
       }
       sb.append("\n");
