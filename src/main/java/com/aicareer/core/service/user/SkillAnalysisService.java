@@ -2,18 +2,12 @@ package com.aicareer.core.service.user;
 
 import com.aicareer.repository.user.SkillAnalysisServiceRepository;
 import java.time.LocalDateTime;
-import org.springframework.stereotype.Service;
 import java.util.*;
-import java.util.logging.Logger;
 
-@Service
 public class SkillAnalysisService implements SkillAnalysisServiceRepository {
-
-  private final Logger log = Logger.getLogger(SkillAnalysisService.class.getName());
 
   @Override
   public Map<String, Object> analyzeSkillLevel(Long userId, String targetPosition) {
-    log.info(String.format("Analyzing skilupdatels for user {%s} targeting {%s}", userId, targetPosition));
 
     Map<String, Object> analysis = new HashMap<>();
     analysis.put("compliancePercentage", calculateCompliance(targetPosition));

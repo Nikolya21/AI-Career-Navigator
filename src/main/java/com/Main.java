@@ -1,129 +1,354 @@
 package com;
 
-import com.aicareer.core.model.user.*;
-import com.aicareer.core.DTO.user.*;
-import com.aicareer.core.service.user.SkillAnalysisService;
-import com.aicareer.core.service.user.UserService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import java.util.Map;
+import com.aicareer.core.DTO.LoginRequestDto;
+import com.aicareer.core.DTO.UserRegistrationDto;
+import com.aicareer.core.config.GigaChatConfig;
+import com.aicareer.core.DTO.courseDto.CourseRequest;
+import com.aicareer.core.DTO.courseDto.ResponseByWeek;
+import com.aicareer.core.model.courseModel.CourseRequirements;
+import com.aicareer.core.model.courseModel.Task;
+import com.aicareer.core.model.courseModel.Week;
+import com.aicareer.core.model.roadmap.Roadmap;
+import com.aicareer.core.model.user.CVData;
+import com.aicareer.core.model.user.User;
+import com.aicareer.core.model.user.UserPreferences;
+import com.aicareer.core.model.vacancy.FinalVacancyRequirements;
+import com.aicareer.core.model.vacancy.SelectedPotentialVacancy;
+import com.aicareer.core.service.ParserOfVacancy.SelectVacancy;
+import com.aicareer.core.service.course.*;
+import com.aicareer.core.service.gigachat.GigaChatService;
+import com.aicareer.core.Validator.LlmResponseValidator;
+import com.aicareer.core.service.information.ChatWithAiAfterDeterminingVacancyService;
+import com.aicareer.core.service.information.ChatWithAiBeforeDeterminingVacancyService;
+import com.aicareer.core.service.information.DialogService;
+import com.aicareer.core.service.roadmap.RoadmapGenerateService;
+import com.aicareer.core.service.user.*;
+import com.aicareer.core.validation.AuthenticationValidator;
+import com.aicareer.core.validation.RegistrationValidator;
+import com.aicareer.repository.information.ChatWithAiBeforeDeterminingVacancy;
 
-@SpringBootApplication(exclude = {
-    DataSourceAutoConfiguration.class,
-    DataSourceTransactionManagerAutoConfiguration.class,
-    HibernateJpaAutoConfiguration.class
-})
+import java.util.List;
+import java.util.Scanner;
 
-@Slf4j
 public class Main {
 
+  // Сервисы — объявляем как поля, инициализируем в main()
+  private static GigaChatService gigaChatService;
+  private static DialogService dialogService;
+  private static ChatWithAiBeforeDeterminingVacancyService chatBeforeVacancyService;
+  private static ChatWithAiAfterDeterminingVacancyService chatAfterVacancyService;
+  private static RoadmapGenerateService roadmapGenerateService;
+  private static UserService userService;
+
+  // Результаты этапов
+  private static FinalVacancyRequirements vacancyRequirements;
+  private static CVData cvData;
+  private static ResponseByWeek responseByWeek;
+  private static User currentUser;
+
   public static void main(String[] args) {
-    var context = SpringApplication.run(Main.class, args);
+    System.out.println("🚀 AI-Career Navigator: Полный end-to-end цикл");
+    System.out.println("================================================");
 
-    // автоматическое тестирование при запуске
-    runAutomatedTests(context);
-  }
-
-  private static void runAutomatedTests(org.springframework.context.ApplicationContext context) {
-    log.info("--- AUTOMATIC TESTING ---");
-
+    Scanner scanner = new Scanner(System.in);
     try {
-      UserService userService = context.getBean(UserService.class);
-      SkillAnalysisService skillService = context.getBean(SkillAnalysisService.class);
-      PasswordEncoder passwordEncoder = context.getBean(PasswordEncoder.class);
+      // 1. Инициализация данных и сервисов
+      initializeData(scanner);
+      initializeServices();
 
-      testUserRegistration(userService);
-      testSkillAnalysis(skillService);
-      testPasswordHashing(passwordEncoder);
-      testCompleteUserFlow(userService, skillService);
+      // 1.5. Цикл регистрации/аутентификации -> User currentUser
+      if (!runAuthCycle(scanner)) {
+        System.err.println("❌ Не удалось пройти аутентификацию. Прерывание.");
+        return;
+      }
 
-      log.info(";) ALL AUTOMATIC TEST PASSED SUCCESSFUL!");
+      // 2. Цикл: AI-знакомство → UserPreferences
+      UserPreferences userPreferences = runBeginAiChatCycle();
+      if (userPreferences == null) {
+        System.err.println("❌ Не удалось получить UserPreferences. Прерывание.");
+        return;
+      }
+
+      // 3. Цикл: подбор вакансии → FinalVacancyRequirements
+      vacancyRequirements = runVacancySelectionCycle(userPreferences);
+      if (vacancyRequirements == null) {
+        System.err.println("❌ Не удалось получить требования вакансии. Прерывание.");
+        return;
+      }
+
+      // 4. Цикл: финальный чат → CourseRequirements
+      CourseRequirements courseRequirements = runCourseRequirementsCycle();
+      if (courseRequirements == null) {
+        System.err.println("❌ Не удалось сформировать CourseRequirements. Прерывание.");
+        return;
+      }
+
+      // 5. Цикл: генерация учебного плана + Roadmap
+      Roadmap roadmap = runCourseAndRoadmapGenerationCycle(courseRequirements);
+      if (roadmap == null) {
+        System.err.println("❌ Не удалось сгенерировать Roadmap.");
+        return;
+      }
+
+      // 6. Вывод результата
+      System.out.println("\n✅ УСПЕХ: полный цикл завершён!");
+      System.out.println("📋 Сгенерированная дорожная карта:");
+      System.out.println(roadmap.getRoadmapZones());
 
     } catch (Exception e) {
-      log.error("-_- ERROR IN AUTOMATIC TESTING: {}", e.getMessage());
+      System.err.println("💥 КРИТИЧЕСКАЯ ОШИБКА: " + e.getMessage());
       e.printStackTrace();
+    } finally {
+      scanner.close();
     }
   }
 
-  private static void testUserRegistration(UserService userService) {
-    log.info("\n--- TEST REGISTRATION ---");
+  // === 0. Цикл регистрации/аутентификации ===
+  private static boolean runAuthCycle(Scanner scanner) {
+    System.out.println("\n🔐 Цикл: Регистрация/Аутентификация");
 
-    UserRegistrationDto newUser = new UserRegistrationDto();
-    newUser.setEmail("test.user@example.com");
-    newUser.setPassword("TestPass123!");
-    newUser.setName("TEST USER");
+    while (true) {
+      System.out.println("\nВыберите действие:");
+      System.out.println("1 - Регистрация");
+      System.out.println("2 - Вход");
+      System.out.println("3 - Выход");
+      System.out.print("Ваш выбор: ");
 
-    User registeredUser = userService.registerUser(newUser);
-    assert registeredUser != null : "Registration of user is failed";
-    assert registeredUser.getEmail().equals("test.user@example.com") : "Email not match";
+      String choice = scanner.nextLine().trim();
 
-    log.info("<3 Registration of user: SUCCESS");
+      switch (choice) {
+        case "1":
+          if (registerUser(scanner)) {
+            return true;
+          }
+          break;
+        case "2":
+          if (authenticateUser(scanner)) {
+            return true;
+          }
+          break;
+        case "3":
+          System.out.println("👋 До свидания!");
+          return false;
+        default:
+          System.out.println("❌ Неверный выбор. Попробуйте снова.");
+      }
+    }
   }
 
-  private static void testSkillAnalysis(SkillAnalysisService skillService) {
-    log.info("\n--- TEST SKILL ANALYSE ---");
+  // === 1. Инициализация данных ===
+  private static void initializeData(Scanner scanner) {
+    cvData = new CVData();
+    cvData.setInformation(
+        "Петров Алексей Сергеевич\n" +
+            "Цель: Замещение должности Java-разработчика\n" +
+            "Контактная информация:\n" +
+            "Телефон: +7 (999) 765-43-21\n" +
+            "Email: petrov.as@example.com\n" +
+            "Город: Санкт-Петербург\n" +
+            "Образование: Высшее, ИТМО, ПО, 2020\n" +
+            "Опыт: Java-разработчик в ООО ТехноСофт (2020–н.в.)\n" +
+            "Навыки: Java, Kotlin, Spring Boot, Hibernate, Git, Docker, PostgreSQL\n" +
+            "Английский: Upper-Intermediate"
+    );
 
-    Map<String, Object> analysis = skillService.analyzeSkillLevel(1L, "Java Developer");
-    assert analysis.containsKey("compliancePercentage") : "Analyse not contains compliancePercentage";
-    assert analysis.containsKey("skillGaps") : "Analyse not contains skillGaps";
-
-    log.info("<3 Analyse skills: SUCCESS");
+    // Для тестов используем заглушку (реально — из этапа 5)
+    responseByWeek = createTestResponse();
   }
 
-  private static void testPasswordHashing(PasswordEncoder passwordEncoder) {
-    log.info("\n--- TEST OF HASHING OF PASSWORD ---");
-
-    String rawPassword = "MySecurePassword123";
-    String hashedPassword = passwordEncoder.encode(rawPassword);
-
-    assert !rawPassword.equals(hashedPassword) : "Password was not hashing";
-    assert passwordEncoder.matches(rawPassword, hashedPassword) : "Verification of password failed";
-
-    log.info("<3 Hashing of password: SUCCESS");
+  // === 2. Инициализация сервисов ===
+  private static void initializeServices() {
+    System.out.println("🔧 Инициализация сервисов...");
+    gigaChatService = new GigaChatService(new GigaChatConfig()); // ← передаём конфиг
+    dialogService = new DialogService(gigaChatService, true);
+    chatBeforeVacancyService = new ChatWithAiBeforeDeterminingVacancyService(gigaChatService, dialogService);
+    chatAfterVacancyService = new ChatWithAiAfterDeterminingVacancyService(gigaChatService, dialogService);
+    roadmapGenerateService = new RoadmapGenerateService(gigaChatService);
+    System.out.println("✅ Сервисы инициализированы");
   }
 
-  private static void testCompleteUserFlow(UserService userService, SkillAnalysisService skillService) {
-    log.info("\n--- FULL SCRIPT TEST ---");
+  // === 3. AI-знакомство с пользователем ===
+  private static UserPreferences runBeginAiChatCycle() {
+    System.out.println("\n💬 Цикл: Знакомство с пользователем (AI-чат)");
+    try {
+      chatBeforeVacancyService.starDialogWithUser();
+      chatBeforeVacancyService.askingStandardQuestions();
+
+      List<String> personalizedQuestions = chatBeforeVacancyService.generatePersonalizedQuestions(cvData);
+      chatBeforeVacancyService.askingPersonalizedQuestions(personalizedQuestions);
+
+      return chatBeforeVacancyService.analyzeCombinedData();
+    } catch (Exception e) {
+      System.err.println("❌ Ошибка в AI-знакомстве: " + e.getMessage());
+      return null;
+    }
+  }
+
+  // === 4. Подбор вакансии (SelectVacancy) ===
+  private static FinalVacancyRequirements runVacancySelectionCycle(UserPreferences userPreferences) {
+    System.out.println("\n🎯 Цикл: Подбор и анализ вакансии");
+    try {
+      SelectVacancy selectVacancy = new SelectVacancy();
+
+      String analysisResult = selectVacancy.analyzeUserPreference(userPreferences);
+      List<String> suggested = selectVacancy.extractThreeVacancies(analysisResult);
+      SelectedPotentialVacancy selected = selectVacancy.choosenVacansy(suggested);
+      String parsingResults = selectVacancy.FormingByParsing(selected);
+      String finalReqStr = selectVacancy.FormingFinalVacancyRequirements(parsingResults);
+
+      // Оборачиваем в FinalVacancyRequirements (если конструктор принимает строку)
+      return new FinalVacancyRequirements(finalReqStr);
+    } catch (Exception e) {
+      System.err.println("❌ Ошибка при подборе вакансии: " + e.getMessage());
+      return null;
+    }
+  }
+
+  // === 5. Формирование требований к курсу ===
+  private static CourseRequirements runCourseRequirementsCycle() {
+    System.out.println("\n🎓 Цикл: Формирование требований к курсу");
+    try {
+      List<String> questions = chatAfterVacancyService.generatePersonalizedQuestions(vacancyRequirements);
+      chatAfterVacancyService.askingPersonalizedQuestions(questions);
+      return chatAfterVacancyService.analyzeCombinedData(vacancyRequirements);
+    } catch (Exception e) {
+      System.err.println("❌ Ошибка при формировании CourseRequirements: " + e.getMessage());
+      return null;
+    }
+  }
+
+  // 6. Генерация учебного плана и Roadmap
+  private static Roadmap runCourseAndRoadmapGenerationCycle(CourseRequirements courseRequirements) {
+    System.out.println("\n🗺️ Цикл: Генерация учебного плана и дорожной карты");
 
     try {
-      // Регистрация
-      UserRegistrationDto userDto = new UserRegistrationDto();
-      userDto.setEmail("full.test@example.com");
-      userDto.setPassword("FullTest123!");
-      userDto.setName("Full test");
+      // DI
+      GigaChatConfig config = new GigaChatConfig();
+      GigaChatService localGigaChat = new GigaChatService(config);
+      ServicePrompt promptService = new ServicePrompt();
+      ServiceGenerateCourse generator = new ServiceGenerateCourse(promptService, localGigaChat);
+      ServiceWeek parser = new ServiceWeek();
+      WeekDistributionService distributor = new WeekDistributionService();
 
-      User user = userService.registerUser(userDto);
-      log.info("<3 Registration: SUCCESS - ID: {}", user.getId());
+      LearningPlanAssembler assembler = new LearningPlanAssembler(generator, parser, distributor);
 
-      // Аутентификация
-      LoginRequestDto loginRequest = new LoginRequestDto();
-      loginRequest.setEmail("full.test@example.com");
-      loginRequest.setPassword("FullTest123!");
+      // Подготовка запроса
+      CourseRequest request = new CourseRequest(courseRequirements.getCourseRequirements());
+      ResponseByWeek response = assembler.assemblePlan(request);
+      List<Week> weeks = response.getWeeks();
 
-      User authenticated = userService.authenticateUser(loginRequest);
-      log.info("<3 Authentication: SUCCESS - {}", authenticated.getName());
+      // Валидация
+      String raw = simulateLlmRawResponse(weeks);
+      if (!LlmResponseValidator.validate(raw)) {
+        System.err.println("❌ Валидация учебного плана провалена");
+        return null;
+      }
 
-      // Анализ навыков
-      Map<String, Object> analysis = skillService.analyzeSkillLevel(user.getId(), "Senior Developer");
-      log.info("<3 Skill Analysis: SUCCESS - {}% Match", analysis.get("compliancePercentage"));
-
-      log.info("))))) Full User Script: SUCCESS");
+      // Генерация Roadmap (предполагается, что сервис принимает ResponseByWeek)
+      return roadmapGenerateService.generateRoadmap(response);
 
     } catch (Exception e) {
-      log.error("((((( Full User Script: FAILURE - {}", e.getMessage());
-      throw e;
+      System.err.println("❌ Ошибка при генерации Roadmap: " + e.getMessage());
+      return null;
     }
   }
 
-  @Bean
-  public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder(12);
+  // === Вспомогательные методы ===
+
+  public static ResponseByWeek createTestResponse() {
+    Week week1 = new Week();
+    week1.setNumber(1);
+    week1.setGoal("Освоить основы Python и анализа данных");
+
+    Task t1 = new Task();
+    t1.setDescription("Изучить базовый синтаксис Python");
+    t1.setUrls(List.of("https://docs.python.org/3/tutorial/", "https://www.learnpython.org/"));
+
+    Task t2 = new Task();
+    t2.setDescription("Установить Jupyter Notebook");
+    t2.setUrls(List.of("https://jupyter.org/install"));
+
+    week1.setTasks(List.of(t1, t2));
+
+    Week week2 = new Week();
+    week2.setNumber(2);
+    week2.setGoal("Pandas и NumPy");
+    Task t3 = new Task();
+    t3.setDescription("Освоить Pandas");
+    t3.setUrls(List.of("https://pandas.pydata.org/docs/", "https://www.w3schools.com/python/pandas/"));
+    week2.setTasks(List.of(t3));
+
+    ResponseByWeek res = new ResponseByWeek();
+    res.setWeeks(List.of(week1, week2));
+    return res;
+  }
+
+  private static String simulateLlmRawResponse(List<Week> weeks) {
+    StringBuilder sb = new StringBuilder();
+    for (Week w : weeks) {
+      sb.append("week").append(w.getNumber()).append(": goal: \"").append(w.getGoal()).append("\"");
+      for (int i = 0; i < w.getTasks().size(); i++) {
+        Task t = w.getTasks().get(i);
+        sb.append(". task").append(i + 1).append(": \"").append(t.getDescription()).append("\"");
+        if (!t.getUrls().isEmpty()) {
+          sb.append(". urls: \"").append(String.join(", ", t.getUrls())).append("\"");
+        }
+      }
+      sb.append("\n");
+    }
+    return sb.toString().trim();
+  }
+
+  private static boolean registerUser(Scanner scanner) {
+    System.out.println("\n📝 Регистрация нового пользователя");
+
+    UserRegistrationDto registrationDto = new UserRegistrationDto();
+
+    System.out.print("Введите email: ");
+    registrationDto.setEmail(scanner.nextLine().trim());
+
+    System.out.print("Введите пароль: ");
+    registrationDto.setPassword(scanner.nextLine().trim());
+
+    System.out.print("Введите имя: ");
+    registrationDto.setName(scanner.nextLine().trim());
+
+    // Регистрация пользователя
+    RegistrationResult result = userService.registerUser(registrationDto);
+
+    if (result.isSuccess()) {
+      currentUser = result.getUser();
+      System.out.println("✅ Регистрация успешна! ID пользователя: " + currentUser.getId());
+      return true;
+    } else {
+      System.out.println("❌ Ошибка регистрации:");
+      result.getErrors().forEach(System.out::println);
+      return false;
+    }
+  }
+
+  private static boolean authenticateUser(Scanner scanner) {
+    System.out.println("\n🔑 Аутентификация пользователя");
+
+    LoginRequestDto loginRequest = new LoginRequestDto();
+
+    System.out.print("Введите email: ");
+    loginRequest.setEmail(scanner.nextLine().trim());
+
+    System.out.print("Введите пароль: ");
+    loginRequest.setPassword(scanner.nextLine().trim());
+
+    // Аутентификация пользователя
+    AuthenticationResult result = userService.authenticateUser(loginRequest);
+
+    if (result.isSuccess()) {
+      currentUser = result.getUser();
+      System.out.println("✅ Аутентификация успешна! Добро пожаловать, " + currentUser.getName());
+      return true;
+    } else {
+      System.out.println("❌ Ошибка аутентификации:");
+      result.getErrors().forEach(System.out::println);
+      return false;
+    }
   }
 }
