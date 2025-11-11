@@ -25,10 +25,79 @@ public class Main {
 
   private static FinalVacancyRequirements vacancyRequirements;
   private static CVData cvData;
+  private static ResponseByWeek responseByWeek;
 
   public static void main(String[] args) {
     initializeServices();
-    runBeginAiChatCycle();
+//    UserPreferences userPreferences = runBeginAiChatCycle();
+//    System.out.println("\n" + "\n" + "\n" + "ВНУТРЕННОСТЬ ОБЪЕКТА UserPreferences");
+//    System.out.println(userPreferences.getInfoAboutPerson());
+//
+//    CourseRequirements courseRequirements = runCourseRequirementsCycle();
+//    System.out.println("\n" + "\n" + "\n" + "ВНУТРЕННОСТЬ ОБЪЕКТА CourseRequirements");
+//    System.out.println(courseRequirements.getCourseRequirements());
+
+    Roadmap roadmap = runCourseAndRoadmapGenerationCycle();
+    System.out.println("\n" + "\n" + "\n" + "ВНУТРЕННОСТЬ ОБЪЕКТА Roadmap");
+    System.out.println(roadmap.getRoadmapZones().toString());
+  }
+
+  public static ResponseByWeek createTestResponse() {
+    ResponseByWeek response = new ResponseByWeek();
+
+    // Неделя 1
+    Week week1 = new Week();
+    week1.setNumber(1);
+    week1.setGoal("Освоить основы Python и основы анализа данных");
+
+    Task task1_1 = new Task();
+    task1_1.setDescription("Изучить базовый синтаксис Python");
+    task1_1.setUrls(List.of(
+            "https://docs.python.org/3/tutorial/",
+            "https://www.learnpython.org/"
+    ));
+
+    Task task1_2 = new Task();
+    task1_2.setDescription("Установить Jupyter Notebook и настроить окружение");
+    task1_2.setUrls(List.of("https://jupyter.org/install"));
+
+    week1.setTasks(List.of(task1_1, task1_2));
+
+    // Неделя 2
+    Week week2 = new Week();
+    week2.setNumber(2);
+    week2.setGoal("Изучить библиотеки для анализа данных: Pandas и NumPy");
+
+    Task task2_1 = new Task();
+    task2_1.setDescription("Освоить основы работы с Pandas");
+    task2_1.setUrls(List.of(
+            "https://pandas.pydata.org/docs/",
+            "https://www.w3schools.com/python/pandas/default.asp"
+    ));
+
+    Task task2_2 = new Task();
+    task2_2.setDescription("Практиковаться с NumPy для математических операций");
+    task2_2.setUrls(List.of("https://numpy.org/doc/"));
+
+    week2.setTasks(List.of(task2_1, task2_2));
+
+    // Неделя 3
+    Week week3 = new Week();
+    week3.setNumber(3);
+    week3.setGoal("Научиться визуализации данных с Matplotlib и Seaborn");
+
+    Task task3_1 = new Task();
+    task3_1.setDescription("Создать первые графики с Matplotlib");
+    task3_1.setUrls(List.of("https://matplotlib.org/stable/tutorials/index.html"));
+
+    Task task3_2 = new Task();
+    task3_2.setDescription("Изучить Seaborn для статистической визуализации");
+    task3_2.setUrls(List.of("https://seaborn.pydata.org/tutorial.html"));
+
+    week3.setTasks(List.of(task3_1, task3_2));
+
+    response.setWeeks(List.of(week1, week2, week3));
+    return response;
   }
 
   private static void initializeServices() {
@@ -85,6 +154,8 @@ public class Main {
             "Наличие профиля на GitHub\n" +
             "Готов к релокации");
 
+    responseByWeek = createTestResponse();
+
     vacancyRequirements = new FinalVacancyRequirements("Java, Spring Framework, SQL, Hibernate, Maven, Git, REST API, MySQL/PostgreSQL, Linux, Английский A2+, Опыт 1-3 года, Командная работа, Микросервисы, Docker, JUnit, Интеграционное тестирование, ООП, Паттерны проектирования, Системы контроля версий, Промышленная разработка");
 
     dialogService = new DialogService(gigaChatService, true);
@@ -120,30 +191,6 @@ public class Main {
     }
   }
 
-  private static UserPreferences runSummarizingAiChatCycle() {
-    System.out.println("\n💬 ЦИКЛ 4: ФОРМИРОВАНИЕ ВСПОМОГАТЕЛЬНОЙ ИНФОРМАЦИИ НА ОСНОВЕ ДИАЛОГА С ПОЛЬЗОВАТЕЛЕМ ЧЕРЕЗ AI-ЧАТ");
-
-    try {
-      // Симуляция чата с AI
-      chatBeforeVacancyService.starDialogWithUser();
-
-      chatBeforeVacancyService.askingStandardQuestions();
-
-
-      List<String> personalizedQuestions = chatBeforeVacancyService.generatePersonalizedQuestions(cvData);
-      chatBeforeVacancyService.askingPersonalizedQuestions(personalizedQuestions);
-
-      UserPreferences userPreferences = chatBeforeVacancyService.analyzeCombinedData();
-
-      return userPreferences;
-
-    } catch (Exception e) {
-
-      System.out.println("❌ Ошибка в цикле AI-чата: {}" + " " + e.getMessage());
-
-      return null;
-    }
-  }
 
   private static CourseRequirements runCourseRequirementsCycle() {
     System.out.println("\n🎓 ЦИКЛ 6: ФОРМИРОВАНИЕ ТРЕБОВАНИЙ К КУРСУ ОБУЧЕНИЯ ЧЕРЕЗ РЕЗЮМИРУЮЩИЙ ДИАЛОГ");
@@ -168,28 +215,28 @@ public class Main {
   }
 
 
-//  private static Roadmap runCourseAndRoadmapGenerationCycle() {
-//    System.out.println("\n🗺️ ЦИКЛ 8: ГЕНЕРАЦИЯ КУРСА И ДОРОЖНОЙ КАРТЫ");
-//
-//    try {
-//      System.out.println("🚀 СОЗДАЕМ ПЕРСОНАЛИЗИРОВАННЫЙ КУРС И ROADMAP...");
-//
-//      String weeksInformation = roadmapGenerateService.gettingWeeksInformation(responseByWeek);
-//
-//      String resultOfComplexityAndQuantityAnalyze = roadmapGenerateService.informationComplexityAndQuantityAnalyzeAndCreatingZone(weeksInformation);
-//
-//      List<Week> weeks = responseByWeek.getWeeks();
-//      List<RoadmapZone> roadmapZones = roadmapGenerateService.splittingWeeksIntoZones(resultOfComplexityAndQuantityAnalyze, weeks);
-//
-//      Roadmap roadmap = roadmapGenerateService.identifyingThematicallySimilarZones(roadmapZones);
-//
-//      return roadmap;
-//
-//    } catch (Exception e) {
-//
-//      System.out.println("❌ Ошибка в цикле генерации курса и roadmap: {}" + " " + e.getMessage());
-//
-//      return null;
-//    }
-//  }
+  private static Roadmap runCourseAndRoadmapGenerationCycle() {
+    System.out.println("\n🗺️ ЦИКЛ 8: ГЕНЕРАЦИЯ КУРСА И ДОРОЖНОЙ КАРТЫ");
+
+    try {
+      System.out.println("🚀 СОЗДАЕМ ПЕРСОНАЛИЗИРОВАННЫЙ КУРС И ROADMAP...");
+
+      String weeksInformation = roadmapGenerateService.gettingWeeksInformation(responseByWeek);
+
+      String resultOfComplexityAndQuantityAnalyze = roadmapGenerateService.informationComplexityAndQuantityAnalyzeAndCreatingZone(weeksInformation);
+
+      List<Week> weeks = responseByWeek.getWeeks();
+      List<RoadmapZone> roadmapZones = roadmapGenerateService.splittingWeeksIntoZones(resultOfComplexityAndQuantityAnalyze, weeks);
+
+      Roadmap roadmap = roadmapGenerateService.identifyingThematicallySimilarZones(roadmapZones);
+
+      return roadmap;
+
+    } catch (Exception e) {
+
+      System.out.println("❌ Ошибка в цикле генерации курса и roadmap: {}" + " " + e.getMessage());
+
+      return null;
+    }
+  }
 }

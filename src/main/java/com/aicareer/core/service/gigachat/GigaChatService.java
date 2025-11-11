@@ -24,7 +24,7 @@ public class GigaChatService {
                 .build();
 
         CompletionResponse response = client.completions(CompletionRequest.builder()
-                .model(ModelName.GIGA_CHAT_MAX)
+                .model(ModelName.GIGA_CHAT)
                 .message(ChatMessage.builder()
                         .content(prompt)
                         .role(ChatMessageRole.USER)

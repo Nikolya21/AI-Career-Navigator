@@ -52,41 +52,50 @@ public class ChatWithAiBeforeDeterminingVacancyService implements ChatWithAiBefo
     }
 
     @Override
-    public void askingStandardQuestions() {
-        for (String question : pullStandartQuestions) {
-            askingStandardQuestion(question);
-
-            dialogHistory.add("AI: " + question);
-            String userAnswer = dialogService.userAnswer(question);
-
-            dialogHistory.add("User: " + userAnswer);
-
-            continueDialogWithUser(userAnswer);
-
-            String userAdditionalAnswer = dialogService.userAnswer(question);
-            dialogHistory.add("User: " + userAdditionalAnswer);
-        }
-    }
-
-    @Override
     public String askingStandardQuestion(String question) {
         return question;
     }
 
+    @Override
+    public void askingStandardQuestions() {
+        for (String question : pullStandartQuestions) {
+            askingStandardQuestion(question);
+
+            // только последние 2-3 реплики вместо всей истории
+            List<String> recentHistory = getRecentDialogHistory(3);
+            String context = String.join("\n", recentHistory);
+
+            dialogHistory.add("AI: " + question);
+            String userAnswer = dialogService.userAnswer(question, context);
+            dialogHistory.add("User: " + userAnswer);
+
+            /* (Жрет очень много токенов)
+            // продолжение диалога с уточняющим вопросом от AI
+            String aiFollowUp = continueDialogWithUser(userAnswer, context);
+            dialogHistory.add("AI: " + aiFollowUp);
+
+            // ответ пользователя на уточняющий вопрос
+            String userAdditionalAnswer = dialogService.userAnswer(aiFollowUp, context);
+            dialogHistory.add("User: " + userAdditionalAnswer);
+            */
+        }
+    }
+
+    private List<String> getRecentDialogHistory(int maxMessages) {
+        int fromIndex = Math.max(0, dialogHistory.size() - maxMessages * 2);
+        return dialogHistory.subList(fromIndex, dialogHistory.size());
+    }
 
     @Override
-    public String continueDialogWithUser(String userAnswer) {
-        String context = String.join("\n", dialogHistory);
-
+    public String continueDialogWithUser(String userAnswer, String context) {
         String prompt = BeforeDeterminingPrompts.CONTINUE_DIALOG + context;
-
         return gigaChatApiService.sendMessage(prompt);
     }
 
     @Override
     public List<String> generatePersonalizedQuestions(CVData cvData) {
         String informationAboutResume = cvData.getInformation();
-        String prompt = BeforeDeterminingPrompts.CONTINUE_DIALOG + informationAboutResume + "\n%s" + dialogHistory;
+        String prompt = BeforeDeterminingPrompts.GENERATE_QUESTIONS + informationAboutResume + "\n%s" + dialogHistory;
 
         return Arrays.asList(gigaChatApiService.sendMessage(prompt).split("\\|"));
     }
@@ -94,20 +103,28 @@ public class ChatWithAiBeforeDeterminingVacancyService implements ChatWithAiBefo
     @Override
     public void askingPersonalizedQuestions(List<String> generatedPersonalizedQuestions) {
         for (String question : generatedPersonalizedQuestions) {
-
             askingPersonalizedQuestion(question);
 
-            dialogHistory.add("AI: " + question);
-            String userAnswer = dialogService.userAnswer(question);
+            // берем только последние 2-3 реплики вместо всей истории
+            List<String> recentHistory = getRecentDialogHistory(3);
+            String context = String.join("\n", recentHistory);
 
+            dialogHistory.add("AI: " + question);
+            String userAnswer = dialogService.userAnswer(question, context);
             dialogHistory.add("User: " + userAnswer);
 
-            continueDialogWithUser(userAnswer);
+            /* (Жрет очень много токенов)
+            // продолжение диалога с уточняющим вопросом от AI
+            String aiFollowUp = continueDialogWithUser(userAnswer, context);
+            dialogHistory.add("AI: " + aiFollowUp);
 
-            String userAdditionalAnswer = dialogService.userAnswer(question);
+            // ответ пользователя на уточняющий вопрос
+            String userAdditionalAnswer = dialogService.userAnswer(aiFollowUp, context);
             dialogHistory.add("User: " + userAdditionalAnswer);
-        }
+            */
 
+
+        }
     }
 
     @Override

@@ -13,7 +13,7 @@ public interface ChatWithAiAfterDeterminingVacancy {
 
     String askingQuestion(String question);
 
-    String continueDialogWithUser(String userAnswer);
+    String continueDialogWithUser(String userAnswer, String context);
 
     CourseRequirements analyzeCombinedData(FinalVacancyRequirements requarements);
 }

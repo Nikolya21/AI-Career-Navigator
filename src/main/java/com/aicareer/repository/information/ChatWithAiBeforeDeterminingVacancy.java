@@ -13,13 +13,14 @@ public interface ChatWithAiBeforeDeterminingVacancy {
 
     String askingStandardQuestion(String question);
 
-    String continueDialogWithUser(String userAnswer);
+    String continueDialogWithUser(String userAnswer, String context);
 
     List<String> generatePersonalizedQuestions(CVData cvData);
 
     void askingPersonalizedQuestions(List<String> generatedPersonalizedQuestions);
 
     String askingPersonalizedQuestion(String question);
+
     UserPreferences analyzeCombinedData();
 
 }
