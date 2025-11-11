@@ -1,6 +1,6 @@
 package com.aicareer.core.model.user;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,11 +13,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 // данные обучения, прогресс
 public class UserSkills {
+  private Long id;
+  private Long userId;
   private double fullCompliancePercentage; // прогресс по всему курсу
   private Map<String, Double> skillGaps; // проценты по навыкам
-  private LocalDateTime calculatedAt;
+  private Instant calculatedAt;
 
   public void updateTimestamps() {
-      calculatedAt = LocalDateTime.now();
+      calculatedAt = Instant.now();
   }
 }

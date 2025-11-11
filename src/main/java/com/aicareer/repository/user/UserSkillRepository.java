@@ -1,9 +1,9 @@
 package com.aicareer.repository.user;
 
 import com.aicareer.core.model.user.UserSkills;
+import java.util.Optional;
 
 public interface UserSkillRepository {
-  void save(UserSkills skills);
-  UserSkills findByUserId(Long userId);
-  void deleteByUserId(Long id);
+  UserSkills save(UserSkills skills);
+  Optional<UserSkills> findByUserId(Long userId);
 }
