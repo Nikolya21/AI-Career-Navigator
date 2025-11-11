@@ -58,7 +58,7 @@ public class RoadmapGenerateService implements RoadmapGenerate {
     public List<RoadmapZone> splittingWeeksIntoZones(String resultOfComplexityAndQuantityAnalyze, List<Week> weeks) {
 
         List<String> roadmapZoneInString = List.of(resultOfComplexityAndQuantityAnalyze.split("\\*"));
-
+        System.out.println(roadmapZoneInString);
         List<RoadmapZone> roadmapZones = new ArrayList<>();
         for (String zone : roadmapZoneInString) {
             List<String> zoneFieldsInString = List.of(zone.split("\\|"));
@@ -78,6 +78,7 @@ public class RoadmapGenerateService implements RoadmapGenerate {
 
             roadmapZones.add(roadmapZone);
         }
+        System.out.println(roadmapZones);
         return roadmapZones;
     }
 

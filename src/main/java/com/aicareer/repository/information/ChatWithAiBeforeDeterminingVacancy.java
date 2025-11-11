@@ -14,7 +14,7 @@ public interface ChatWithAiBeforeDeterminingVacancy {
 
     String askingStandardQuestion(String question);
 
-    String continueDialogWithUser(String userAnswer);
+    String continueDialogWithUser(String userAnswer, String context);
 
     List<String> generatePersonalizedQuestions(CVData cvData);
 
