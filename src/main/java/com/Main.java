@@ -39,7 +39,7 @@ public class Main {
 
     Roadmap roadmap = runCourseAndRoadmapGenerationCycle();
     System.out.println("\n" + "\n" + "\n" + "ВНУТРЕННОСТЬ ОБЪЕКТА Roadmap");
-    System.out.println(roadmap.getRoadmapZones().toString());
+    System.out.println(roadmap.toString());
   }
 
   public static ResponseByWeek createTestResponse() {
@@ -94,9 +94,135 @@ public class Main {
     task3_2.setDescription("Изучить Seaborn для статистической визуализации");
     task3_2.setUrls(List.of("https://seaborn.pydata.org/tutorial.html"));
 
+    // Неделя 4
+    Week week4 = new Week();
+    week4.setNumber(4);
+    week4.setGoal("Освоить продвинутые техники анализа данных с Pandas");
+
+    Task task4_1 = new Task();
+    task4_1.setDescription("Изучить группировку и агрегацию данных в Pandas");
+    task4_1.setUrls(List.of(
+            "https://pandas.pydata.org/docs/user_guide/groupby.html",
+            "https://www.w3schools.com/python/pandas/pandas_cleaning.asp"
+    ));
+
+    Task task4_2 = new Task();
+    task4_2.setDescription("Работа с временными рядами и датами");
+    task4_2.setUrls(List.of("https://pandas.pydata.org/docs/user_guide/timeseries.html"));
+
+    week4.setTasks(List.of(task4_1, task4_2));
+
+// Неделя 5
+    Week week5 = new Week();
+    week5.setNumber(5);
+    week5.setGoal("Применить статистические методы для анализа данных");
+
+    Task task5_1 = new Task();
+    task5_1.setDescription("Изучить статистические функции в SciPy");
+    task5_1.setUrls(List.of(
+            "https://docs.scipy.org/doc/scipy/tutorial/index.html",
+            "https://www.w3schools.com/python/scipy/index.php"
+    ));
+
+    Task task5_2 = new Task();
+    task5_2.setDescription("Практика статистического анализа реальных данных");
+    task5_2.setUrls(List.of("https://realpython.com/python-statistics/"));
+
+    week5.setTasks(List.of(task5_1, task5_2));
+
+// Неделя 6
+    Week week6 = new Week();
+    week6.setNumber(6);
+    week6.setGoal("Освоить машинное обучение на базовом уровне");
+
+    Task task6_1 = new Task();
+    task6_1.setDescription("Введение в Scikit-learn и базовые алгоритмы ML");
+    task6_1.setUrls(List.of(
+            "https://scikit-learn.org/stable/tutorial/index.html",
+            "https://www.w3schools.com/python/python_ml_getting_started.asp"
+    ));
+
+    Task task6_2 = new Task();
+    task6_2.setDescription("Построение первой модели машинного обучения");
+    task6_2.setUrls(List.of("https://scikit-learn.org/stable/auto_examples/index.html"));
+
+    week6.setTasks(List.of(task6_1, task6_2));
+
+// Неделя 7
+    Week week7 = new Week();
+    week7.setNumber(7);
+    week7.setGoal("Работа с базами данных и SQL в Python");
+
+    Task task7_1 = new Task();
+    task7_1.setDescription("Изучить SQLAlchemy для работы с базами данных");
+    task7_1.setUrls(List.of(
+            "https://docs.sqlalchemy.org/en/20/tutorial/index.html",
+            "https://www.w3schools.com/sql/sql_intro.asp"
+    ));
+
+    Task task7_2 = new Task();
+    task7_2.setDescription("Практика извлечения и обработки данных из БД");
+    task7_2.setUrls(List.of("https://realpython.com/python-sql-libraries/"));
+
+    week7.setTasks(List.of(task7_1, task7_2));
+
+// Неделя 8
+    Week week8 = new Week();
+    week8.setNumber(8);
+    week8.setGoal("Разработка полноценного проекта анализа данных");
+
+    Task task8_1 = new Task();
+    task8_1.setDescription("Планирование и проектирование финального проекта");
+    task8_1.setUrls(List.of(
+            "https://towardsdatascience.com/the-data-science-project-checklist-7d9f911e21e3",
+            "https://www.kaggle.com/learn/data-cleaning"
+    ));
+
+    Task task8_2 = new Task();
+    task8_2.setDescription("Реализация и презентация результатов проекта");
+    task8_2.setUrls(List.of("https://www.kaggle.com/learn/data-visualization"));
+
+    week8.setTasks(List.of(task8_1, task8_2));
+
+// Неделя 9
+    Week week9 = new Week();
+    week9.setNumber(9);
+    week9.setGoal("Оптимизация и развертывание data science проектов");
+
+    Task task9_1 = new Task();
+    task9_1.setDescription("Оптимизация производительности кода анализа данных");
+    task9_1.setUrls(List.of(
+            "https://pandas.pydata.org/docs/user_guide/enhancingperf.html",
+            "https://realpython.com/fast-flexible-pandas/"
+    ));
+
+    Task task9_2 = new Task();
+    task9_2.setDescription("Развертывание моделей в production");
+    task9_2.setUrls(List.of("https://mlflow.org/docs/latest/tutorials-and-examples/tutorial.html"));
+
+    week9.setTasks(List.of(task9_1, task9_2));
+
+// Неделя 10
+    Week week10 = new Week();
+    week10.setNumber(10);
+    week10.setGoal("Подготовка к карьере в data science и итоговая аттестация");
+
+    Task task10_1 = new Task();
+    task10_1.setDescription("Создание портфолио проектов и подготовка резюме");
+    task10_1.setUrls(List.of(
+            "https://towardsdatascience.com/how-to-build-a-data-science-portfolio-5f566517c79c",
+            "https://www.kaggle.com/learn/portfolio-tips"
+    ));
+
+    Task task10_2 = new Task();
+    task10_2.setDescription("Итоговый проект и оценка полученных навыков");
+    task10_2.setUrls(List.of("https://www.projectpro.io/data-science-projects"));
+
+    week10.setTasks(List.of(task10_1, task10_2));
+
     week3.setTasks(List.of(task3_1, task3_2));
 
-    response.setWeeks(List.of(week1, week2, week3));
+    response.setWeeks(List.of(week1, week2, week3, week4, week5, week6, week7, week8, week9, week10));
     return response;
   }
 

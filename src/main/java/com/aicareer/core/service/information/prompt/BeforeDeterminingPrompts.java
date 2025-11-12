@@ -1,4 +1,4 @@
-package com.aicareer.core.service.information.prompts;
+package com.aicareer.core.service.information.prompt;
 
 public final class BeforeDeterminingPrompts {
 

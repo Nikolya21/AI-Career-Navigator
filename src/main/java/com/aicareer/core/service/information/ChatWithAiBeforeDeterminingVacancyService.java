@@ -3,7 +3,7 @@ package com.aicareer.core.service.information;
 import com.aicareer.core.model.CVData;
 import com.aicareer.core.model.UserPreferences;
 import com.aicareer.core.service.gigachat.GigaChatService;
-import com.aicareer.core.service.information.prompts.BeforeDeterminingPrompts;
+import com.aicareer.core.service.information.prompt.BeforeDeterminingPrompts;
 import com.aicareer.repository.information.ChatWithAiBeforeDeterminingVacancy;
 import lombok.AllArgsConstructor;
 import lombok.Data;
