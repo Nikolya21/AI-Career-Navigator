@@ -15,29 +15,33 @@ public class CVDataRepositoryImpl implements CVDataRepository {
     this.dataSource = dataSource;
   }
 
+  // Замените метод save():
+
   @Override
   public CVData save(CVData cvData) {
-    String sql = cvData.getId() == null ?
-        "INSERT INTO cv_data (user_id, file_path, information, uploaded_at) VALUES (?, ?, ?, ?)" :
-        "UPDATE cv_data SET user_id = ?, file_path = ?, information = ? WHERE id = ?";
+    String sql = cvData.getId() == null
+      ? "INSERT INTO cv_data (user_id, file_path, information, uploaded_at) VALUES (?, ?, ?, ?)"
+      : "UPDATE cv_data SET user_id = ?, file_path = ?, information = ?, uploaded_at = ? WHERE id = ?"; // ← добавлен uploaded_at в UPDATE
 
     try (Connection conn = dataSource.getConnection();
-        PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+         PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+      Instant now = Instant.now();
 
       if (cvData.getId() == null) {
         stmt.setLong(1, cvData.getUserId());
         stmt.setString(2, cvData.getFile() != null ? cvData.getFile().getAbsolutePath() : null);
         stmt.setString(3, cvData.getInformation());
-        stmt.setTimestamp(4, Timestamp.valueOf(String.valueOf(Instant.now())));
+        stmt.setTimestamp(4, Timestamp.from(now)); // ← исправлено: Timestamp.from(instant)
       } else {
         stmt.setLong(1, cvData.getUserId());
         stmt.setString(2, cvData.getFile() != null ? cvData.getFile().getAbsolutePath() : null);
         stmt.setString(3, cvData.getInformation());
-        stmt.setLong(4, cvData.getId());
+        stmt.setTimestamp(4, Timestamp.from(now)); // ← исправлено
+        stmt.setLong(5, cvData.getId());            // ← теперь 5-й параметр
       }
 
       int affectedRows = stmt.executeUpdate();
-
       if (affectedRows == 0) {
         throw new SQLException("Creating CV data failed, no rows affected.");
       }

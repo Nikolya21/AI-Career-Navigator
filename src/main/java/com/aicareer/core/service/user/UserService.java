@@ -34,7 +34,7 @@ public class UserService implements  UserServiceRepository{
     this.passwordEncoder = passwordEncoder;
   }
   @Override
-  public RegistrationResult registerUser(UserRegistrationDto registrationDto) {
+  public RegistrationResult registerUser(UserRegistrationDto registrationDto) { //через объект, исправить в IML
     List<String> validationErrors = RegistrationValidator.validate(
         registrationDto,
         this::isEmailAvailable

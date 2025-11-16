@@ -6,5 +6,5 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class FinalVacancyRequirements {
-    private String vacancyAllCompactRequirements;
+    private String vacancyAllCompactRequirements; //Главные требования по конкретной вакансии
 }
