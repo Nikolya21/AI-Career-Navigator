@@ -1,4 +1,4 @@
-package com;
+package com.aicareer;
 
 import com.aicareer.core.DTO.ResponseByWeek;
 import com.aicareer.core.model.*;
@@ -10,8 +10,6 @@ import com.aicareer.core.service.roadmap.RoadmapGenerateService;
 import com.aicareer.repository.information.ChatWithAiBeforeDeterminingVacancy;
 
 
-import javax.sql.DataSource;
-import java.util.ArrayList;
 import java.util.List;
 
 
