@@ -19,10 +19,9 @@ public interface ChatWithAiBeforeDeterminingVacancy {
     List<String> generatePersonalizedQuestions(CVData cvData);
 
 
-  void askingPersonalizedQuestions(List<String> generatedPersonalizedQuestions);
+    void askingPersonalizedQuestions(List<String> generatedPersonalizedQuestions);
 
     String askingPersonalizedQuestion(String question);
-
     UserPreferences analyzeCombinedData();
 
 }
