@@ -1,6 +1,7 @@
 package com.aicareer.core.validation;
 
-import com.aicareer.core.DTO.UserRegistrationDto;
+import com.aicareer.core.DTO.user.UserRegistrationDto;
+import com.aicareer.core.validation.util.ValidationUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -11,19 +12,19 @@ public class RegistrationValidator {
     List<String> errors = new ArrayList<>();
 
     try {
-      ValidationUtils.validateEmail(dto.getEmail(), "Email");
+      ValidationUtil.validateEmail(dto.getEmail(), "Email");
     } catch (ValidationException e) {
       errors.add(e.getMessage());
     }
 
     try {
-      ValidationUtils.validateName(dto.getName(), "Name");
+      ValidationUtil.validateName(dto.getName(), "Name");
     } catch (ValidationException e) {
       errors.add(e.getMessage());
     }
 
     try {
-      ValidationUtils.validatePassword(dto.getPassword(), "Password");
+      ValidationUtil.validatePassword(dto.getPassword(), "Password");
     } catch (ValidationException e) {
       errors.add(e.getMessage());
     }

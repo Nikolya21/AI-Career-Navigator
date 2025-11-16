@@ -1,15 +1,13 @@
-package com.aicareer.core.service.user;
+package com.aicareer.core.service.user.util;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public final class PasswordEncoder {
-
-  private static final int SALT_LENGTH = 16;
-  private static final int ITERATIONS = 10000;
 
   public static String encode(String password) {
     try {
@@ -28,6 +26,8 @@ public final class PasswordEncoder {
   }
 
   public static boolean matches(String password, String encodedPassword) {
+    final int SALT_LENGTH = 16;
+
     try {
       byte[] combined = Base64.getDecoder().decode(encodedPassword);
       byte[] salt = new byte[SALT_LENGTH];
@@ -46,12 +46,16 @@ public final class PasswordEncoder {
   }
 
   private static byte[] generateSalt() {
+    final int SALT_LENGTH = 16;
+
     byte[] salt = new byte[SALT_LENGTH];
     new SecureRandom().nextBytes(salt);
     return salt;
   }
 
   private static byte[] hashPassword(String password, byte[] salt) throws NoSuchAlgorithmException {
+    final int ITERATIONS = 10000;
+
     MessageDigest digest = MessageDigest.getInstance("SHA-256");
     digest.reset();
     digest.update(salt);

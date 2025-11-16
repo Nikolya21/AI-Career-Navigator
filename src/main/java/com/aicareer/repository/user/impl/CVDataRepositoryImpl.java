@@ -1,4 +1,4 @@
-package com.aicareer.core.service.user;
+package com.aicareer.repository.user.impl;
 
 import com.aicareer.core.model.user.CVData;
 import com.aicareer.repository.user.CVDataRepository;

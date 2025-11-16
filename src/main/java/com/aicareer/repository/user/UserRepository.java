@@ -9,9 +9,6 @@ import java.util.Optional;
 public interface UserRepository {
   User save(User user);
   Optional<User> findById(Long id);
-
-  Optional<UserSkills> findByUserId(Long userId);
-
   Optional<User> findByEmail(String email);
   boolean existsByEmail(String email);
   boolean delete(Long id);

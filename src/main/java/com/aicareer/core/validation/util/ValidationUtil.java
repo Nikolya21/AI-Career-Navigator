@@ -1,8 +1,11 @@
-package com.aicareer.core.validation;
+package com.aicareer.core.validation.util;
 
+import com.aicareer.core.validation.ValidationException;
 import java.util.regex.Pattern;
+import lombok.experimental.UtilityClass;
 
-public class ValidationUtils {
+@UtilityClass
+public final class ValidationUtil {
   private static final Pattern EMAIL_PATTERN =
       Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9]+\\.[A-Za-z]{2,3}$");
 

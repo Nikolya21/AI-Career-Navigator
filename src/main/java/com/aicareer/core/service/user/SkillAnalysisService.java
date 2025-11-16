@@ -1,7 +1,7 @@
-package com.aicareer.repository.user;
+package com.aicareer.core.service.user;
 
 import java.util.Map;
 
-public interface SkillAnalysisServiceRepository {
+public interface SkillAnalysisService {
   Map<String, Object> analyzeSkillLevel(Long userId, String targetPosition);
 }
