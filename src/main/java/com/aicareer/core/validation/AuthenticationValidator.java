@@ -1,6 +1,7 @@
 package com.aicareer.core.validation;
 
-import com.aicareer.core.DTO.LoginRequestDto;
+import com.aicareer.core.DTO.user.LoginRequestDto;
+import com.aicareer.core.validation.util.ValidationUtil;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +11,7 @@ public class AuthenticationValidator {
     List<String> errors = new ArrayList<>();
 
     try {
-      ValidationUtils.validateEmail(dto.getEmail(), "Email");
+      ValidationUtil.validateEmail(dto.getEmail(), "Email");
     } catch (ValidationException e) {
       errors.add(e.getMessage());
     }

@@ -1,4 +1,4 @@
-package com.aicareer.core.service.user;
+package com.aicareer.core.service.user.model;
 
 import com.aicareer.core.model.user.User;
 import java.util.List;

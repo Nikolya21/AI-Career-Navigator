@@ -1,4 +1,4 @@
-package com.aicareer.core.service.user;
+package com.aicareer.repository.user.impl;
 
 import com.aicareer.core.model.user.User;
 import com.aicareer.repository.user.UserRepository;

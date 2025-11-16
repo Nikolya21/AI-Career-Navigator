@@ -1,10 +1,10 @@
-package com.aicareer.core.service.user;
+package com.aicareer.core.service.user.impl;
 
-import com.aicareer.repository.user.SkillAnalysisServiceRepository;
+import com.aicareer.core.service.user.SkillAnalysisService;
 import java.time.LocalDateTime;
 import java.util.*;
 
-public class SkillAnalysisService implements SkillAnalysisServiceRepository {
+public class SkillAnalysisServiceImpl implements SkillAnalysisService {
 
   @Override
   public Map<String, Object> analyzeSkillLevel(Long userId, String targetPosition) {

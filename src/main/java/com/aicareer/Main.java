@@ -1,7 +1,6 @@
 package com.aicareer;
 
-import com.aicareer.core.DTO.LoginRequestDto;
-import com.aicareer.core.DTO.UserRegistrationDto;
+import com.aicareer.core.DTO.user.*;
 import com.aicareer.core.Validator.LlmResponseValidator;
 import com.aicareer.core.config.GigaChatConfig;
 import com.aicareer.core.DTO.courseDto.CourseRequest;
@@ -23,19 +22,27 @@ import com.aicareer.core.service.information.ChatWithAiBeforeDeterminingVacancyS
 import com.aicareer.core.service.information.DialogService;
 import com.aicareer.core.service.roadmap.RoadmapGenerateService;
 import com.aicareer.core.service.user.UserService;
-import com.aicareer.core.validation.AuthenticationValidator;
-import com.aicareer.core.validation.RegistrationValidator;
-import com.aicareer.repository.information.ChatWithAiBeforeDeterminingVacancy;
 
+import com.aicareer.core.service.user.impl.UserServiceImpl;
+import com.aicareer.repository.user.CVDataRepository;
+import com.aicareer.repository.user.UserRepository;
+import com.aicareer.repository.user.UserSkillsRepository;
+import com.aicareer.repository.user.impl.CVDataRepositoryImpl;
+import com.aicareer.repository.user.impl.UserRepositoryImpl;
+import com.aicareer.repository.user.impl.UserSkillsRepositoryImpl;
 import java.util.List;
 import java.util.Scanner;
+import javax.sql.DataSource;
 
 // Предполагаемые классы (не импортированы в оригинале, но используются):
 // Добавьте их в core, если ещё не сделано:
-// import com.aicareer.core.service.user.AuthenticationResult;
-// import com.aicareer.core.service.user.RegistrationResult;
+// import com.aicareer.core.service.user.model.AuthenticationResult;
+// import com.aicareer.core.service.user.model.RegistrationResult;
 
 public class Main {
+
+  // === База данных ===
+  private static DataSource dataSource;
 
   // === Сервисы — объявляем один раз ===
   private static GigaChatService gigaChatService;
@@ -136,7 +143,10 @@ public class Main {
     chatBeforeVacancyService = new ChatWithAiBeforeDeterminingVacancyService(gigaChatService, dialogService);
     chatAfterVacancyService = new ChatWithAiAfterDeterminingVacancyService(gigaChatService, dialogService);
     roadmapGenerateService = new RoadmapGenerateService(gigaChatService);
-    userService = new UserService(); // ← добавлено (инициализация)
+    UserRepository userRepository = new UserRepositoryImpl(dataSource);
+    CVDataRepository cvDataRepository = new CVDataRepositoryImpl(dataSource);
+    UserSkillsRepository userSkillsRepository = new UserSkillsRepositoryImpl(dataSource);
+    userService = new UserServiceImpl(userRepository, cvDataRepository, userSkillsRepository); // ← добавлено (инициализация)
     System.out.println("✅ Сервисы инициализированы");
   }
 

@@ -1,17 +1,17 @@
-package com.aicareer.core.service.user;
+package com.aicareer.repository.user.impl;
 
 import com.aicareer.core.model.user.UserSkills;
-import com.aicareer.repository.user.UserSkillRepository;
+import com.aicareer.repository.user.UserSkillsRepository;
 import javax.sql.DataSource;
 import java.sql.*;
 import java.time.Instant;
 import java.util.*;
 
-public class UserSkillRepositoryImpl implements UserSkillRepository {
+public class UserSkillsRepositoryImpl implements UserSkillsRepository {
 
   private final DataSource dataSource;
 
-  public UserSkillRepositoryImpl(DataSource dataSource) {
+  public UserSkillsRepositoryImpl(DataSource dataSource) {
     this.dataSource = dataSource;
   }
 
