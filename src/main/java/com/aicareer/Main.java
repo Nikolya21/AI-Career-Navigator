@@ -1,59 +1,71 @@
 package com.aicareer;
 
 import com.aicareer.application.CareerNavigatorApplicationImpl;
+import com.aicareer.core.config.DatabaseConfig;
 import com.aicareer.core.service.ParserOfVacancy.SelectVacancy;
 import com.aicareer.core.service.gigachat.GigaChatService;
-import com.aicareer.core.service.information.ChatWithAiAfterDeterminingVacancyService;
 import com.aicareer.core.service.information.ChatWithAiBeforeDeterminingVacancyService;
+import com.aicareer.core.service.information.ChatWithAiAfterDeterminingVacancyService;
 import com.aicareer.core.service.information.DialogService;
 import com.aicareer.core.service.roadmap.RoadmapGenerateService;
+import com.aicareer.core.service.roadmap.RoadmapService;
+import com.aicareer.core.service.user.UserService;
+import com.aicareer.core.service.user.impl.UserServiceImpl;
 import com.aicareer.presentation.ConsolePresentation;
 import com.aicareer.repository.user.CVDataRepository;
+import com.aicareer.repository.user.UserPreferencesRepository;
 import com.aicareer.repository.user.UserRepository;
-import com.aicareer.core.service.user.UserService;
-
-import javax.sql.DataSource;
-import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.logging.Logger;
-import com.aicareer.core.service.user.impl.UserServiceImpl;
 import com.aicareer.repository.user.UserSkillsRepository;
 import com.aicareer.repository.user.impl.CVDataRepositoryImpl;
+import com.aicareer.repository.user.impl.UserPreferencesRepositoryImpl;
 import com.aicareer.repository.user.impl.UserRepositoryImpl;
 import com.aicareer.repository.user.impl.UserSkillsRepositoryImpl;
+import com.aicareer.repository.roadmap.RoadmapRepository;
+import com.aicareer.repository.roadmap.RoadmapZoneRepository;
+import com.aicareer.repository.roadmap.WeekRepository;
+import com.aicareer.repository.roadmap.TaskRepository;
+import com.aicareer.repository.roadmap.impl.RoadmapRepositoryImpl;
+import com.aicareer.repository.roadmap.impl.RoadmapZoneRepositoryImpl;
+import com.aicareer.repository.roadmap.impl.WeekRepositoryImpl;
+import com.aicareer.repository.roadmap.impl.TaskRepositoryImpl;
 
-// Предполагаемые классы (не импортированы в оригинале, но используются):
-// Добавьте их в core, если ещё не сделано:
-// import com.aicareer.core.service.user.model.AuthenticationResult;
-// import com.aicareer.core.service.user.model.RegistrationResult;
+import javax.sql.DataSource;
 
 public class Main {
-  // === База данных ===
-  private static DataSource dataSource;
-  private static UserService userService;
   public static void main(String[] args) {
     try {
-      // 1. Создаём DataSource
-      DataSource dataSource = createPostgresDataSource();
+      System.out.println("🚀 Запуск AlCareer Application...");
 
-      // 2. Репозитории
-      UserSkillsRepository userSkillRepository = new UserSkillsRepositoryImpl(dataSource);
-      CVDataRepository cvDataRepository = new CVDataRepositoryImpl(dataSource);
+      // 1. Инициализация БД через DatabaseConfig (автоматически создаст таблицы)
+      DataSource dataSource = DatabaseConfig.getDataSource();
+      System.out.println("✅ База данных инициализирована");
+
+      // 2. Репозитории User
       UserRepository userRepository = new UserRepositoryImpl(dataSource);
+      UserPreferencesRepository userPreferencesRepository = new UserPreferencesRepositoryImpl(dataSource);
+      CVDataRepository cvDataRepository = new CVDataRepositoryImpl(dataSource);
+      UserSkillsRepository userSkillsRepository = new UserSkillsRepositoryImpl(dataSource);
 
-      // 4. UserService
+      // 3. Репозитории Roadmap
+      RoadmapRepository roadmapRepository = new RoadmapRepositoryImpl(dataSource);
+      RoadmapZoneRepository zoneRepository = new RoadmapZoneRepositoryImpl(dataSource);
+      WeekRepository weekRepository = new WeekRepositoryImpl(dataSource);
+      TaskRepository taskRepository = new TaskRepositoryImpl(dataSource);
+
+      // 4. Сервисы
       UserService userService = new UserServiceImpl(
-        userRepository,
-        cvDataRepository,
-        userSkillRepository
+              userRepository,
+              cvDataRepository,
+              userSkillsRepository,
+              userPreferencesRepository
       );
 
-      // 5. Остальные сервисы
+      RoadmapService roadmapService = new RoadmapService(dataSource);
+
       GigaChatService gigaChatService = new GigaChatService();
       DialogService dialogService = new DialogService(gigaChatService, true);
 
+      // 5. Сервисы бизнес-логики
       var chatBeforeVacancyService = new ChatWithAiBeforeDeterminingVacancyService(gigaChatService, dialogService);
       var selectVacancy = new SelectVacancy();
       var chatAfterVacancyService = new ChatWithAiAfterDeterminingVacancyService(gigaChatService, dialogService);
@@ -61,56 +73,31 @@ public class Main {
 
       // 6. Приложение
       var application = new CareerNavigatorApplicationImpl(
-        userService,
-        chatBeforeVacancyService,
-        selectVacancy,
-        chatAfterVacancyService,
-        roadmapGenerateService
+              userService,
+              chatBeforeVacancyService,
+              selectVacancy,
+              chatAfterVacancyService,
+              roadmapGenerateService,
+              roadmapService,
+              userPreferencesRepository
       );
 
       // 7. Запуск
+      System.out.println("✅ Все компоненты инициализированы");
+      System.out.println("🎯 Запуск пользовательского интерфейса...");
+
       new ConsolePresentation(application).start();
 
     } catch (Exception e) {
-      System.err.println("❌ Ошибка инициализации: " + e.getMessage());
+      System.err.println("❌ Критическая ошибка инициализации: " + e.getMessage());
       e.printStackTrace();
+
+      // Полезная информация для диагностики
+      System.err.println("\n🔧 Диагностика:");
+      System.err.println("- Проверь что PostgreSQL запущен на localhost:5432");
+      System.err.println("- Проверь что база 'aicareer' существует");
+      System.err.println("- Проверь логин/пароль в application.properties");
+      System.err.println("- Проверь сетевые настройки");
     }
-  }
-
-  // DataSource
-  private static DataSource createPostgresDataSource() {
-    return new DataSource() {
-      @Override
-      public <T> T unwrap(Class<T> iface) throws SQLException {
-        return null;
-      }
-
-      @Override
-      public boolean isWrapperFor(Class<?> iface) throws SQLException {
-        return false;
-      }
-
-      private final String url = "jdbc:postgresql://localhost:5432/aicareer";
-      private final String username = "postgres";
-      private final String password = "password";
-
-      @Override
-      public Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(url, username, password);
-      }
-
-      @Override
-      public Connection getConnection(String username, String password) throws SQLException {
-        return DriverManager.getConnection(url, username, password);
-      }
-
-      @Override public PrintWriter getLogWriter() throws SQLException { return null; }
-      @Override public void setLogWriter(PrintWriter out) throws SQLException {}
-      @Override public void setLoginTimeout(int seconds) throws SQLException {}
-      @Override public int getLoginTimeout() throws SQLException { return 0; }
-      @Override public Logger getParentLogger() {
-        return Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-      }
-    };
   }
 }

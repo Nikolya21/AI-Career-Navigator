@@ -18,6 +18,10 @@ import java.util.stream.Collectors;
 public class RoadmapGenerateService implements RoadmapGenerate {
 
     private final GigaChatService gigaChatApiService;
+
+    public RoadmapGenerateService(GigaChatService gigaChatApiService) {
+        this.gigaChatApiService = gigaChatApiService;
+    }
     @Override
     public String gettingWeeksInformation(ResponseByWeek responseByWeek) {
         return responseByWeek.getWeeks().size() + "\n" +responseByWeek.getWeeks().stream()
