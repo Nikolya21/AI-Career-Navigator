@@ -1,4 +1,4 @@
-package com.aicareer.core.validation;
+package com.aicareer.core.validator.user;
 
 public class ValidationException extends RuntimeException {
   public ValidationException(String message) {

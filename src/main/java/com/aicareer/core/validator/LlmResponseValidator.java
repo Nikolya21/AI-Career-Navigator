@@ -1,4 +1,4 @@
-package com.aicareer.core.Validator;
+package com.aicareer.core.validator;
 
 import java.net.URI;
 import java.net.URISyntaxException;

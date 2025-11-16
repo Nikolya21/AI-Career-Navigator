@@ -1,4 +1,4 @@
-package com.aicareer.core.Validator;
+package com.aicareer.core.validator;
 
 import com.aicareer.core.Annotation.Syntax;
 import com.aicareer.core.DTO.courseDto.CourseRequest;

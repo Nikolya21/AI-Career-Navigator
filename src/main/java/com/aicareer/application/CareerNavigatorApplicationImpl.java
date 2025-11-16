@@ -1,7 +1,6 @@
-// com.aicareer.application.CareerNavigatorApplicationImpl.java
 package com.aicareer.application;
 
-import com.aicareer.core.DTO.UserRegistrationDto;
+import com.aicareer.core.DTO.user.UserRegistrationDto;
 import com.aicareer.core.DTO.courseDto.ResponseByWeek;
 import com.aicareer.core.exception.*;
 import com.aicareer.core.model.courseModel.Task;
@@ -16,8 +15,9 @@ import com.aicareer.core.service.ParserOfVacancy.SelectVacancy;
 import com.aicareer.core.service.information.ChatWithAiAfterDeterminingVacancyService;
 import com.aicareer.core.service.information.ChatWithAiBeforeDeterminingVacancyService;
 import com.aicareer.core.service.roadmap.RoadmapGenerateService;
-import com.aicareer.core.service.user.RegistrationResult;
+import com.aicareer.*;
 import com.aicareer.core.service.user.UserService;
+import com.aicareer.core.service.user.model.RegistrationResult;
 
 import java.util.List;
 

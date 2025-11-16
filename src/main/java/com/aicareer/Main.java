@@ -1,28 +1,12 @@
 package com.aicareer;
 
 import com.aicareer.application.CareerNavigatorApplicationImpl;
-import com.aicareer.core.DTO.user.*;
-import com.aicareer.core.Validator.LlmResponseValidator;
-import com.aicareer.core.config.GigaChatConfig;
-import com.aicareer.core.DTO.courseDto.CourseRequest;
-import com.aicareer.core.DTO.courseDto.ResponseByWeek;
-import com.aicareer.core.model.courseModel.CourseRequirements;
-import com.aicareer.core.model.courseModel.Task;
-import com.aicareer.core.model.courseModel.Week;
-import com.aicareer.core.model.roadmap.Roadmap;
-import com.aicareer.core.model.user.CVData;
-import com.aicareer.core.model.user.User;
-import com.aicareer.core.model.user.UserPreferences;
-import com.aicareer.core.model.vacancy.FinalVacancyRequirements;
-import com.aicareer.core.model.vacancy.SelectedPotentialVacancy;
 import com.aicareer.core.service.ParserOfVacancy.SelectVacancy;
 import com.aicareer.core.service.gigachat.GigaChatService;
 import com.aicareer.core.service.information.ChatWithAiAfterDeterminingVacancyService;
 import com.aicareer.core.service.information.ChatWithAiBeforeDeterminingVacancyService;
 import com.aicareer.core.service.information.DialogService;
 import com.aicareer.core.service.roadmap.RoadmapGenerateService;
-import com.aicareer.core.service.user.*;
-import com.aicareer.core.service.user.util.PasswordEncoder;
 import com.aicareer.presentation.ConsolePresentation;
 import com.aicareer.repository.user.CVDataRepository;
 import com.aicareer.repository.user.UserRepository;
@@ -35,15 +19,10 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.logging.Logger;
 import com.aicareer.core.service.user.impl.UserServiceImpl;
-import com.aicareer.repository.user.CVDataRepository;
-import com.aicareer.repository.user.UserRepository;
 import com.aicareer.repository.user.UserSkillsRepository;
 import com.aicareer.repository.user.impl.CVDataRepositoryImpl;
 import com.aicareer.repository.user.impl.UserRepositoryImpl;
 import com.aicareer.repository.user.impl.UserSkillsRepositoryImpl;
-import java.util.List;
-import java.util.Scanner;
-import javax.sql.DataSource;
 
 // Предполагаемые классы (не импортированы в оригинале, но используются):
 // Добавьте их в core, если ещё не сделано:

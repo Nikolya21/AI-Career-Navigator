@@ -1,6 +1,6 @@
-package com.aicareer.core.validation.util;
+package com.aicareer.core.validator.util;
 
-import com.aicareer.core.validation.ValidationException;
+import com.aicareer.core.validator.user.ValidationException;
 import java.util.regex.Pattern;
 import lombok.experimental.UtilityClass;
 

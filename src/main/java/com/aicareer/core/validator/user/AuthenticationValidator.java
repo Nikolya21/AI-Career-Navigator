@@ -1,7 +1,7 @@
-package com.aicareer.core.validation;
+package com.aicareer.core.validator.user;
 
 import com.aicareer.core.DTO.user.LoginRequestDto;
-import com.aicareer.core.validation.util.ValidationUtil;
+import com.aicareer.core.validator.util.ValidationUtil;
 import java.util.ArrayList;
 import java.util.List;
 
