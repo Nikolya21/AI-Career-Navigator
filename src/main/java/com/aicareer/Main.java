@@ -8,6 +8,7 @@ import com.aicareer.core.service.information.ChatWithAiBeforeDeterminingVacancyS
 import com.aicareer.core.service.information.DialogService;
 import com.aicareer.core.service.roadmap.RoadmapGenerateService;
 import com.aicareer.core.service.user.*;
+import com.aicareer.core.service.user.PasswordEncoder;
 import com.aicareer.presentation.ConsolePresentation;
 import com.aicareer.repository.user.CVDataRepository;
 import com.aicareer.repository.user.UserRepository;
