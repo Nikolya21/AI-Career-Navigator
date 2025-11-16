@@ -10,6 +10,7 @@ import com.aicareer.core.service.roadmap.RoadmapGenerateService;
 import com.aicareer.repository.information.ChatWithAiBeforeDeterminingVacancy;
 
 
+import java.time.Instant;
 import java.util.List;
 
 
@@ -23,17 +24,18 @@ public class Main {
 
   private static FinalVacancyRequirements vacancyRequirements;
   private static CVData cvData;
+  private static User user;
   private static ResponseByWeek responseByWeek;
 
   public static void main(String[] args) {
     initializeServices();
-//    UserPreferences userPreferences = runBeginAiChatCycle();
-//    System.out.println("\n" + "\n" + "\n" + "ВНУТРЕННОСТЬ ОБЪЕКТА UserPreferences");
-//    System.out.println(userPreferences.getInfoAboutPerson());
-//
-//    CourseRequirements courseRequirements = runCourseRequirementsCycle();
-//    System.out.println("\n" + "\n" + "\n" + "ВНУТРЕННОСТЬ ОБЪЕКТА CourseRequirements");
-//    System.out.println(courseRequirements.getCourseRequirements());
+    UserPreferences userPreferences = runBeginAiChatCycle();
+    System.out.println("\n" + "\n" + "\n" + "ВНУТРЕННОСТЬ ОБЪЕКТА UserPreferences");
+    System.out.println(userPreferences.getInfoAboutPerson());
+
+    CourseRequirements courseRequirements = runCourseRequirementsCycle();
+    System.out.println("\n" + "\n" + "\n" + "ВНУТРЕННОСТЬ ОБЪЕКТА CourseRequirements");
+    System.out.println(courseRequirements.getCourseRequirements());
 
     Roadmap roadmap = runCourseAndRoadmapGenerationCycle();
     System.out.println("\n" + "\n" + "\n" + "ВНУТРЕННОСТЬ ОБЪЕКТА Roadmap");
@@ -236,6 +238,17 @@ public class Main {
 
     // Инициализация сервисов
     gigaChatService = new GigaChatService();
+    user = new User();
+    user.setId(1L);
+    user.setName("Иван Петров");
+    user.setEmail("ivan.petrov@example.com");
+    user.setPasswordHash("$2a$10$N9qo8uLOickgx2ZMRZoMye");
+    user.setCv(new CVData("Опытный Java разработчик Java, Spring, SQL, 5 лет в IT, Высшее техническое"));
+    user.setVacancyNow("Middle Java Developer в Сбере");
+    user.setRoadmapId(12345L);
+    user.setCreatedAt(Instant.parse("2024-01-15T10:00:00Z"));
+    user.setUpdatedAt(Instant.parse("2024-01-20T14:30:00Z"));
+
     cvData = new CVData();
     cvData.setInformation(
             "Петров Алексей Сергеевич\n" +
@@ -284,7 +297,7 @@ public class Main {
 
     dialogService = new DialogService(gigaChatService, true);
 
-    chatBeforeVacancyService = new ChatWithAiBeforeDeterminingVacancyService(gigaChatService, dialogService);
+    chatBeforeVacancyService = new ChatWithAiBeforeDeterminingVacancyService(gigaChatService, dialogService, user);
     chatAfterVacancyService = new ChatWithAiAfterDeterminingVacancyService(gigaChatService, dialogService);
 
     roadmapGenerateService = new RoadmapGenerateService(gigaChatService);

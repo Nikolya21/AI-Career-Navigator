@@ -5,10 +5,11 @@ import com.aicareer.core.model.UserPreferences;
 import com.aicareer.core.service.gigachat.GigaChatService;
 import com.aicareer.core.service.information.prompt.BeforeDeterminingPrompts;
 import com.aicareer.repository.information.ChatWithAiBeforeDeterminingVacancy;
+import com.aicareer.core.model.User;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,6 +22,8 @@ public class ChatWithAiBeforeDeterminingVacancyService implements ChatWithAiBefo
     private final GigaChatService gigaChatApiService;
 
     private final DialogService dialogService;
+
+    private final User user;
 
     private List<String> dialogHistory = new ArrayList<>();
 
@@ -136,6 +139,8 @@ public class ChatWithAiBeforeDeterminingVacancyService implements ChatWithAiBefo
     @Override
     public UserPreferences analyzeCombinedData() {
         String prompt = BeforeDeterminingPrompts.ANALYZE_DATA + dialogHistory;
-        return new UserPreferences(gigaChatApiService.sendMessage(prompt));
+        UserPreferences userPreferences = new UserPreferences(gigaChatApiService.sendMessage(prompt));
+        user.setUserPreferences(userPreferences);
+        return userPreferences;
     }
 }
