@@ -1,4 +1,4 @@
-package com.aicareer.core.Annotation;
+package com.aicareer.core.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

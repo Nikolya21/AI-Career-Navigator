@@ -1,6 +1,6 @@
 package com.aicareer.core.service.user;
 
-import com.aicareer.core.DTO.user.*;
+import com.aicareer.core.dto.user.*;
 import com.aicareer.core.model.user.User;
 import com.aicareer.core.model.user.UserPreferences;
 import com.aicareer.core.model.user.UserSkills;

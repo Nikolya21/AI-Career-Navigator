@@ -1,4 +1,4 @@
-package com.aicareer.core.service.ParserOfVacancy;
+package com.aicareer.core.service.parserOfVacancy;
 
 import com.aicareer.core.model.vacancy.PotentialVacancy;
 import com.aicareer.core.model.vacancy.RealVacancy;
