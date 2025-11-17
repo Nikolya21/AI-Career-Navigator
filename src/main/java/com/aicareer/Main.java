@@ -2,7 +2,7 @@ package com.aicareer;
 
 import com.aicareer.application.CareerNavigatorApplicationImpl;
 import com.aicareer.core.config.DatabaseConfig;
-import com.aicareer.core.service.parserOfVacancy.SelectVacancy;
+import com.aicareer.core.service.parserOfVacancy.*;
 import com.aicareer.core.service.gigachat.GigaChatService;
 import com.aicareer.core.service.information.ChatWithAiAfterDeterminingVacancyService;
 import com.aicareer.core.service.information.ChatWithAiBeforeDeterminingVacancyService;
