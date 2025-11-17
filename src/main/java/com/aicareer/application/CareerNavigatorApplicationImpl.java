@@ -1,5 +1,6 @@
 package com.aicareer.application;
 
+import com.aicareer.core.dto.user.LoginRequestDto;
 import com.aicareer.core.dto.user.UserRegistrationDto;
 import com.aicareer.core.dto.courseDto.ResponseByWeek;
 import com.aicareer.core.exception.*;
@@ -12,12 +13,14 @@ import com.aicareer.core.model.user.UserPreferences;
 import com.aicareer.core.model.vacancy.FinalVacancyRequirements;
 import com.aicareer.core.model.courseModel.CourseRequirements;
 import com.aicareer.core.model.roadmap.Roadmap;
+import com.aicareer.core.model.vacancy.SelectedPotentialVacancy;
 import com.aicareer.core.service.parserOfVacancy.SelectVacancy;
 import com.aicareer.core.service.information.ChatWithAiAfterDeterminingVacancyService;
 import com.aicareer.core.service.information.ChatWithAiBeforeDeterminingVacancyService;
 import com.aicareer.core.service.roadmap.RoadmapGenerateService;
 import com.aicareer.core.service.roadmap.RoadmapService;
 import com.aicareer.core.service.user.UserService;
+import com.aicareer.core.service.user.model.AuthenticationResult;
 import com.aicareer.core.service.user.model.RegistrationResult;
 import com.aicareer.repository.user.CVDataRepository;
 import com.aicareer.repository.user.UserPreferencesRepository;
@@ -61,7 +64,7 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
   }
 
   @Override
-  public User authenticateOrRegister(String email, String password, String name)
+  public User register(String email, String password, String name)
           throws AuthenticationException {
     // Валидация
     if (email == null || email.trim().isEmpty()) {
@@ -86,6 +89,7 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
 
       // Вызываем UserService
       RegistrationResult result = userService.registerUser(dto);
+      User user = result.getUser(); //todo cvData adding
 
       if (result.isSuccess()) {
         return result.getUser();
@@ -106,14 +110,58 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
   }
 
   @Override
+  public User authenticate(String email, String password)
+      throws AuthenticationException {
+    // Валидация для входа
+    if (email == null || email.trim().isEmpty()) {
+      throw new AuthenticationException(
+          AuthenticationException.Type.INVALID_EMAIL_FORMAT,
+          "Email не может быть пустым"
+      );
+    }
+    if (password == null || password.length() < 6) {
+      throw new AuthenticationException(
+          AuthenticationException.Type.WEAK_PASSWORD,
+          "Пароль должен содержать минимум 6 символов"
+      );
+    }
+
+    try {
+      // Создаём DTO для входа
+      LoginRequestDto loginDto = new LoginRequestDto();
+      loginDto.setEmail(email);
+      loginDto.setPassword(password);
+
+      // Вызываем UserService для аутентификации
+      AuthenticationResult result = userService.authenticateUser(loginDto);
+
+      if (result.isSuccess()) {
+        return result.getUser();
+      } else {
+        throw new AuthenticationException(
+            AuthenticationException.Type.USER_ALREADY_EXISTS,
+            "Вход не удался: " + String.join("; ", result.getErrors())
+        );
+      }
+
+    } catch (Exception e) {
+      throw new AuthenticationException(
+          AuthenticationException.Type.ACCOUNT_LOCKED,
+          "Системная ошибка при входе: " + e.getMessage(),
+          e
+      );
+    }
+  }
+
+  @Override
   public UserPreferences gatherUserPreferences(User user, String cvText) throws ChatException {
     if (user == null) {
       throw new IllegalArgumentException("User must not be null");
     }
     if (cvText == null || cvText.trim().isEmpty()) {
       throw new ChatException(
-              ChatException.Type.INVALID_RESPONSE_FORMAT,
-              "CV не может быть пустым"
+          ChatException.Type.INVALID_RESPONSE_FORMAT,
+          "CV не может быть пустым"
       );
     }
 
@@ -121,28 +169,54 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
       // ✅ ВАЖНО: Запускаем диалог с пользователем!
       chatBeforeVacancyService.starDialogWithUser();
       chatBeforeVacancyService.askingStandardQuestions();
+      System.out.println("first");
 
       // 1. Сохраняем CVData
       CVData cvData = CVData.builder()
-              .userId(user.getId())
-              .information(cvText)
-              .build();
-      cvDataRepository.save(cvData);
+          .userId(user.getId())
+          .information(cvText)
+          .build();
+      try {
+        cvDataRepository.save(cvData);
+        System.out.println("✅ CV data saved successfully");
+      } catch (RuntimeException e) {
+        System.err.println("❌ Error saving CV data: " + e.getMessage());
+        e.printStackTrace(); // Добавляем stack trace для диагностики
+        throw new ChatException(
+            ChatException.Type.MODEL_ERROR,
+            "Ошибка при сохранении данных CV: " + e.getMessage(),
+            e
+        );
+      }
+      System.out.println("second");
 
       // 2. Генерируем и сохраняем UserPreferences через ИИ
       UserPreferences userPreferences = chatBeforeVacancyService.analyzeCombinedData();
-      userPreferences.setUserId(user.getId());
-      UserPreferences savedPreferences = userPreferencesRepository.save(userPreferences);
+      System.out.println("third");
 
-      // 3. TODO: Сохранить UserSkills (когда будет логика анализа навыков)
+      if (userPreferences == null) {
+        throw new ChatException(
+            ChatException.Type.INVALID_RESPONSE_FORMAT,
+            "AI не вернул данные о предпочтениях пользователя"
+        );
+      }
+
+      userPreferences.setUserId(user.getId());
+      System.out.println("fourth");
+
+      UserPreferences savedPreferences = userPreferencesRepository.save(userPreferences);
+      System.out.println("fifth");
 
       return savedPreferences;
 
-    } catch (RuntimeException e) {
+    } catch (ChatException e) {
+      // Пробрасываем уже созданные ChatException
+      throw e;
+    } catch (Exception e) {
       throw new ChatException(
-              ChatException.Type.MODEL_ERROR,
-              "Ошибка при анализе данных пользователя через AI",
-              e
+          ChatException.Type.MODEL_ERROR,
+          "Ошибка при анализе данных пользователя через AI: " + e.getMessage(),
+          e
       );
     }
   }
@@ -165,11 +239,13 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
                 "AI не вернул анализ предпочтений"
         );
       }
+      List<String> threeVacancies = selectVacancy.extractThreeVacancies(analysisResult);
+      SelectedPotentialVacancy selectedPotentialVacancy = selectVacancy.choosenVacansy(threeVacancies);
+      String parsingResult = selectVacancy.formingByParsing(selectedPotentialVacancy);
+      FinalVacancyRequirements finalVacancyRequirements = selectVacancy.formingFinalVacancyRequirements(parsingResult);
 
       // Возвращаем вашу строку — как и задумано
-      return new FinalVacancyRequirements(
-              "Java 11+, Spring Boot, опыт работы с REST API, 2+ года опыта, английский B1+"
-      );
+      return finalVacancyRequirements;
     } catch (Exception e) {
       throw new VacancySelectionException(
               VacancySelectionException.Type.PARSING_FAILED,

@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS tasks (
+CREATE TABLE IF NOT EXISTS aicareer.tasks (
     id BIGSERIAL PRIMARY KEY,
     week_id BIGINT NOT NULL,
     description TEXT NOT NULL,

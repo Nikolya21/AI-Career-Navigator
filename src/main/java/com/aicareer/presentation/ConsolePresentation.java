@@ -84,7 +84,7 @@ public class ConsolePresentation {
     String name = scanner.nextLine().trim();
 
     try {
-      return application.authenticateOrRegister(email, password, name);
+      return application.register(email, password, name);
     } catch (Exception e) {
       System.err.println("❌ Ошибка регистрации: " + e.getMessage());
       return null;
@@ -99,7 +99,7 @@ public class ConsolePresentation {
     String password = scanner.nextLine().trim();
 
     try {
-      return application.authenticateOrRegister(email, password, ""); // name не нужен для входа
+      return application.authenticate(email, password); // name не нужен для входа
     } catch (Exception e) {
       System.err.println("❌ Ошибка аутентификации: " + e.getMessage());
       return null;

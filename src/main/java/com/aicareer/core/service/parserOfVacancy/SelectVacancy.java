@@ -1,5 +1,6 @@
 package com.aicareer.core.service.parserOfVacancy;
 
+import com.aicareer.core.model.vacancy.FinalVacancyRequirements;
 import com.aicareer.core.model.vacancy.PotentialVacancy;
 import com.aicareer.core.model.vacancy.RealVacancy;
 import com.aicareer.core.model.vacancy.SelectedPotentialVacancy;
@@ -9,14 +10,20 @@ import java.util.List;
 import java.util.ArrayList;
 import com.aicareer.core.service.gigachat.GigaChatService;
 import java.util.Scanner;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
+@Data
+@AllArgsConstructor
+@RequiredArgsConstructor
 public class SelectVacancy implements SelectOfVacancy {
   Scanner scan = new Scanner(System.in);
   private List<String> listOfThreeVacancy = new ArrayList<>();
   private SelectedPotentialVacancy selectedVacancy;
   private List<RealVacancy> parsedVacancies = new ArrayList<>();
   private String analysisResult;
-  private GigaChatService gigaChatService;
+  private final GigaChatService gigaChatService;
 
 
   @Override
@@ -39,6 +46,7 @@ public class SelectVacancy implements SelectOfVacancy {
 
   @Override
   public List<String> extractThreeVacancies(String gigachatAnswer) {
+    System.out.println(gigachatAnswer);
     if (gigachatAnswer.contains(":::")) {
       String[] parts = gigachatAnswer.split(":::");
       if (parts.length > 1) {
@@ -89,7 +97,7 @@ public class SelectVacancy implements SelectOfVacancy {
   }
 
   @Override
-  public String FormingByParsing(SelectedPotentialVacancy selectedVacancy) {
+  public String formingByParsing(SelectedPotentialVacancy selectedVacancy) {
 
     String selectedVacancy1 = this.selectedVacancy.getNameOfVacancy();
     List<RealVacancy> vacancies = ParserService.getVacancies(selectedVacancy1, "1", 10);
@@ -106,9 +114,8 @@ public class SelectVacancy implements SelectOfVacancy {
   }
 
   @Override
-  public String FormingFinalVacancyRequirements(
-      String newPromt) {
+  public FinalVacancyRequirements formingFinalVacancyRequirements(String newPromt) {
       String gigachatFinalReqirements = gigaChatService.sendMessage(newPromt);
-    return gigachatFinalReqirements;
+    return new FinalVacancyRequirements(gigachatFinalReqirements);
   }
 }

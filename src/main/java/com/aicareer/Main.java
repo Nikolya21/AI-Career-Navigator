@@ -67,7 +67,7 @@ public class Main {
 
       // 5. Сервисы бизнес-логики
       var chatBeforeVacancyService = new ChatWithAiBeforeDeterminingVacancyService(gigaChatService, dialogService);
-      var selectVacancy = new SelectVacancy();
+      var selectVacancy = new SelectVacancy(gigaChatService);
       var chatAfterVacancyService = new ChatWithAiAfterDeterminingVacancyService(gigaChatService, dialogService);
       var roadmapGenerateService = new RoadmapGenerateService(gigaChatService);
 

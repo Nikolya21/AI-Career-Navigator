@@ -23,8 +23,8 @@ public class UserSkillsRepositoryImpl implements UserSkillsRepository {
       conn.setAutoCommit(false);
 
       String skillsSql = skills.getId() == null ?
-          "INSERT INTO user_skills (user_id, full_compliance_percentage, calculated_at) VALUES (?, ?, ?)" :
-          "UPDATE user_skills SET user_id = ?, full_compliance_percentage = ?, calculated_at = ? WHERE id = ?";
+          "INSERT INTO aicareer.user_skills (user_id, full_compliance_percentage, calculated_at) VALUES (?, ?, ?)" :
+          "UPDATE aicareer.user_skills SET user_id = ?, full_compliance_percentage = ?, calculated_at = ? WHERE id = ?";
 
       PreparedStatement skillsStmt = conn.prepareStatement(skillsSql, Statement.RETURN_GENERATED_KEYS);
 
@@ -80,7 +80,7 @@ public class UserSkillsRepositoryImpl implements UserSkillsRepository {
 
   @Override
   public Optional<UserSkills> findByUserId(Long userId) {
-    String sql = "SELECT * FROM user_skills WHERE user_id = ?";
+    String sql = "SELECT * FROM aicareer.user_skills WHERE user_id = ?";
 
     try (Connection conn = dataSource.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -102,14 +102,14 @@ public class UserSkillsRepositoryImpl implements UserSkillsRepository {
   }
 
   private void saveSkillGaps(Connection conn, UserSkills skills) throws SQLException {
-    String deleteSql = "DELETE FROM skill_gaps WHERE user_skills_id = ?";
+    String deleteSql = "DELETE FROM skill_gaps WHERE aicareer.user_skills_id = ?";
     try (PreparedStatement stmt = conn.prepareStatement(deleteSql)) {
       stmt.setLong(1, skills.getId());
       stmt.executeUpdate();
     }
 
     if (skills.getSkillGaps() != null && !skills.getSkillGaps().isEmpty()) {
-      String insertSql = "INSERT INTO skill_gaps (user_skills_id, skill_name, gap_percentage) VALUES (?, ?, ?)";
+      String insertSql = "INSERT INTO skill_gaps (aicareer.user_skills_id, skill_name, gap_percentage) VALUES (?, ?, ?)";
       try (PreparedStatement stmt = conn.prepareStatement(insertSql)) {
         for (Map.Entry<String, Double> entry : skills.getSkillGaps().entrySet()) {
           stmt.setLong(1, skills.getId());
@@ -123,7 +123,7 @@ public class UserSkillsRepositoryImpl implements UserSkillsRepository {
   }
 
   private Map<String, Double> getSkillGapsByUserSkillsId(Connection conn, Long userSkillsId) throws SQLException {
-    String sql = "SELECT skill_name, gap_percentage FROM skill_gaps WHERE user_skills_id = ?";
+    String sql = "SELECT skill_name, gap_percentage FROM skill_gaps WHERE aicareer.user_skills_id = ?";
     Map<String, Double> skillGaps = new HashMap<>();
 
     try (PreparedStatement stmt = conn.prepareStatement(sql)) {

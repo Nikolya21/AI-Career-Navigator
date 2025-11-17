@@ -20,8 +20,8 @@ public class UserRepositoryImpl implements UserRepository {
   @Override
   public User save(User user) {
     String sql = user.getId() == null ?
-        "INSERT INTO users (name, email, password_hash, vacancy_now, roadmap_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)" :
-        "UPDATE users SET name = ?, email = ?, password_hash = ?, vacancy_now = ?, roadmap_id = ?, updated_at = ? WHERE id = ?";
+        "INSERT INTO aicareer.users (name, email, password_hash, vacancy_now, roadmap_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)" :
+        "UPDATE aicareer.users SET name = ?, email = ?, password_hash = ?, vacancy_now = ?, roadmap_id = ?, updated_at = ? WHERE id = ?";
 
     try (Connection conn = dataSource.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -34,15 +34,15 @@ public class UserRepositoryImpl implements UserRepository {
         stmt.setString(3, user.getPasswordHash());
         stmt.setString(4, user.getVacancyNow());
         stmt.setObject(5, user.getRoadmapId());
-        stmt.setTimestamp(6, Timestamp.valueOf(String.valueOf(now)));
-        stmt.setTimestamp(7, Timestamp.valueOf(String.valueOf(now)));
+        stmt.setTimestamp(6, Timestamp.from(now));
+        stmt.setTimestamp(7, Timestamp.from(now));
       } else {
         stmt.setString(1, user.getName());
         stmt.setString(2, user.getEmail());
         stmt.setString(3, user.getPasswordHash());
         stmt.setString(4, user.getVacancyNow());
         stmt.setObject(5, user.getRoadmapId());
-        stmt.setTimestamp(6, Timestamp.valueOf(String.valueOf(now)));
+        stmt.setTimestamp(6, Timestamp.from(now));
         stmt.setLong(7, user.getId());
       }
 
@@ -74,7 +74,7 @@ public class UserRepositoryImpl implements UserRepository {
 
   @Override
   public Optional<User> findById(Long id) {
-    String sql = "SELECT * FROM users WHERE id = ?";
+    String sql = "SELECT * FROM aicareer.users WHERE id = ?";
 
     try (Connection conn = dataSource.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -95,7 +95,7 @@ public class UserRepositoryImpl implements UserRepository {
 
   @Override
   public Optional<User> findByEmail(String email) {
-    String sql = "SELECT * FROM users WHERE email = ?";
+    String sql = "SELECT * FROM aicareer.users WHERE email = ?";
 
     try (Connection conn = dataSource.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -116,7 +116,7 @@ public class UserRepositoryImpl implements UserRepository {
 
   @Override
   public boolean existsByEmail(String email) {
-    String sql = "SELECT COUNT(*) FROM users WHERE email = ?";
+    String sql = "SELECT COUNT(*) FROM aicareer.users WHERE email = ?";
 
     try (Connection conn = dataSource.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -137,7 +137,7 @@ public class UserRepositoryImpl implements UserRepository {
 
   @Override
   public boolean delete(Long id) {
-    String sql = "DELETE FROM users WHERE id = ?";
+    String sql = "DELETE FROM aicareer.users WHERE id = ?";
 
     try (Connection conn = dataSource.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -152,7 +152,7 @@ public class UserRepositoryImpl implements UserRepository {
 
   @Override
   public List<User> findAll() {
-    String sql = "SELECT * FROM users ORDER BY created_at DESC";
+    String sql = "SELECT * FROM aicareer.users ORDER BY created_at DESC";
     List<User> users = new ArrayList<>();
 
     try (Connection conn = dataSource.getConnection();
@@ -166,7 +166,7 @@ public class UserRepositoryImpl implements UserRepository {
       return users;
 
     } catch (SQLException e) {
-      throw new RuntimeException("Error finding all users", e);
+      throw new RuntimeException("Error finding all aicareer.users", e);
     }
   }
 

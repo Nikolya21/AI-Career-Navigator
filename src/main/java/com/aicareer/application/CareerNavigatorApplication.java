@@ -10,7 +10,8 @@ import com.aicareer.core.model.roadmap.Roadmap;
 
 public interface CareerNavigatorApplication {
 
-  User authenticateOrRegister(String email, String password, String name) throws AuthenticationException;
+  User register(String email, String password, String name) throws AuthenticationException;
+  User authenticate(String email, String password) throws AuthenticationException;
 
   UserPreferences gatherUserPreferences(User user, String cvText) throws ChatException;
 

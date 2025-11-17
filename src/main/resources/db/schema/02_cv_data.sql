@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS cv_data (
+CREATE TABLE IF NOT EXISTS aicareer.cv_data (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT UNIQUE NOT NULL,
     file_path VARCHAR(500),

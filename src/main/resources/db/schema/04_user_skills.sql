@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS user_skills (
+CREATE TABLE IF NOT EXISTS aicareer.user_skills (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
     skill_name VARCHAR(255) NOT NULL,

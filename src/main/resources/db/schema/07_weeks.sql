@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS weeks (
+CREATE TABLE IF NOT EXISTS aicareer.weeks (
     id BIGSERIAL PRIMARY KEY,
     roadmap_zone_id BIGINT NOT NULL,
     week_number INTEGER NOT NULL,

@@ -19,12 +19,20 @@ public class CVDataRepositoryImpl implements CVDataRepository {
 
   @Override
   public CVData save(CVData cvData) {
+    // Проверяем обязательные поля
+    if (cvData.getUserId() == null) {
+      throw new IllegalArgumentException("User ID cannot be null");
+    }
+    if (cvData.getInformation() == null) {
+      throw new IllegalArgumentException("Information cannot be null");
+    }
+
     String sql = cvData.getId() == null
-      ? "INSERT INTO cv_data (user_id, file_path, information, uploaded_at) VALUES (?, ?, ?, ?)"
-      : "UPDATE cv_data SET user_id = ?, file_path = ?, information = ?, uploaded_at = ? WHERE id = ?"; // ← добавлен uploaded_at в UPDATE
+        ? "INSERT INTO aicareer.cv_data (user_id, file_path, information, uploaded_at) VALUES (?, ?, ?, ?)"
+        : "UPDATE aicareer.cv_data SET user_id = ?, file_path = ?, information = ?, uploaded_at = ? WHERE id = ?";
 
     try (Connection conn = dataSource.getConnection();
-         PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
       Instant now = Instant.now();
 
@@ -32,13 +40,13 @@ public class CVDataRepositoryImpl implements CVDataRepository {
         stmt.setLong(1, cvData.getUserId());
         stmt.setString(2, cvData.getFile() != null ? cvData.getFile().getAbsolutePath() : null);
         stmt.setString(3, cvData.getInformation());
-        stmt.setTimestamp(4, Timestamp.from(now)); // ← исправлено: Timestamp.from(instant)
+        stmt.setTimestamp(4, Timestamp.from(now));
       } else {
         stmt.setLong(1, cvData.getUserId());
         stmt.setString(2, cvData.getFile() != null ? cvData.getFile().getAbsolutePath() : null);
         stmt.setString(3, cvData.getInformation());
-        stmt.setTimestamp(4, Timestamp.from(now)); // ← исправлено
-        stmt.setLong(5, cvData.getId());            // ← теперь 5-й параметр
+        stmt.setTimestamp(4, Timestamp.from(now));
+        stmt.setLong(5, cvData.getId());
       }
 
       int affectedRows = stmt.executeUpdate();
@@ -57,13 +65,17 @@ public class CVDataRepositoryImpl implements CVDataRepository {
       return cvData;
 
     } catch (SQLException e) {
-      throw new RuntimeException("Error saving CV data", e);
+      System.err.println("❌ SQL Error in CVDataRepository.save(): " + e.getMessage());
+      System.err.println("SQL State: " + e.getSQLState());
+      System.err.println("Error Code: " + e.getErrorCode());
+      e.printStackTrace();
+      throw new RuntimeException("Error saving CV data: " + e.getMessage(), e);
     }
   }
 
   @Override
   public Optional<CVData> findByUserId(Long userId) {
-    String sql = "SELECT * FROM cv_data WHERE user_id = ?";
+    String sql = "SELECT * FROM aicareer.cv_data WHERE user_id = ?";
 
     try (Connection conn = dataSource.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql)) {

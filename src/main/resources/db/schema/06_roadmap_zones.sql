@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS roadmap_zones (
+CREATE TABLE IF NOT EXISTS aicareer.roadmap_zones (
     id BIGSERIAL PRIMARY KEY,
     roadmap_id BIGINT NOT NULL,
     name VARCHAR(255) NOT NULL,

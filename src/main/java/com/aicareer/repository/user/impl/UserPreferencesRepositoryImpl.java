@@ -26,7 +26,7 @@ public class UserPreferencesRepositoryImpl implements UserPreferencesRepository 
     }
 
     private UserPreferences insert(UserPreferences userPreferences) {
-        String sql = "INSERT INTO user_preferences (user_id, info_about_person) VALUES (?, ?)";
+        String sql = "INSERT INTO aicareer.user_preferences (user_id, info_about_person) VALUES (?, ?)";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -54,7 +54,7 @@ public class UserPreferencesRepositoryImpl implements UserPreferencesRepository 
     }
 
     private UserPreferences update(UserPreferences userPreferences) {
-        String sql = "UPDATE user_preferences SET user_id = ?, info_about_person = ? WHERE id = ?";
+        String sql = "UPDATE aicareer.user_preferences SET user_id = ?, info_about_person = ? WHERE id = ?";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -78,7 +78,7 @@ public class UserPreferencesRepositoryImpl implements UserPreferencesRepository 
 
     @Override
     public Optional<UserPreferences> findById(Long id) {
-        String sql = "SELECT * FROM user_preferences WHERE id = ?";
+        String sql = "SELECT * FROM aicareer.user_preferences WHERE id = ?";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -99,7 +99,7 @@ public class UserPreferencesRepositoryImpl implements UserPreferencesRepository 
 
     @Override
     public Optional<UserPreferences> findByUserId(Long userId) {
-        String sql = "SELECT * FROM user_preferences WHERE user_id = ?";
+        String sql = "SELECT * FROM aicareer.user_preferences WHERE user_id = ?";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -120,7 +120,7 @@ public class UserPreferencesRepositoryImpl implements UserPreferencesRepository 
 
     @Override
     public boolean delete(Long id) {
-        String sql = "DELETE FROM user_preferences WHERE id = ?";
+        String sql = "DELETE FROM aicareer.user_preferences WHERE id = ?";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -136,7 +136,7 @@ public class UserPreferencesRepositoryImpl implements UserPreferencesRepository 
 
     @Override
     public boolean deleteByUserId(Long userId) {
-        String sql = "DELETE FROM user_preferences WHERE user_id = ?";
+        String sql = "DELETE FROM aicareer.user_preferences WHERE user_id = ?";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -152,7 +152,7 @@ public class UserPreferencesRepositoryImpl implements UserPreferencesRepository 
 
     @Override
     public boolean existsByUserId(Long userId) {
-        String sql = "SELECT COUNT(*) FROM user_preferences WHERE user_id = ?";
+        String sql = "SELECT COUNT(*) FROM aicareer.user_preferences WHERE user_id = ?";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
