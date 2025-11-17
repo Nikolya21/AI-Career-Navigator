@@ -19,9 +19,16 @@ public class DatabaseConfig {
 
     private static void initializeDataSource() {
         // 1. Загружаем настройки из properties файла ✅
+      try {
+        Class.forName("org.postgresql.Driver");
+        System.out.println("DEBUG: Explicitly loaded PostgreSQL driver.");
+      } catch (ClassNotFoundException e) {
+        throw new RuntimeException("PostgreSQL JDBC Driver not found in Classpath.", e);
+      }
+
         Properties props = loadDatabaseProperties();
 
-        String url = props.getProperty("database.url");
+        String url = "jdbc:" + props.getProperty("database.url");
         String username = props.getProperty("database.username");
         String password = props.getProperty("database.password");
 
@@ -72,7 +79,9 @@ public class DatabaseConfig {
             System.out.println("   Database: " + meta.getDatabaseProductName() + " " + meta.getDatabaseProductVersion());
             return true;
         } catch (SQLException e) {
-            System.err.println("❌ Database connection failed: " + e.getMessage());
+
+          e.printStackTrace();
+          System.err.println("❌ Database connection failed: " + e.getMessage());
             return false;
         }
     }
@@ -83,14 +92,14 @@ public class DatabaseConfig {
             conn.createStatement().execute("SET search_path TO aicareer");
 
             // В ПРАВИЛЬНОМ ПОРЯДКЕ (из-за foreign keys)
-            executeSqlFile(conn, "db/schema/01_users.sql");
-            executeSqlFile(conn, "db/schema/02_cv_data.sql");
-            executeSqlFile(conn, "db/schema/03_user_preferences.sql");
-            executeSqlFile(conn, "db/schema/04_user_skills.sql");
-            executeSqlFile(conn, "db/schema/05_roadmaps.sql");
-            executeSqlFile(conn, "db/schema/06_roadmap_zones.sql");
-            executeSqlFile(conn, "db/schema/07_weeks.sql");
-            executeSqlFile(conn, "db/schema/08_tasks.sql");
+          executeSqlFile(conn, "db/schema/01_users.sql");
+          executeSqlFile(conn, "db/schema/02_cv_data.sql");
+          executeSqlFile(conn, "db/schema/03_user_preferences.sql");
+          executeSqlFile(conn, "db/schema/04_user_skills.sql");
+          executeSqlFile(conn, "db/schema/05_roadmaps.sql");
+          executeSqlFile(conn, "db/schema/06_roadmap_zones.sql");
+          executeSqlFile(conn, "db/schema/07_weeks.sql");
+          executeSqlFile(conn, "db/schema/08_tasks.sql");
 
             System.out.println("✅ Database schema initialized successfully");
         } catch (SQLException e) {
