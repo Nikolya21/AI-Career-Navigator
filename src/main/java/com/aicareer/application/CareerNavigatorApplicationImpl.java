@@ -15,7 +15,6 @@ import com.aicareer.core.service.ParserOfVacancy.SelectVacancy;
 import com.aicareer.core.service.information.ChatWithAiAfterDeterminingVacancyService;
 import com.aicareer.core.service.information.ChatWithAiBeforeDeterminingVacancyService;
 import com.aicareer.core.service.roadmap.RoadmapGenerateService;
-import com.aicareer.*;
 import com.aicareer.core.service.user.UserService;
 import com.aicareer.core.service.user.model.RegistrationResult;
 
