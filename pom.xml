@@ -61,7 +61,6 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>${postgresql.version}</version>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.json</groupId>
@@ -113,6 +112,17 @@
     </dependencies>
 
     <build>
+      <resources>
+        <resource>
+          <directory>src/main/resources</directory>
+          <includes>
+            <include>**/*.properties</include>
+            <include>**/*.sql</include>
+            <include>**/*.xml</include>
+            <include>**/*.json</include>
+          </includes>
+        </resource>
+      </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
