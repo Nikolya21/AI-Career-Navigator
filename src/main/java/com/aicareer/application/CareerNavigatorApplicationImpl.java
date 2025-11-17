@@ -6,6 +6,7 @@ import com.aicareer.core.exception.*;
 import com.aicareer.core.model.courseModel.Task;
 import com.aicareer.core.model.courseModel.Week;
 import com.aicareer.core.model.roadmap.RoadmapZone;
+import com.aicareer.core.model.user.CVData;
 import com.aicareer.core.model.user.User;
 import com.aicareer.core.model.user.UserPreferences;
 import com.aicareer.core.model.vacancy.FinalVacancyRequirements;
@@ -18,7 +19,9 @@ import com.aicareer.core.service.roadmap.RoadmapGenerateService;
 import com.aicareer.core.service.roadmap.RoadmapService;
 import com.aicareer.core.service.user.UserService;
 import com.aicareer.core.service.user.model.RegistrationResult;
+import com.aicareer.repository.user.CVDataRepository;
 import com.aicareer.repository.user.UserPreferencesRepository;
+import com.aicareer.repository.user.UserSkillsRepository;
 
 import java.util.List;
 
@@ -29,8 +32,11 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
   private final SelectVacancy selectVacancy;
   private final ChatWithAiAfterDeterminingVacancyService chatAfterVacancyService;
   private final RoadmapGenerateService roadmapGenerateService;
-  private final RoadmapService roadmapService; // ← ДОБАВИЛ для сохранения в БД
+  private final RoadmapService roadmapService;
   private final UserPreferencesRepository userPreferencesRepository;
+  private final CVDataRepository cvDataRepository;
+
+  private final UserSkillsRepository userSkillsRepository;
 
   public CareerNavigatorApplicationImpl(
           UserService userService,
@@ -39,7 +45,9 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
           ChatWithAiAfterDeterminingVacancyService chatAfterVacancyService,
           RoadmapGenerateService roadmapGenerateService,
           RoadmapService roadmapService, // ← ДОБАВИЛ
-          UserPreferencesRepository userPreferencesRepository
+          UserPreferencesRepository userPreferencesRepository,
+          CVDataRepository cvDataRepository, // ← ДОБАВИТЬ
+          UserSkillsRepository userSkillsRepository // ← ДОБАВИТЬ
   ) {
     this.userService = userService;
     this.chatBeforeVacancyService = chatBeforeVacancyService;
@@ -48,6 +56,8 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
     this.roadmapGenerateService = roadmapGenerateService;
     this.roadmapService = roadmapService; // ← ДОБАВИЛ
     this.userPreferencesRepository = userPreferencesRepository;
+    this.cvDataRepository = cvDataRepository;
+    this.userSkillsRepository = userSkillsRepository;
   }
 
   @Override
@@ -108,15 +118,23 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
     }
 
     try {
+      // ✅ ВАЖНО: Запускаем диалог с пользователем!
       chatBeforeVacancyService.starDialogWithUser();
       chatBeforeVacancyService.askingStandardQuestions();
 
-      // Генерируем UserPreferences
-      UserPreferences userPreferences = chatBeforeVacancyService.analyzeCombinedData();
+      // 1. Сохраняем CVData
+      CVData cvData = CVData.builder()
+              .userId(user.getId())
+              .information(cvText)
+              .build();
+      cvDataRepository.save(cvData);
 
-// ✅ ПРАВИЛЬНО: Сохраняем напрямую через Repository
+      // 2. Генерируем и сохраняем UserPreferences через ИИ
+      UserPreferences userPreferences = chatBeforeVacancyService.analyzeCombinedData();
       userPreferences.setUserId(user.getId());
       UserPreferences savedPreferences = userPreferencesRepository.save(userPreferences);
+
+      // 3. TODO: Сохранить UserSkills (когда будет логика анализа навыков)
 
       return savedPreferences;
 

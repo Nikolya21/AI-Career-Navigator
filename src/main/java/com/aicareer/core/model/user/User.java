@@ -15,11 +15,8 @@ public class User {
   private Long id;
   private String name;
   private String email;
-  private String passwordHash; // храним хеш пароля
-  private CVData cv;
-  private UserSkills skills;
-  private String vacancyNow; // получаю всю информацию про уже выбранную вакансию от Сани
-  private UserPreferences userPreferences; // от Луки
+  private String passwordHash;
+  private String vacancyNow;
   private Long roadmapId;
   private Instant createdAt;
   private Instant updatedAt;

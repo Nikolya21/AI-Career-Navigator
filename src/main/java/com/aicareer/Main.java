@@ -79,7 +79,9 @@ public class Main {
               chatAfterVacancyService,
               roadmapGenerateService,
               roadmapService,
-              userPreferencesRepository
+              userPreferencesRepository,
+              cvDataRepository,        // ← ДОБАВЬ
+              userSkillsRepository     // ← ДОБАВЬ
       );
 
       // 7. Запуск

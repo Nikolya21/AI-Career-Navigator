@@ -63,12 +63,10 @@ public class UserServiceImpl implements UserService {
               .name(registrationDto.getName())
               .email(registrationDto.getEmail())
               .passwordHash(PasswordEncoder.encode(registrationDto.getPassword()))
-              .cv(null)
-              .skills(null)
               .vacancyNow(null)
-              .userPreferences(null)
               .roadmapId(null)
               .build();
+      // ✅ Убрали cv, skills, userPreferences - их больше нет в модели
 
       user.updateTimestamps();
       User savedUser = userRepository.save(user);
@@ -125,19 +123,11 @@ public class UserServiceImpl implements UserService {
 
     User user = userOpt.get();
 
-    Optional<CVData> cvDataOpt = cvDataRepository.findByUserId(userId);
-    Optional<UserSkills> skillsOpt = userSkillsRepository.findByUserId(userId);
-    Optional<UserPreferences> preferencesOpt = userPreferencesRepository.findByUserId(userId); // ← ДОБАВИЛ
-
     User profile = new User();
     profile.setEmail(user.getEmail());
     profile.setName(user.getName());
-    profile.setCv(cvDataOpt.orElse(null));
-    profile.setSkills(skillsOpt.orElse(null));
-    profile.setUserPreferences(preferencesOpt.orElse(null)); // ← ОБНОВИЛ
     profile.setVacancyNow(user.getVacancyNow());
     profile.setRoadmapId(user.getRoadmapId());
-
     return profile;
   }
 
