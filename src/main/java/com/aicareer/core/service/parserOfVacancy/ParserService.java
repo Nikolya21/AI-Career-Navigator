@@ -1,4 +1,4 @@
-package com.aicareer.core.service.ParserOfVacancy;
+package com.aicareer.core.service.parserOfVacancy;
 
 import com.aicareer.core.model.vacancy.RealVacancy;
 
@@ -8,7 +8,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import netscape.javascript.JSObject;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 

@@ -1,13 +1,12 @@
-package com.aicareer.core.DTO.user;
+package com.aicareer.core.dto.courseDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class LoginRequestDto {
-  private String email;
-  private String password;
+@Data
+public class CourseRequest {
+  private String courseRequirements;
 }

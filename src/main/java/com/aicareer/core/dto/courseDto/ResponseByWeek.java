@@ -1,4 +1,4 @@
-package com.aicareer.core.DTO.courseDto;
+package com.aicareer.core.dto.courseDto;
 
 import com.aicareer.core.model.courseModel.Week;
 import lombok.AllArgsConstructor;
