@@ -25,6 +25,7 @@ public class ChatWithAiBeforeDeterminingVacancyService implements ChatWithAiBefo
     private List<String> dialogHistory = new ArrayList<>();
 
 
+
     private List<String> pullStandartQuestions = Arrays.asList(
             "Представь, что мы с тобой встречаемся через год. Какой главный профессиональный результат этого года заставил бы тебя гордиться собой? ",
             "Что для тебя важнее в работе сейчас: глубокая экспертиза в одной области или возможность работать на стыке разных направлений? Почему?",
@@ -136,6 +137,8 @@ public class ChatWithAiBeforeDeterminingVacancyService implements ChatWithAiBefo
     @Override
     public UserPreferences analyzeCombinedData() {
         String prompt = BeforeDeterminingPrompts.ANALYZE_DATA + dialogHistory;
-        return new UserPreferences(gigaChatApiService.sendMessage(prompt));
+        return UserPreferences.builder()
+                .infoAboutPerson(gigaChatApiService.sendMessage(prompt))
+                .build();
     }
 }

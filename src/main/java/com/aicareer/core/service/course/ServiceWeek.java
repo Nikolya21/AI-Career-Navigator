@@ -70,14 +70,20 @@ public class ServiceWeek implements CourseResponse {
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .toList();
-              tasks.add(new Task(currentTaskDescription, urls));
+              Task task = new Task();
+              task.setDescription(currentTaskDescription);
+              task.setUrls(urls);
+              tasks.add(task);
               currentTaskDescription = null;
             }
             break;
           default:
             if (key.startsWith("task")) {
               if (currentTaskDescription != null && !currentTaskDescription.isEmpty()) {
-                tasks.add(new Task(currentTaskDescription, List.of()));
+                Task task = new Task();
+                task.setDescription(currentTaskDescription);
+                task.setUrls(List.of());
+                tasks.add(task);
               }
               currentTaskDescription = value;
             }
@@ -102,14 +108,20 @@ public class ServiceWeek implements CourseResponse {
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .toList();
-              tasks.add(new Task(currentTaskDescription, urls));
+              Task task = new Task();
+              task.setDescription(currentTaskDescription);
+              task.setUrls(urls);
+              tasks.add(task);;
               currentTaskDescription = null;
             }
             break;
           default:
             if (key.startsWith("task")) {
               if (currentTaskDescription != null && !currentTaskDescription.isEmpty()) {
-                tasks.add(new Task(currentTaskDescription, List.of()));
+                Task task = new Task();
+                task.setDescription(currentTaskDescription);
+                task.setUrls(List.of());
+                tasks.add(task);
               }
               currentTaskDescription = value;
             }
@@ -118,13 +130,19 @@ public class ServiceWeek implements CourseResponse {
       }
     }
     if (currentTaskDescription != null && !currentTaskDescription.isEmpty()) {
-      tasks.add(new Task(currentTaskDescription, List.of()));
+      Task task = new Task();
+      task.setDescription(currentTaskDescription);
+      task.setUrls(List.of());
+      tasks.add(task);
     }
 
     if (goal == null || goal.isEmpty()) {
       return null;
     }
-
-    return new Week(weekNumber, goal, tasks);
+    Week week = new Week();
+    week.setNumber(weekNumber);
+    week.setGoal(goal);
+    week.setTasks(tasks);
+    return week;
   }
 }

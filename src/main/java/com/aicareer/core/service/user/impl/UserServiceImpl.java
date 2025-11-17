@@ -1,6 +1,7 @@
 package com.aicareer.core.service.user.impl;
 
 import com.aicareer.core.DTO.user.*;
+import com.aicareer.core.model.user.UserPreferences;
 import com.aicareer.core.service.user.UserService;
 import com.aicareer.core.service.user.model.AuthenticationResult;
 import com.aicareer.core.service.user.model.RegistrationResult;
@@ -14,6 +15,8 @@ import com.aicareer.core.validator.user.RegistrationValidator;
 import com.aicareer.repository.user.CVDataRepository;
 import com.aicareer.repository.user.UserRepository;
 import com.aicareer.repository.user.UserSkillsRepository;
+import com.aicareer.repository.user.UserPreferencesRepository; // ← ДОБАВИЛ
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -29,19 +32,24 @@ public class UserServiceImpl implements UserService {
   private final UserRepository userRepository;
   private final CVDataRepository cvDataRepository;
   private final UserSkillsRepository userSkillsRepository;
+  private final UserPreferencesRepository userPreferencesRepository; // ← ДОБАВИЛ
 
   public UserServiceImpl(UserRepository userRepository,
-      CVDataRepository cvDataRepository,
-      UserSkillsRepository userSkillsRepository) {
+                         CVDataRepository cvDataRepository,
+                         UserSkillsRepository userSkillsRepository,
+                         UserPreferencesRepository userPreferencesRepository) { // ← ОБНОВИЛ КОНСТРУКТОР
     this.userRepository = userRepository;
     this.cvDataRepository = cvDataRepository;
     this.userSkillsRepository = userSkillsRepository;
+    this.userPreferencesRepository = userPreferencesRepository; // ← ДОБАВИЛ
   }
+
+  // ========== СУЩЕСТВУЮЩИЕ МЕТОДЫ (без изменений) ==========
   @Override
   public RegistrationResult registerUser(UserRegistrationDto registrationDto) {
     List<String> validationErrors = RegistrationValidator.validate(
-        registrationDto,
-        this::isEmailAvailable
+            registrationDto,
+            this::isEmailAvailable
     );
 
     if (!validationErrors.isEmpty()) {
@@ -52,15 +60,15 @@ public class UserServiceImpl implements UserService {
 
     try {
       User user = User.builder()
-          .name(registrationDto.getName())
-          .email(registrationDto.getEmail())
-          .passwordHash(PasswordEncoder.encode(registrationDto.getPassword()))
-          .cv(null)
-          .skills(null)
-          .vacancyNow(null)
-          .userPreferences(null)
-          .roadmapId(null)
-          .build();
+              .name(registrationDto.getName())
+              .email(registrationDto.getEmail())
+              .passwordHash(PasswordEncoder.encode(registrationDto.getPassword()))
+              .cv(null)
+              .skills(null)
+              .vacancyNow(null)
+              .userPreferences(null)
+              .roadmapId(null)
+              .build();
 
       user.updateTimestamps();
       User savedUser = userRepository.save(user);
@@ -119,13 +127,14 @@ public class UserServiceImpl implements UserService {
 
     Optional<CVData> cvDataOpt = cvDataRepository.findByUserId(userId);
     Optional<UserSkills> skillsOpt = userSkillsRepository.findByUserId(userId);
+    Optional<UserPreferences> preferencesOpt = userPreferencesRepository.findByUserId(userId); // ← ДОБАВИЛ
 
     User profile = new User();
     profile.setEmail(user.getEmail());
     profile.setName(user.getName());
     profile.setCv(cvDataOpt.orElse(null));
     profile.setSkills(skillsOpt.orElse(null));
-    profile.setUserPreferences(null);
+    profile.setUserPreferences(preferencesOpt.orElse(null)); // ← ОБНОВИЛ
     profile.setVacancyNow(user.getVacancyNow());
     profile.setRoadmapId(user.getRoadmapId());
 
@@ -254,10 +263,10 @@ public class UserServiceImpl implements UserService {
       String extractedText = UniversalTextExtractor(cvFile);
 
       CVData cvData = CVData.builder()
-          .userId(userId)
-          .file(cvFile)
-          .information(extractedText)
-          .build();
+              .userId(userId)
+              .file(cvFile)
+              .information(extractedText)
+              .build();
 
       cvData.updateTimestamps();
       cvDataRepository.save(cvData);
@@ -280,9 +289,85 @@ public class UserServiceImpl implements UserService {
     return userRepository.findAll();
   }
 
+  // ========== НОВЫЕ МЕТОДЫ ДЛЯ USER PREFERENCES ==========
+
+
+  @Override
+  public UserPreferences getUserPreferences(Long userId) {
+    if (userId == null || userId <= 0) {
+      throw new IllegalArgumentException("Неверный ID пользователя");
+    }
+
+    System.out.println("Getting user preferences for user: " + userId);
+
+    try {
+      Optional<UserPreferences> preferencesOpt = userPreferencesRepository.findByUserId(userId);
+
+      if (preferencesOpt.isPresent()) {
+        UserPreferences preferences = preferencesOpt.get();
+        System.out.println("Found user preferences for user ID: " + userId);
+        return preferences;
+      } else {
+        System.out.println("No user preferences found for user ID: " + userId);
+        return null;
+      }
+
+    } catch (Exception e) {
+      throw new RuntimeException("Системная ошибка при получении настроек: " + e.getMessage());
+    }
+  }
+
+  @Override
+  public UpdateResult updateUserPreferencesInfo(Long userId, String newInfoAboutPerson) {
+    if (userId == null || userId <= 0) {
+      return UpdateResult.error("Неверный ID пользователя");
+    }
+
+    if (newInfoAboutPerson == null || newInfoAboutPerson.trim().isEmpty()) {
+      return UpdateResult.error("Новая информация о пользователе не может быть пустой");
+    }
+
+    System.out.println("Updating user preferences info for user: " + userId);
+
+    try {
+      Optional<UserPreferences> preferencesOpt = userPreferencesRepository.findByUserId(userId);
+
+      if (preferencesOpt.isEmpty()) {
+        return UpdateResult.error("Настройки пользователя не найдены");
+      }
+
+      UserPreferences preferences = preferencesOpt.get();
+      preferences.setInfoAboutPerson(newInfoAboutPerson.trim());
+
+      userPreferencesRepository.save(preferences);
+
+      System.out.println("User preferences info updated successfully for user ID: " + userId);
+      return UpdateResult.success();
+
+    } catch (Exception e) {
+      return UpdateResult.error("Системная ошибка при обновлении настроек: " + e.getMessage());
+    }
+  }
+
+  @Override
+  public boolean hasUserPreferences(Long userId) {
+    if (userId == null || userId <= 0) {
+      return false;
+    }
+
+    try {
+      boolean exists = userPreferencesRepository.existsByUserId(userId);
+      System.out.println("User preferences exist for user " + userId + ": " + exists);
+      return exists;
+    } catch (Exception e) {
+      System.err.println("Error checking user preferences existence: " + e.getMessage());
+      return false;
+    }
+  }
+
+  // ========== СУЩЕСТВУЮЩИЕ ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ==========
   private static String UniversalTextExtractor(File cvFile) throws IOException {
     String fileName = cvFile.getName();
-
     String fileExtension = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
 
     switch (fileExtension) {
@@ -296,12 +381,12 @@ public class UserServiceImpl implements UserService {
         return text;
       case "docx":
         try (FileInputStream fis = new FileInputStream(cvFile);
-            XWPFDocument document = new XWPFDocument(fis)) { // автоматическое закрытие ресурсов
+             XWPFDocument document = new XWPFDocument(fis)) {
           List<XWPFParagraph> paragraphs = document.getParagraphs();
           StringBuilder textDOCX = new StringBuilder();
           for (XWPFParagraph para : paragraphs) {
             textDOCX.append(para.getText());
-            textDOCX.append("\n"); // добавляем перенос строки для сохранения структуры
+            textDOCX.append("\n");
           }
           return textDOCX.toString();
         }

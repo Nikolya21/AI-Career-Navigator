@@ -1,7 +1,6 @@
 package com.aicareer.repository.user.impl;
 
 import com.aicareer.core.model.user.User;
-import com.aicareer.core.model.user.UserSkills;
 import com.aicareer.repository.user.UserRepository;
 import java.util.ArrayList;
 import java.util.List;
