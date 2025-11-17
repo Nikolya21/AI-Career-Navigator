@@ -83,14 +83,14 @@ public class DatabaseConfig {
             conn.createStatement().execute("SET search_path TO aicareer");
 
             // В ПРАВИЛЬНОМ ПОРЯДКЕ (из-за foreign keys)
-            executeSqlFile(conn, "db/schema/01_users.sql");
-            executeSqlFile(conn, "db/schema/02_cv_data.sql");
-            executeSqlFile(conn, "db/schema/03_user_preferences.sql");
-            executeSqlFile(conn, "db/schema/04_user_skills.sql");
-            executeSqlFile(conn, "db/schema/05_roadmaps.sql");
-            executeSqlFile(conn, "db/schema/06_roadmap_zones.sql");
-            executeSqlFile(conn, "db/schema/07_weeks.sql");
-            executeSqlFile(conn, "db/schema/08_tasks.sql");
+            executeSqlFile(conn, "db.schema/01_users.sql");
+            executeSqlFile(conn, "db.schema/02_cv_data.sql");
+            executeSqlFile(conn, "db.schema/03_user_preferences.sql");
+            executeSqlFile(conn, "db.schema/04_user_skills.sql");
+            executeSqlFile(conn, "db.schema/05_roadmaps.sql");
+            executeSqlFile(conn, "db.schema/06_roadmap_zones.sql");
+            executeSqlFile(conn, "db.schema/07_weeks.sql");
+            executeSqlFile(conn, "db.schema/08_tasks.sql");
 
             System.out.println("✅ Database schema initialized successfully");
         } catch (SQLException e) {
