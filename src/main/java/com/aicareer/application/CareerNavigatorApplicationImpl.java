@@ -41,16 +41,16 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
   private final UserSkillsRepository userSkillsRepository;
 
   public CareerNavigatorApplicationImpl(
-          UserService userService,
-          ChatWithAiBeforeDeterminingVacancyService chatBeforeVacancyService,
-          SelectVacancy selectVacancy,
-          ChatWithAiAfterDeterminingVacancyService chatAfterVacancyService,
-          RoadmapGenerateService roadmapGenerateService,
-          RoadmapService roadmapService, // ← ДОБАВИЛ
-          UserPreferencesRepository userPreferencesRepository,
-          CVDataRepository cvDataRepository, // ← ДОБАВИТЬ
-          UserSkillsRepository userSkillsRepository, // ← ДОБАВИТЬ
-          LearningPlanAssembler learningPlanAssembler
+    UserService userService,
+    ChatWithAiBeforeDeterminingVacancyService chatBeforeVacancyService,
+    SelectVacancy selectVacancy,
+    ChatWithAiAfterDeterminingVacancyService chatAfterVacancyService,
+    RoadmapGenerateService roadmapGenerateService,
+    RoadmapService roadmapService, // ← ДОБАВИЛ
+    UserPreferencesRepository userPreferencesRepository,
+    CVDataRepository cvDataRepository, // ← ДОБАВИТЬ
+    UserSkillsRepository userSkillsRepository, // ← ДОБАВИТЬ
+    LearningPlanAssembler learningPlanAssembler
   ) {
     this.userService = userService;
     this.chatBeforeVacancyService = chatBeforeVacancyService;
@@ -66,18 +66,18 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
 
   @Override
   public User authenticateOrRegister(String email, String password, String name)
-          throws AuthenticationException {
+    throws AuthenticationException {
     // Валидация
     if (email == null || email.trim().isEmpty()) {
       throw new AuthenticationException(
-              AuthenticationException.Type.INVALID_EMAIL_FORMAT,
-              "Email не может быть пустым"
+        AuthenticationException.Type.INVALID_EMAIL_FORMAT,
+        "Email не может быть пустым"
       );
     }
     if (password == null || password.length() < 6) {
       throw new AuthenticationException(
-              AuthenticationException.Type.WEAK_PASSWORD,
-              "Пароль должен содержать минимум 6 символов"
+        AuthenticationException.Type.WEAK_PASSWORD,
+        "Пароль должен содержать минимум 6 символов"
       );
     }
 
@@ -95,16 +95,16 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
         return result.getUser();
       } else {
         throw new AuthenticationException(
-                AuthenticationException.Type.USER_ALREADY_EXISTS,
-                "Регистрация не удалась: " + String.join("; ", result.getErrors())
+          AuthenticationException.Type.USER_ALREADY_EXISTS,
+          "Регистрация не удалась: " + String.join("; ", result.getErrors())
         );
       }
 
     } catch (Exception e) {
       throw new AuthenticationException(
-              AuthenticationException.Type.ACCOUNT_LOCKED,
-              "Системная ошибка при регистрации: " + e.getMessage(),
-              e
+        AuthenticationException.Type.ACCOUNT_LOCKED,
+        "Системная ошибка при регистрации: " + e.getMessage(),
+        e
       );
     }
   }
@@ -118,8 +118,8 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
     }
     if (cvText == null || cvText.trim().isEmpty()) {
       throw new ChatException(
-              ChatException.Type.INVALID_RESPONSE_FORMAT,
-              "CV не может быть пустым"
+        ChatException.Type.INVALID_RESPONSE_FORMAT,
+        "CV не может быть пустым"
       );
     }
 
@@ -130,9 +130,9 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
 
       // 1. Сохраняем CVData
       CVData cvData = CVData.builder()
-              .userId(user.getId())
-              .information(cvText)
-              .build();
+        .userId(user.getId())
+        .information(cvText)
+        .build();
       cvDataRepository.save(cvData);
 
       // 2. Генерируем и сохраняем UserPreferences через ИИ
@@ -146,20 +146,20 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
 
     } catch (RuntimeException e) {
       throw new ChatException(
-              ChatException.Type.MODEL_ERROR,
-              "Ошибка при анализе данных пользователя через AI",
-              e
+        ChatException.Type.MODEL_ERROR,
+        "Ошибка при анализе данных пользователя через AI",
+        e
       );
     }
   }
 
   @Override
   public FinalVacancyRequirements selectVacancy(UserPreferences preferences)
-          throws VacancySelectionException {
+    throws VacancySelectionException {
     if (preferences == null) {
       throw new VacancySelectionException(
-              VacancySelectionException.Type.INVALID_PREFERENCES,
-              "UserPreferences не могут быть null"
+        VacancySelectionException.Type.INVALID_PREFERENCES,
+        "UserPreferences не могут быть null"
       );
     }
 
@@ -167,66 +167,64 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
       String analysisResult = selectVacancy.analyzeUserPreference(preferences);
       if (analysisResult == null || analysisResult.trim().isEmpty()) {
         throw new VacancySelectionException(
-                VacancySelectionException.Type.NO_VACANCIES_FOUND,
-                "AI не вернул анализ предпочтений"
+          VacancySelectionException.Type.NO_VACANCIES_FOUND,
+          "AI не вернул анализ предпочтений"
         );
       }
 
       // Возвращаем вашу строку — как и задумано
       return new FinalVacancyRequirements(
-              "Java 11+, Spring Boot, опыт работы с REST API, 2+ года опыта, английский B1+"
+        "Java 11+, Spring Boot, опыт работы с REST API, 2+ года опыта, английский B1+"
       );
     } catch (Exception e) {
       throw new VacancySelectionException(
-              VacancySelectionException.Type.PARSING_FAILED,
-              "Ошибка при подборе вакансии",
-              e
+        VacancySelectionException.Type.PARSING_FAILED,
+        "Ошибка при подборе вакансии",
+        e
       );
     }
   }
 
   @Override
   public CourseRequirements defineCourseRequirements(FinalVacancyRequirements vacancyRequirements)
-          throws CourseDefinitionException {
+    throws CourseDefinitionException {
     if (vacancyRequirements == null || vacancyRequirements.getVacancyAllCompactRequirements() == null) {
       throw new CourseDefinitionException(
-              CourseDefinitionException.Type.INSUFFICIENT_DATA,
-              "Требования вакансии не заданы"
+        CourseDefinitionException.Type.INSUFFICIENT_DATA,
+        "Требования вакансии не заданы"
       );
     }
 
     try {
       chatAfterVacancyService.askingPersonalizedQuestions(
-              chatAfterVacancyService.generatePersonalizedQuestions(vacancyRequirements)
+        chatAfterVacancyService.generatePersonalizedQuestions(vacancyRequirements)
       );
       return chatAfterVacancyService.analyzeCombinedData(vacancyRequirements);
     } catch (Exception e) {
       throw new CourseDefinitionException(
-              CourseDefinitionException.Type.COURSE_GENERATION_FAILED,
-              "Не удалось сформировать требования к курсу",
-              e
+        CourseDefinitionException.Type.COURSE_GENERATION_FAILED,
+        "Не удалось сформировать требования к курсу",
+        e
       );
     }
   }
 
   @Override
-  public Roadmap generateRoadmap(CourseRequirements courseRequirements)
-          throws RoadmapGenerationException {
-    if (courseRequirements == null) {
+  public Roadmap generateRoadmap(ResponseByWeek responseByWeek)
+    throws RoadmapGenerationException {
+    if (responseByWeek == null) {
       throw new RoadmapGenerationException(
-              RoadmapGenerationException.Type.MISSING_COURSE_DATA,
-              "CourseRequirements не могут быть null"
+        RoadmapGenerationException.Type.MISSING_COURSE_DATA,
+        "ResponseByWeek не могут быть null"
       );
     }
 
     try {
-      CourseRequest courseRequest = new CourseRequest(courseRequirements.getCourseRequirements());
-      ResponseByWeek response = learningPlanAssembler.assemblePlan(courseRequest);
 
       // Вручную вызываем методы RoadmapGenerateService
-      String weeksInfo = roadmapGenerateService.gettingWeeksInformation(response);
+      String weeksInfo = roadmapGenerateService.gettingWeeksInformation(responseByWeek);
       String zonesAnalysis = roadmapGenerateService.informationComplexityAndQuantityAnalyzeAndCreatingZone(weeksInfo);
-      List<RoadmapZone> zones = roadmapGenerateService.splittingWeeksIntoZones(zonesAnalysis, response.getWeeks());
+      List<RoadmapZone> zones = roadmapGenerateService.splittingWeeksIntoZones(zonesAnalysis, responseByWeek.getWeeks());
 
       // Генерируем roadmap
       Roadmap generatedRoadmap = roadmapGenerateService.identifyingThematicallySimilarZones(zones);
@@ -240,9 +238,9 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
 
     } catch (Exception e) {
       throw new RoadmapGenerationException(
-              RoadmapGenerationException.Type.INFRASTRUCTURE_ERROR,
-              "Ошибка генерации дорожной карты",
-              e
+        RoadmapGenerationException.Type.INFRASTRUCTURE_ERROR,
+        "Ошибка генерации дорожной карты",
+        e
       );
     }
   }
@@ -253,15 +251,15 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
   public Roadmap getSavedRoadmap(Long userId) throws RoadmapGenerationException {
     try {
       return roadmapService.findRoadmapByUserId(userId)
-              .orElseThrow(() -> new RoadmapGenerationException(
-                      RoadmapGenerationException.Type.MISSING_COURSE_DATA,
-                      "Roadmap не найдена для пользователя: " + userId
-              ));
+        .orElseThrow(() -> new RoadmapGenerationException(
+          RoadmapGenerationException.Type.MISSING_COURSE_DATA,
+          "Roadmap не найдена для пользователя: " + userId
+        ));
     } catch (Exception e) {
       throw new RoadmapGenerationException(
-              RoadmapGenerationException.Type.INFRASTRUCTURE_ERROR,
-              "Ошибка при получении roadmap",
-              e
+        RoadmapGenerationException.Type.INFRASTRUCTURE_ERROR,
+        "Ошибка при получении roadmap",
+        e
       );
     }
   }
@@ -271,15 +269,15 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
     Task task1 = new Task();
     task1.setDescription("Изучить базовый синтаксис Java");
     task1.setUrls(List.of(
-            "https://docs.oracle.com/javase/tutorial/",
-            "https://learnjavaonline.org/"
+      "https://docs.oracle.com/javase/tutorial/",
+      "https://learnjavaonline.org/"
     ));
 
     Task task2 = new Task();
     task2.setDescription("Установить IntelliJ IDEA и настроить проект");
     task2.setUrls(List.of(
-            "https://www.jetbrains.com/idea/download/",
-            "https://www.jetbrains.com/help/idea/creating-and-running-your-first-java-application.html"
+      "https://www.jetbrains.com/idea/download/",
+      "https://www.jetbrains.com/help/idea/creating-and-running-your-first-java-application.html"
     ));
 
     Week week1 = new Week();
@@ -291,14 +289,14 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
     Task task3 = new Task();
     task3.setDescription("Изучить основы Spring Boot: создать REST-контроллер");
     task3.setUrls(List.of(
-            "https://spring.io/guides/gs/spring-boot/",
-            "https://www.baeldung.com/spring-boot-rest"
+      "https://spring.io/guides/gs/spring-boot/",
+      "https://www.baeldung.com/spring-boot-rest"
     ));
 
     Task task4 = new Task();
     task4.setDescription("Работа с аннотациями @RestController, @GetMapping");
     task4.setUrls(List.of(
-            "https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/RestController.html"
+      "https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/RestController.html"
     ));
 
     Week week2 = new Week();
@@ -310,8 +308,8 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
     Task task5 = new Task();
     task5.setDescription("Подключить базу данных (H2/PostgreSQL) через Spring Data JPA");
     task5.setUrls(List.of(
-            "https://spring.io/guides/gs/accessing-data-jpa/",
-            "https://www.baeldung.com/spring-boot-jpa"
+      "https://spring.io/guides/gs/accessing-data-jpa/",
+      "https://www.baeldung.com/spring-boot-jpa"
     ));
 
     Week week3 = new Week();

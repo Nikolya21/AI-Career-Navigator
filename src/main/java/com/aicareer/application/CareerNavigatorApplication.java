@@ -1,6 +1,7 @@
 // com.aicareer.application.CareerNavigatorApplication.java
 package com.aicareer.application;
 
+import com.aicareer.core.DTO.courseDto.ResponseByWeek;
 import com.aicareer.core.exception.*;
 import com.aicareer.core.model.user.User;
 import com.aicareer.core.model.user.UserPreferences;
@@ -19,5 +20,5 @@ public interface CareerNavigatorApplication {
 
   CourseRequirements defineCourseRequirements(FinalVacancyRequirements vacancyRequirements) throws CourseDefinitionException;
 
-  Roadmap generateRoadmap(CourseRequirements courseRequirements) throws RoadmapGenerationException;
+  Roadmap generateRoadmap(ResponseByWeek responseByWeek) throws RoadmapGenerationException;
 }

@@ -41,10 +41,10 @@ public class ConsolePresentation {
 
       System.out.println("\n📚 Передаём требования в генератор курса...");
       CourseRequest courseRequest = new CourseRequest(courseRequirements);
-      ResponseByWeek courseResponse = application.getLearningPlanAssembler().assemblePlan(courseRequest);
-      System.out.println("✅ Курс сгенерирован: " + courseResponse.getWeeks().size() + " недель");
+      ResponseByWeek responseByWeek = application.getLearningPlanAssembler().assemblePlan(courseRequest);
+      System.out.println("✅ Курс сгенерирован: " + responseByWeek.getWeeks().size() + " недель");
 
-      Roadmap roadmap = handleRoadmapGeneration(courseRequirements);
+      Roadmap roadmap = handleRoadmapGeneration(responseByWeek);
       if (roadmap == null) return;
 
       displaySuccess(roadmap);
@@ -144,10 +144,10 @@ public class ConsolePresentation {
     }
   }
 
-  private Roadmap handleRoadmapGeneration(CourseRequirements courseRequirements) {
+  private Roadmap handleRoadmapGeneration(ResponseByWeek responseByWeek) {
     System.out.println("\n🗺️ Цикл: Генерация учебного плана и дорожной карты");
     try {
-      return application.generateRoadmap(courseRequirements);
+      return application.generateRoadmap(responseByWeek);
     } catch (Exception e) {
       System.err.println("❌ Ошибка при генерации Roadmap: " + e.getMessage());
       return null;
