@@ -7,6 +7,7 @@ import com.aicareer.core.model.user.UserPreferences;
 import com.aicareer.core.model.vacancy.FinalVacancyRequirements;
 import com.aicareer.core.model.courseModel.CourseRequirements;
 import com.aicareer.core.model.roadmap.Roadmap;
+import com.aicareer.repository.course.AssemblePlan;
 
 public interface CareerNavigatorApplication {
 

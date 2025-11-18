@@ -3,6 +3,7 @@ package com.aicareer;
 import com.aicareer.application.CareerNavigatorApplicationImpl;
 import com.aicareer.core.config.DatabaseConfig;
 import com.aicareer.core.service.ParserOfVacancy.SelectVacancy;
+import com.aicareer.core.service.course.*;
 import com.aicareer.core.service.gigachat.GigaChatService;
 import com.aicareer.core.service.information.ChatWithAiBeforeDeterminingVacancyService;
 import com.aicareer.core.service.information.ChatWithAiAfterDeterminingVacancyService;
@@ -52,6 +53,18 @@ public class Main {
       WeekRepository weekRepository = new WeekRepositoryImpl(dataSource);
       TaskRepository taskRepository = new TaskRepositoryImpl(dataSource);
 
+      ServicePrompt servicePrompt = new ServicePrompt();
+      GigaChatService gigaChatService = new GigaChatService();
+      ServiceGenerateCourse courseGenerator = new ServiceGenerateCourse(servicePrompt, gigaChatService);
+      ServiceWeek courseResponseParser = new ServiceWeek();
+      WeekDistributionService distributionService = new WeekDistributionService();
+
+      LearningPlanAssembler learningPlanAssembler = new LearningPlanAssembler(
+        courseGenerator,
+        courseResponseParser,
+        distributionService
+      );
+
       // 4. Сервисы
       UserService userService = new UserServiceImpl(
               userRepository,
@@ -62,7 +75,6 @@ public class Main {
 
       RoadmapService roadmapService = new RoadmapService(dataSource);
 
-      GigaChatService gigaChatService = new GigaChatService();
       DialogService dialogService = new DialogService(gigaChatService, true);
 
       // 5. Сервисы бизнес-логики
@@ -81,7 +93,8 @@ public class Main {
               roadmapService,
               userPreferencesRepository,
               cvDataRepository,        // ← ДОБАВЬ
-              userSkillsRepository     // ← ДОБАВЬ
+              userSkillsRepository,     // ← ДОБАВЬ
+              learningPlanAssembler
       );
 
       // 7. Запуск

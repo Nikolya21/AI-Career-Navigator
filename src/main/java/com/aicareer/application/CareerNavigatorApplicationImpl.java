@@ -1,5 +1,6 @@
 package com.aicareer.application;
 
+import com.aicareer.core.DTO.courseDto.CourseRequest;
 import com.aicareer.core.DTO.user.UserRegistrationDto;
 import com.aicareer.core.DTO.courseDto.ResponseByWeek;
 import com.aicareer.core.exception.*;
@@ -13,6 +14,7 @@ import com.aicareer.core.model.vacancy.FinalVacancyRequirements;
 import com.aicareer.core.model.courseModel.CourseRequirements;
 import com.aicareer.core.model.roadmap.Roadmap;
 import com.aicareer.core.service.ParserOfVacancy.SelectVacancy;
+import com.aicareer.core.service.course.LearningPlanAssembler;
 import com.aicareer.core.service.information.ChatWithAiAfterDeterminingVacancyService;
 import com.aicareer.core.service.information.ChatWithAiBeforeDeterminingVacancyService;
 import com.aicareer.core.service.roadmap.RoadmapGenerateService;
@@ -35,7 +37,7 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
   private final RoadmapService roadmapService;
   private final UserPreferencesRepository userPreferencesRepository;
   private final CVDataRepository cvDataRepository;
-
+  private final LearningPlanAssembler learningPlanAssembler;
   private final UserSkillsRepository userSkillsRepository;
 
   public CareerNavigatorApplicationImpl(
@@ -47,7 +49,8 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
           RoadmapService roadmapService, // ← ДОБАВИЛ
           UserPreferencesRepository userPreferencesRepository,
           CVDataRepository cvDataRepository, // ← ДОБАВИТЬ
-          UserSkillsRepository userSkillsRepository // ← ДОБАВИТЬ
+          UserSkillsRepository userSkillsRepository, // ← ДОБАВИТЬ
+          LearningPlanAssembler learningPlanAssembler
   ) {
     this.userService = userService;
     this.chatBeforeVacancyService = chatBeforeVacancyService;
@@ -58,6 +61,7 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
     this.userPreferencesRepository = userPreferencesRepository;
     this.cvDataRepository = cvDataRepository;
     this.userSkillsRepository = userSkillsRepository;
+    this.learningPlanAssembler = learningPlanAssembler;
   }
 
   @Override
@@ -104,7 +108,9 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
       );
     }
   }
-
+  public LearningPlanAssembler getLearningPlanAssembler() {
+    return learningPlanAssembler;
+  }
   @Override
   public UserPreferences gatherUserPreferences(User user, String cvText) throws ChatException {
     if (user == null) {
@@ -214,8 +220,8 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
     }
 
     try {
-      // Заглушка: создаём ResponseByWeek
-      ResponseByWeek response = createTestResponseByWeek();
+      CourseRequest courseRequest = new CourseRequest(courseRequirements.getCourseRequirements());
+      ResponseByWeek response = learningPlanAssembler.assemblePlan(courseRequest);
 
       // Вручную вызываем методы RoadmapGenerateService
       String weeksInfo = roadmapGenerateService.gettingWeeksInformation(response);

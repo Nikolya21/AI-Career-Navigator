@@ -2,6 +2,8 @@ package com.aicareer.presentation;
 
 import com.aicareer.application.CareerNavigatorApplication;
 import com.aicareer.application.CareerNavigatorApplicationImpl;
+import com.aicareer.core.DTO.courseDto.CourseRequest;
+import com.aicareer.core.DTO.courseDto.ResponseByWeek;
 import com.aicareer.core.model.user.User;
 import com.aicareer.core.model.user.UserPreferences;
 import com.aicareer.core.model.vacancy.FinalVacancyRequirements;
@@ -12,7 +14,7 @@ import java.util.Scanner;
 
 public class ConsolePresentation {
 
-  private final CareerNavigatorApplication application;
+  private final CareerNavigatorApplicationImpl application;
   private final Scanner scanner;
 
   public ConsolePresentation(CareerNavigatorApplicationImpl application) {
@@ -36,6 +38,11 @@ public class ConsolePresentation {
 
       CourseRequirements courseRequirements = handleCourseDefinition(vacancyRequirements);
       if (courseRequirements == null) return;
+
+      System.out.println("\n📚 Передаём требования в генератор курса...");
+      CourseRequest courseRequest = new CourseRequest(courseRequirements);
+      ResponseByWeek courseResponse = application.getLearningPlanAssembler().assemblePlan(courseRequest);
+      System.out.println("✅ Курс сгенерирован: " + courseResponse.getWeeks().size() + " недель");
 
       Roadmap roadmap = handleRoadmapGeneration(courseRequirements);
       if (roadmap == null) return;
