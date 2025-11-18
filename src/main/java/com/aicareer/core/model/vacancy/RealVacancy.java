@@ -26,7 +26,7 @@ public class RealVacancy {
   }
   @Override
   public String toString(){
-    return String.format("Должность: %s\nЗарплата: %s\nОпыт: %s\n",
+    return String.format("Зарплата: %s\nОпыт: %s\n",
         nameOfVacancy, salary != null ? salary : "не указана", vacancyRequirements
         );
   }

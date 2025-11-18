@@ -37,7 +37,7 @@ public class ConsolePresentation {
       CourseRequirements courseRequirements = handleCourseDefinition(vacancyRequirements);
       if (courseRequirements == null) return;
 
-      Roadmap roadmap = handleRoadmapGeneration(courseRequirements);
+      Roadmap roadmap = handleRoadmapGeneration(courseRequirements, currentUser);
       if (roadmap == null) return;
 
       displaySuccess(roadmap);
@@ -137,10 +137,10 @@ public class ConsolePresentation {
     }
   }
 
-  private Roadmap handleRoadmapGeneration(CourseRequirements courseRequirements) {
+  private Roadmap handleRoadmapGeneration(CourseRequirements courseRequirements, User user) {
     System.out.println("\n🗺️ Цикл: Генерация учебного плана и дорожной карты");
     try {
-      return application.generateRoadmap(courseRequirements);
+      return application.generateRoadmap(courseRequirements, user);
     } catch (Exception e) {
       System.err.println("❌ Ошибка при генерации Roadmap: " + e.getMessage());
       return null;

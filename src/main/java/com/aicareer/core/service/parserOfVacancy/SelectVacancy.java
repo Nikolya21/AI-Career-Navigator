@@ -29,15 +29,20 @@ public class SelectVacancy implements SelectOfVacancy {
   @Override
   public String analyzeUserPreference(UserPreferences infoAboutPerson) {
     String promtAnalyze = (infoAboutPerson.toString() + "%s\n\nРоль: Ты — опытный HR-аналитик и карьерный психолог. Твоя задача — проанализировать диалог с пользователем, составить его детальный психологический портрет и на его основе подобрать три наиболее подходящие профессии.\n"
-      + "\nКонтекст:\n"
-      + "Пользователь прошел сессию карьерного консультирования. Тебе нужно глубоко проанализировать его ответы, чтобы понять его истинные мотивы, предпочтения и на основе этого предложить конкретные вакансии.\n"
-      + "\nЗадача: Проведи комплексный анализ, а затем подбери профессии.\n"
-      + "\nФормат вывода:\n"
-      + "ПСИХОЛОГИЧЕСКИЙ ПОРТРЕТ ДЛЯ ПОДБОРА ВАКАНСИЙ\n"
-      + "[анализ...]\n"
-      + "ПОДБОР ПРОФЕССИЙ\n"
-      + "[профессии...]\n"
-      + ":::Профессия1,Профессия2,Профессия3");
+        + "\nКонтекст:\n"
+        + "Пользователь прошел сессию карьерного консультирования. Тебе нужно глубоко проанализировать его ответы, чтобы понять его истинные мотивы, предпочтения и на основе этого предложить конкретные вакансии.\n"
+        + "\nЗадача: Проведи комплексный анализ, а затем подбери профессии.\n"
+        + "\nФормат вывода:\n"
+        + "ПСИХОЛОГИЧЕСКИЙ ПОРТРЕТ ДЛЯ ПОДБОРА ВАКАНСИЙ\n"
+        + "[анализ...]\n"
+        + "ПОДБОР ПРОФЕССИЙ\n"
+        + "[профессии...]\n"
+        + ":::Профессия1,Профессия2,Профессия3\n"
+        + "последняя строчка является обязательной и самым главным условием, так же учитывай что названия профессия должны быть на английском языке обязательно\n"
+        + "ПРИМЕР: Javamiddle - \n"
+        + "QA tester - \n"
+        + "TeamLead -  \n"
+        + "::: Javamiddle,Qa tester,TeamLead \n");
     String gigachatAnswer = gigaChatService.sendMessage(promtAnalyze);
     this.analysisResult = gigachatAnswer;
     extractThreeVacancies(gigachatAnswer);
@@ -100,15 +105,21 @@ public class SelectVacancy implements SelectOfVacancy {
   public String formingByParsing(SelectedPotentialVacancy selectedVacancy) {
 
     String selectedVacancy1 = this.selectedVacancy.getNameOfVacancy();
-    List<RealVacancy> vacancies = ParserService.getVacancies(selectedVacancy1, "1", 10);
+    List<RealVacancy> vacancies = ParserService.getVacancies(selectedVacancy1, "1", 100);
     String newPromt = "";
-    for (int i = 0; i < Math.min(10, vacancies.size()); i++) {
-      RealVacancy vacancy = vacancies.get(i);
-      newPromt += (vacancy + "\n");
-
+    int neededCountOfVacancies = 0;
+    for (int i = 0; i < Math.min(100, vacancies.size()); i++) {
+      if (vacancies.get(i).getVacancyRequirements() != null || vacancies.get(i).getSalary() != null){
+        neededCountOfVacancies++;
+        RealVacancy vacancy = vacancies.get(i);
+        newPromt += (vacancy.getNameOfVacancy() + "\n" +vacancy.getSalary() + "\n" +vacancy.getVacancyRequirements().get(0) + "\n");
+      }
+      if (neededCountOfVacancies == 10){
+        break;
+      }
     }
 
-    System.out.println(newPromt);
+
 
     return newPromt;
   }

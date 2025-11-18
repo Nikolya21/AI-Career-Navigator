@@ -19,7 +19,7 @@ public class WeekRepositoryImpl implements WeekRepository {
 
     @Override
     public Week save(Week week) {
-        String sql = "INSERT INTO weeks (roadmap_zone_id, week_number, goal, created_at) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO aicareer.weeks (roadmap_zone_id, week_number, goal, created_at) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -52,7 +52,7 @@ public class WeekRepositoryImpl implements WeekRepository {
 
     @Override
     public List<Week> findByRoadmapZoneId(Long roadmapZoneId) {
-        String sql = "SELECT * FROM weeks WHERE roadmap_zone_id = ? ORDER BY week_number";
+        String sql = "SELECT * FROM aicareer.weeks WHERE roadmap_zone_id = ? ORDER BY week_number";
         List<Week> weeks = new ArrayList<>();
 
         try (Connection conn = dataSource.getConnection();
@@ -68,13 +68,13 @@ public class WeekRepositoryImpl implements WeekRepository {
             return weeks;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Error finding weeks by roadmap zone id", e);
+            throw new RuntimeException("Error finding aicareer.weeks by roadmap zone id", e);
         }
     }
 
     @Override
     public Optional<Week> findById(Long id) {
-        String sql = "SELECT * FROM weeks WHERE id = ?";
+        String sql = "SELECT * FROM aicareer.weeks WHERE id = ?";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -95,7 +95,7 @@ public class WeekRepositoryImpl implements WeekRepository {
 
     @Override
     public boolean delete(Long id) {
-        String sql = "DELETE FROM weeks WHERE id = ?";
+        String sql = "DELETE FROM aicareer.weeks WHERE id = ?";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -111,7 +111,7 @@ public class WeekRepositoryImpl implements WeekRepository {
 
     @Override
     public boolean deleteByRoadmapZoneId(Long roadmapZoneId) {
-        String sql = "DELETE FROM weeks WHERE roadmap_zone_id = ?";
+        String sql = "DELETE FROM aicareer.weeks WHERE roadmap_zone_id = ?";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {

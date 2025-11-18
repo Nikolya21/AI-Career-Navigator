@@ -19,7 +19,7 @@ public class RoadmapRepositoryImpl implements RoadmapRepository {
 
     @Override
     public Roadmap save(Roadmap roadmap) {
-        String sql = "INSERT INTO roadmaps (user_id, created_at, updated_at) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO aicareer.roadmaps (user_id, created_at, updated_at) VALUES (?, ?, ?)";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -51,7 +51,7 @@ public class RoadmapRepositoryImpl implements RoadmapRepository {
 
     @Override
     public Optional<Roadmap> findById(Long id) {
-        String sql = "SELECT * FROM roadmaps WHERE id = ?";
+        String sql = "SELECT * FROM aicareer.roadmaps WHERE id = ?";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -72,7 +72,7 @@ public class RoadmapRepositoryImpl implements RoadmapRepository {
 
     @Override
     public Optional<Roadmap> findByUserId(Long userId) {
-        String sql = "SELECT * FROM roadmaps WHERE user_id = ? ORDER BY created_at DESC LIMIT 1";
+        String sql = "SELECT * FROM aicareer.roadmaps WHERE user_id = ? ORDER BY created_at DESC LIMIT 1";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -93,7 +93,7 @@ public class RoadmapRepositoryImpl implements RoadmapRepository {
 
     @Override
     public List<Roadmap> findAllByUserId(Long userId) {
-        String sql = "SELECT * FROM roadmaps WHERE user_id = ? ORDER BY created_at DESC";
+        String sql = "SELECT * FROM aicareer.roadmaps WHERE user_id = ? ORDER BY created_at DESC";
         List<Roadmap> roadmaps = new ArrayList<>();
 
         try (Connection conn = dataSource.getConnection();
@@ -109,13 +109,13 @@ public class RoadmapRepositoryImpl implements RoadmapRepository {
             return roadmaps;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Error finding all roadmaps by user id", e);
+            throw new RuntimeException("Error finding all aicareer.roadmaps by user id", e);
         }
     }
 
     @Override
     public boolean delete(Long id) {
-        String sql = "DELETE FROM roadmaps WHERE id = ?";
+        String sql = "DELETE FROM aicareer.roadmaps WHERE id = ?";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -131,7 +131,7 @@ public class RoadmapRepositoryImpl implements RoadmapRepository {
 
     @Override
     public boolean deleteByUserId(Long userId) {
-        String sql = "DELETE FROM roadmaps WHERE user_id = ?";
+        String sql = "DELETE FROM aicareer.roadmaps WHERE user_id = ?";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {

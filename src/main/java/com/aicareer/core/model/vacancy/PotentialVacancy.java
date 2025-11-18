@@ -17,7 +17,7 @@ public class PotentialVacancy {
   }
   @Override
   public String toString(){
-    return String.format("Должность: %s\nЗарплата: %s\nИнформация по вакансии: %s\n",
+    return String.format("%s\nЗарплата: %s\nИнформация по вакансии: %s\n",
         nameOfVacancy, salary != null ? salary : "не указана", infAboutVacancy
     );
   }

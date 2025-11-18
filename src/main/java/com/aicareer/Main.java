@@ -2,6 +2,11 @@ package com.aicareer;
 
 import com.aicareer.application.CareerNavigatorApplicationImpl;
 import com.aicareer.core.config.DatabaseConfig;
+import com.aicareer.core.service.course.LearningPlanAssembler;
+import com.aicareer.core.service.course.ServiceGenerateCourse;
+import com.aicareer.core.service.course.ServicePrompt;
+import com.aicareer.core.service.course.ServiceWeek;
+import com.aicareer.core.service.course.WeekDistributionService;
 import com.aicareer.core.service.parserOfVacancy.*;
 import com.aicareer.core.service.gigachat.GigaChatService;
 import com.aicareer.core.service.information.ChatWithAiAfterDeterminingVacancyService;
@@ -71,6 +76,17 @@ public class Main {
       var chatAfterVacancyService = new ChatWithAiAfterDeterminingVacancyService(gigaChatService, dialogService);
       var roadmapGenerateService = new RoadmapGenerateService(gigaChatService);
 
+      ServicePrompt servicePrompt = new ServicePrompt();
+      ServiceGenerateCourse courseGenerator = new ServiceGenerateCourse(servicePrompt, gigaChatService);
+      ServiceWeek courseResponseParser = new ServiceWeek();
+      WeekDistributionService distributionService = new WeekDistributionService();
+
+      LearningPlanAssembler learningPlanAssembler = new LearningPlanAssembler(
+          courseGenerator,
+          courseResponseParser,
+          distributionService
+      );
+
       // 6. Приложение
       var application = new CareerNavigatorApplicationImpl(
               userService,
@@ -81,7 +97,8 @@ public class Main {
               roadmapService,
               userPreferencesRepository,
               cvDataRepository,        // ← ДОБАВЬ
-              userSkillsRepository     // ← ДОБАВЬ
+              userSkillsRepository,
+              learningPlanAssembler
       );
 
       // 7. Запуск

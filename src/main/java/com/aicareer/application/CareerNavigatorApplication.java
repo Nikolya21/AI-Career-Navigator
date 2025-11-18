@@ -19,5 +19,5 @@ public interface CareerNavigatorApplication {
 
   CourseRequirements defineCourseRequirements(FinalVacancyRequirements vacancyRequirements) throws CourseDefinitionException;
 
-  Roadmap generateRoadmap(CourseRequirements courseRequirements) throws RoadmapGenerationException;
+  Roadmap generateRoadmap(CourseRequirements courseRequirements, User user) throws RoadmapGenerationException;
 }

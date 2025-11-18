@@ -19,7 +19,7 @@ public class TaskRepositoryImpl implements TaskRepository {
 
     @Override
     public Task save(Task task) {
-        String sql = "INSERT INTO tasks (week_id, description, urls, created_at) VALUES (?, ?, ?::jsonb, ?)";
+        String sql = "INSERT INTO aicareer.tasks (week_id, description, urls, created_at) VALUES (?, ?, ?::jsonb, ?)";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -56,7 +56,7 @@ public class TaskRepositoryImpl implements TaskRepository {
 
     @Override
     public List<Task> findByWeekId(Long weekId) {
-        String sql = "SELECT * FROM tasks WHERE week_id = ? ORDER BY created_at";
+        String sql = "SELECT * FROM aicareer.tasks WHERE week_id = ? ORDER BY created_at";
         List<Task> tasks = new ArrayList<>();
 
         try (Connection conn = dataSource.getConnection();
@@ -72,13 +72,13 @@ public class TaskRepositoryImpl implements TaskRepository {
             return tasks;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Error finding tasks by week id", e);
+            throw new RuntimeException("Error finding aicareer.tasks by week id", e);
         }
     }
 
     @Override
     public Optional<Task> findById(Long id) {
-        String sql = "SELECT * FROM tasks WHERE id = ?";
+        String sql = "SELECT * FROM aicareer.tasks WHERE id = ?";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -99,7 +99,7 @@ public class TaskRepositoryImpl implements TaskRepository {
 
     @Override
     public boolean delete(Long id) {
-        String sql = "DELETE FROM tasks WHERE id = ?";
+        String sql = "DELETE FROM aicareer.tasks WHERE id = ?";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -115,7 +115,7 @@ public class TaskRepositoryImpl implements TaskRepository {
 
     @Override
     public boolean deleteByWeekId(Long weekId) {
-        String sql = "DELETE FROM tasks WHERE week_id = ?";
+        String sql = "DELETE FROM aicareer.tasks WHERE week_id = ?";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {

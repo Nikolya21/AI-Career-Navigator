@@ -8,7 +8,7 @@ import lombok.Data;
 public class SelectedPotentialVacancy {
   private String nameOfVacancy;
   public SelectedPotentialVacancy(PotentialVacancy nameOfVacancy){
-    this.nameOfVacancy = String.valueOf(nameOfVacancy);
+    this.nameOfVacancy = nameOfVacancy.getNameOfVacancy();
   }
 
   public String getNameOfVacancy() {
