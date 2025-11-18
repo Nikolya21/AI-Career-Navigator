@@ -72,7 +72,7 @@ public class RoadmapGenerateService implements RoadmapGenerate {
         System.out.println("Found zones: " + roadmapZoneInString.size());
 
         List<RoadmapZone> roadmapZones = new ArrayList<>();
-
+        int zoneOrder = 1;
         for (String zone : roadmapZoneInString) {
             if (zone.trim().isEmpty()) continue;
 
@@ -90,6 +90,7 @@ public class RoadmapGenerateService implements RoadmapGenerate {
             roadmapZone.setName(name);
             roadmapZone.setLearningGoal(skills);
             roadmapZone.setComplexityLevel(complexity);
+            roadmapZone.setZoneOrder(zoneOrder++);
 
             // Обрабатываем диапазон недель
             if (weeksRange != null) {

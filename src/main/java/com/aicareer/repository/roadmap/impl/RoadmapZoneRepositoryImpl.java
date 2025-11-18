@@ -19,7 +19,7 @@ public class RoadmapZoneRepositoryImpl implements RoadmapZoneRepository {
 
     @Override
     public RoadmapZone save(RoadmapZone zone) {
-        String sql = "INSERT INTO roadmap_zones (roadmap_id, name, learning_goal, complexity_level, zone_order, created_at) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO aicareer.roadmap_zones (roadmap_id, name, learning_goal, complexity_level, zone_order, created_at) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -54,7 +54,7 @@ public class RoadmapZoneRepositoryImpl implements RoadmapZoneRepository {
 
     @Override
     public List<RoadmapZone> findByRoadmapId(Long roadmapId) {
-        String sql = "SELECT * FROM roadmap_zones WHERE roadmap_id = ? ORDER BY zone_order";
+        String sql = "SELECT * FROM aicareer.roadmap_zones WHERE roadmap_id = ? ORDER BY zone_order";
         List<RoadmapZone> zones = new ArrayList<>();
 
         try (Connection conn = dataSource.getConnection();
@@ -76,7 +76,7 @@ public class RoadmapZoneRepositoryImpl implements RoadmapZoneRepository {
 
     @Override
     public Optional<RoadmapZone> findById(Long id) {
-        String sql = "SELECT * FROM roadmap_zones WHERE id = ?";
+        String sql = "SELECT * FROM aicareer.roadmap_zones WHERE id = ?";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -97,7 +97,7 @@ public class RoadmapZoneRepositoryImpl implements RoadmapZoneRepository {
 
     @Override
     public boolean delete(Long id) {
-        String sql = "DELETE FROM roadmap_zones WHERE id = ?";
+        String sql = "DELETE FROM aicareer.roadmap_zones WHERE id = ?";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -113,7 +113,7 @@ public class RoadmapZoneRepositoryImpl implements RoadmapZoneRepository {
 
     @Override
     public boolean deleteByRoadmapId(Long roadmapId) {
-        String sql = "DELETE FROM roadmap_zones WHERE roadmap_id = ?";
+        String sql = "DELETE FROM aicareer.roadmap_zones WHERE roadmap_id = ?";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
