@@ -1,14 +1,16 @@
 package com.aicareer.repository.roadmap;
 
-import com.aicareer.core.model.Roadmap;
-import com.aicareer.core.model.RoadmapZone;
-import com.aicareer.core.model.Week;
+import com.aicareer.core.dto.courseDto.ResponseByWeek;
+import com.aicareer.core.model.roadmap.Roadmap;
+import com.aicareer.core.model.roadmap.RoadmapZone;
+import com.aicareer.core.model.courseModel.Week;
 
 import java.util.List;
 
 public interface RoadmapGenerate {
 
-    String gettingWeeksInformation(List<Week> weeks);
+
+    String gettingWeeksInformation(ResponseByWeek responseByWeek);
 
     String informationComplexityAndQuantityAnalyzeAndCreatingZone(String weeksInformation);
 
