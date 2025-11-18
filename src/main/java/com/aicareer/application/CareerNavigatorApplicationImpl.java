@@ -171,7 +171,7 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
     }
 
     try {
-      // ✅ ВАЖНО: Запускаем диалог с пользователем!
+      //Запускаем диалог с пользователем
       chatBeforeVacancyService.starDialogWithUser();
       chatBeforeVacancyService.askingStandardQuestions();
       System.out.println("first");
@@ -359,7 +359,7 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
       // Генерируем roadmap
       Roadmap generatedRoadmap = roadmapGenerateService.identifyingThematicallySimilarZones(zones);
 
-      // ✅ СОХРАНЯЕМ в БД через RoadmapService
+      // СОХРАНЯЕМ в БД через RoadmapService
       // Нужно установить userId (можно передавать через параметры или контекст)
       // generatedRoadmap.setUserId(userId);
       Roadmap savedRoadmap = roadmapService.saveCompleteRoadmap(generatedRoadmap);
@@ -377,9 +377,6 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
 
 
 
-  /**
-   * НОВЫЙ МЕТОД: Получить сохраненную roadmap пользователя
-   */
   public Roadmap getSavedRoadmap(Long userId) throws RoadmapGenerationException {
     try {
       return roadmapService.findRoadmapByUserId(userId)
@@ -449,7 +446,7 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
     week3.setGoal("Работа с базой данных через JPA");
     week3.setTasks(List.of(task5));
 
-    // === Собираем ResponseByWeek ===
+    // Собираем ResponseByWeek
     ResponseByWeek response = new ResponseByWeek();
     response.setWeeks(List.of(week1, week2, week3));
     return response;
