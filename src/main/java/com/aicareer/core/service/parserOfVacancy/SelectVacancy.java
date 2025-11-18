@@ -105,16 +105,18 @@ public class SelectVacancy implements SelectOfVacancy {
   public String formingByParsing(SelectedPotentialVacancy selectedVacancy) {
 
     String selectedVacancy1 = this.selectedVacancy.getNameOfVacancy();
-    List<RealVacancy> vacancies = ParserService.getVacancies(selectedVacancy1, "1", 100);
+    List<RealVacancy> vacancies = ParserService.getVacancies(selectedVacancy1, "1", 1000);
     String newPromt = "";
     int neededCountOfVacancies = 0;
-    for (int i = 0; i < Math.min(100, vacancies.size()); i++) {
+    for (int i = 0; i < Math.min(1000, vacancies.size()); i++) {
       if (vacancies.get(i).getVacancyRequirements() != null || vacancies.get(i).getSalary() != null) {
 
         RealVacancy vacancy = vacancies.get(i);
         if (vacancy.getVacancyRequirements() != null) {
-          newPromt += (vacancy.getNameOfVacancy() + "\n" + vacancy.getSalary() + "\n"
-              + vacancy.getVacancyRequirements().get(0) + "\n");
+          newPromt += (vacancy.getNameOfVacancy() + "\n" + vacancy.getSalary() + "\n");
+          for (int j = 0; j < vacancy.getVacancyRequirements().size(); j++) {
+            newPromt += vacancy.getVacancyRequirements().get(j);
+          }
           neededCountOfVacancies++;
         } else{
           newPromt += (vacancy.getNameOfVacancy() + "\n" + vacancy.getSalary() + "\n");
