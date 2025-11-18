@@ -16,7 +16,20 @@ public class ServiceGenerateCourse implements GenerateCourseFromGpt {
 
   @Override
   public String generateCoursePlan(CourseRequest request) {
-    String prompt = servicePrompt.generatePrompt(request);
-    return gigaChatClient.sendMessage(prompt);
+    System.out.println("🔧 Генерация курса для: " + request);
+
+    try {
+      String prompt = servicePrompt.generatePrompt(request);
+      System.out.println("📝 Промт сгенерирован, длина: " + prompt.length());
+
+      String response = gigaChatClient.sendMessage(prompt);
+      System.out.println("✅ Ответ от GigaChat получен, длина: " + response.length());
+
+      return response;
+    } catch (Exception e) {
+      System.err.println("❌ Ошибка при генерации курса: " + e.getMessage());
+      e.printStackTrace();
+      throw new RuntimeException("Не удалось сгенерировать курс: " + e.getMessage(), e);
+    }
   }
 }

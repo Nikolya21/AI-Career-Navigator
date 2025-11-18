@@ -2,6 +2,8 @@ package com.aicareer.presentation;
 
 import com.aicareer.application.CareerNavigatorApplication;
 import com.aicareer.application.CareerNavigatorApplicationImpl;
+import com.aicareer.core.dto.courseDto.CourseRequest;
+import com.aicareer.core.dto.courseDto.ResponseByWeek;
 import com.aicareer.core.model.user.User;
 import com.aicareer.core.model.user.UserPreferences;
 import com.aicareer.core.model.vacancy.FinalVacancyRequirements;
@@ -12,7 +14,7 @@ import java.util.Scanner;
 
 public class ConsolePresentation {
 
-  private final CareerNavigatorApplication application;
+  private final CareerNavigatorApplicationImpl application;
   private final Scanner scanner;
 
   public ConsolePresentation(CareerNavigatorApplicationImpl application) {
@@ -37,7 +39,12 @@ public class ConsolePresentation {
       CourseRequirements courseRequirements = handleCourseDefinition(vacancyRequirements);
       if (courseRequirements == null) return;
 
-      Roadmap roadmap = handleRoadmapGeneration(courseRequirements, currentUser);
+      System.out.println("\n📚 Передаём требования в генератор курса...");
+      CourseRequest courseRequest = new CourseRequest(courseRequirements);
+      ResponseByWeek responseByWeek = application.getLearningPlanAssembler().assemblePlan(courseRequest);
+      System.out.println("✅ Курс сгенерирован: " + responseByWeek.getWeeks().size() + " недель");
+
+      Roadmap roadmap = handleRoadmapGeneration(responseByWeek);
       if (roadmap == null) return;
 
       displaySuccess(roadmap);
@@ -137,10 +144,10 @@ public class ConsolePresentation {
     }
   }
 
-  private Roadmap handleRoadmapGeneration(CourseRequirements courseRequirements, User user) {
+  private Roadmap handleRoadmapGeneration(ResponseByWeek responseByWeek) {
     System.out.println("\n🗺️ Цикл: Генерация учебного плана и дорожной карты");
     try {
-      return application.generateRoadmap(courseRequirements, user);
+      return application.generateRoadmap(responseByWeek);
     } catch (Exception e) {
       System.err.println("❌ Ошибка при генерации Roadmap: " + e.getMessage());
       return null;

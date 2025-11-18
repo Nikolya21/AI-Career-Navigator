@@ -7,7 +7,7 @@ import com.aicareer.core.service.course.ServiceGenerateCourse;
 import com.aicareer.core.service.course.ServicePrompt;
 import com.aicareer.core.service.course.ServiceWeek;
 import com.aicareer.core.service.course.WeekDistributionService;
-import com.aicareer.core.service.parserOfVacancy.*;
+import com.aicareer.core.service.parserOfVacancy.SelectVacancy;
 import com.aicareer.core.service.gigachat.GigaChatService;
 import com.aicareer.core.service.information.ChatWithAiAfterDeterminingVacancyService;
 import com.aicareer.core.service.information.ChatWithAiBeforeDeterminingVacancyService;
@@ -41,7 +41,7 @@ public class Main {
     try {
       System.out.println("🚀 Запуск AlCareer Application...");
 
-      // 1. Инициализация БД через DatabaseConfig (автоматически создаст таблицы)
+      // 1. Инициализация БД
       DataSource dataSource = DatabaseConfig.getDataSource();
       System.out.println("✅ База данных инициализирована");
 
@@ -57,26 +57,10 @@ public class Main {
       WeekRepository weekRepository = new WeekRepositoryImpl(dataSource);
       TaskRepository taskRepository = new TaskRepositoryImpl(dataSource);
 
-      // 4. Сервисы
-      UserService userService = new UserServiceImpl(
-              userRepository,
-              cvDataRepository,
-              userSkillsRepository,
-              userPreferencesRepository
-      );
-
-      RoadmapService roadmapService = new RoadmapService(dataSource);
-
-      GigaChatService gigaChatService = new GigaChatService();
-      DialogService dialogService = new DialogService(gigaChatService, true);
-
-      // 5. Сервисы бизнес-логики
-      var chatBeforeVacancyService = new ChatWithAiBeforeDeterminingVacancyService(gigaChatService, dialogService);
-      var selectVacancy = new SelectVacancy(gigaChatService);
-      var chatAfterVacancyService = new ChatWithAiAfterDeterminingVacancyService(gigaChatService, dialogService);
-      var roadmapGenerateService = new RoadmapGenerateService(gigaChatService);
-
+      // 4. Сервисы генерации курса
+      System.out.println("🔧 Инициализация сервисов генерации курса...");
       ServicePrompt servicePrompt = new ServicePrompt();
+      GigaChatService gigaChatService = new GigaChatService();
       ServiceGenerateCourse courseGenerator = new ServiceGenerateCourse(servicePrompt, gigaChatService);
       ServiceWeek courseResponseParser = new ServiceWeek();
       WeekDistributionService distributionService = new WeekDistributionService();
@@ -86,22 +70,40 @@ public class Main {
           courseResponseParser,
           distributionService
       );
+      System.out.println("✅ Сервисы генерации курса инициализированы");
 
-      // 6. Приложение
-      var application = new CareerNavigatorApplicationImpl(
-              userService,
-              chatBeforeVacancyService,
-              selectVacancy,
-              chatAfterVacancyService,
-              roadmapGenerateService,
-              roadmapService,
-              userPreferencesRepository,
-              cvDataRepository,        // ← ДОБАВЬ
-              userSkillsRepository,
-              learningPlanAssembler
+      // 5. Основные сервисы
+      UserService userService = new UserServiceImpl(
+          userRepository,
+          cvDataRepository,
+          userSkillsRepository,
+          userPreferencesRepository
       );
 
-      // 7. Запуск
+      RoadmapService roadmapService = new RoadmapService(dataSource);
+      DialogService dialogService = new DialogService(gigaChatService, true);
+
+      // 6. Сервисы бизнес-логики
+      System.out.println("🔧 Инициализация бизнес-сервисов...");
+      var chatBeforeVacancyService = new ChatWithAiBeforeDeterminingVacancyService(gigaChatService, dialogService);
+      var selectVacancy = new SelectVacancy(gigaChatService);
+      var chatAfterVacancyService = new ChatWithAiAfterDeterminingVacancyService(gigaChatService, dialogService);
+      var roadmapGenerateService = new RoadmapGenerateService(gigaChatService);
+
+      // 7. Приложение
+      var application = new CareerNavigatorApplicationImpl(
+          userService,
+          chatBeforeVacancyService,
+          selectVacancy,
+          chatAfterVacancyService,
+          roadmapGenerateService,
+          roadmapService,
+          userPreferencesRepository,
+          cvDataRepository,
+          userSkillsRepository,
+          learningPlanAssembler
+      );
+
       System.out.println("✅ Все компоненты инициализированы");
       System.out.println("🎯 Запуск пользовательского интерфейса...");
 
@@ -111,12 +113,11 @@ public class Main {
       System.err.println("❌ Критическая ошибка инициализации: " + e.getMessage());
       e.printStackTrace();
 
-      // Полезная информация для диагностики
       System.err.println("\n🔧 Диагностика:");
-      System.err.println("- Проверь что PostgreSQL запущен на localhost:5432");
-      System.err.println("- Проверь что база 'aicareer' существует");
-      System.err.println("- Проверь логин/пароль в application.properties");
-      System.err.println("- Проверь сетевые настройки");
+      System.err.println("- Проверьте что PostgreSQL запущен на localhost:5432");
+      System.err.println("- Проверьте что база 'aicareer' существует");
+      System.err.println("- Проверьте логин/пароль в application.properties");
+      System.err.println("- Проверьте настройки GigaChat API");
     }
   }
 }

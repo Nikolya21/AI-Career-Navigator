@@ -21,13 +21,27 @@ public class LearningPlanAssembler implements AssemblePlan {
     this.courseResponse = courseResponse;
     this.distributionByWeek = distributionByWeek;
   }
+
   @Override
   public ResponseByWeek assemblePlan(CourseRequest request) {
-    String rawLlmResponse = courseGenerator.generateCoursePlan(request);
+    System.out.println("🎯 Начало сборки учебного плана...");
 
-    List<Week> parsedWeeks = courseResponse.parseCourseResponse(rawLlmResponse);
+    try {
+      String rawLlmResponse = courseGenerator.generateCoursePlan(request);
+      System.out.println("✅ Сырой ответ от LLM получен");
 
-    List<Week> distributedWeeks = distributionByWeek.distributionByWeek(parsedWeeks);
-    return new ResponseByWeek(distributedWeeks);
+      List<Week> parsedWeeks = courseResponse.parseCourseResponse(rawLlmResponse);
+      System.out.println("✅ Недели распарсены: " + parsedWeeks.size());
+
+      List<Week> distributedWeeks = distributionByWeek.distributionByWeek(parsedWeeks);
+      System.out.println("✅ Распределение по неделям завершено");
+
+      return new ResponseByWeek(distributedWeeks);
+
+    } catch (Exception e) {
+      System.err.println("❌ Ошибка при сборке учебного плана: " + e.getMessage());
+      e.printStackTrace();
+      throw new RuntimeException("Не удалось собрать учебный план: " + e.getMessage(), e);
+    }
   }
 }

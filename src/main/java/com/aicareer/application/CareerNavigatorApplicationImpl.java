@@ -28,7 +28,6 @@ import com.aicareer.repository.user.UserPreferencesRepository;
 import com.aicareer.repository.user.UserSkillsRepository;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class CareerNavigatorApplicationImpl implements CareerNavigatorApplication {
 
@@ -112,7 +111,9 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
       );
     }
   }
-
+  public LearningPlanAssembler getLearningPlanAssembler() {
+    return learningPlanAssembler;
+  }
   @Override
   public User authenticate(String email, String password)
       throws AuthenticationException {
@@ -338,107 +339,42 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
       );
     }
   }
-
   @Override
-  public Roadmap generateRoadmap(CourseRequirements courseRequirements, User user)
+  public Roadmap generateRoadmap(ResponseByWeek responseByWeek)
       throws RoadmapGenerationException {
-    if (courseRequirements == null) {
+    if (responseByWeek == null) {
       throw new RoadmapGenerationException(
           RoadmapGenerationException.Type.MISSING_COURSE_DATA,
-          "CourseRequirements не могут быть null"
+          "ResponseByWeek не могут быть null"
       );
     }
 
-
-      ResponseByWeek response = createTestResponseByWeek();
-      System.out.println("✅ Тестовый ResponseByWeek создан");
-
-    String weeksInfo;
     try {
+
       // Вручную вызываем методы RoadmapGenerateService
-      weeksInfo = roadmapGenerateService.gettingWeeksInformation(response);
-      System.out.println(
-          "✅ Информация о неделях получена, длина: " + (weeksInfo != null ? weeksInfo.length()
-              : "null"));
+      String weeksInfo = roadmapGenerateService.gettingWeeksInformation(responseByWeek);
+      String zonesAnalysis = roadmapGenerateService.informationComplexityAndQuantityAnalyzeAndCreatingZone(weeksInfo);
+      List<RoadmapZone> zones = roadmapGenerateService.splittingWeeksIntoZones(zonesAnalysis, responseByWeek.getWeeks());
 
-    } catch (Exception e) {
-      System.err.println("❌ Ошибка в gettingWeeksInformation:");
-      System.err.println("   Response: " + (response != null ? response.toString() : "null"));
-      e.printStackTrace();
-      throw new RuntimeException("Ошибка получения информации о неделях: " + e.getMessage(), e);
-    }
-
-    String zonesAnalysis;
-    try {
-      zonesAnalysis = roadmapGenerateService.informationComplexityAndQuantityAnalyzeAndCreatingZone(
-          weeksInfo);
-      System.out.println(
-          "✅ Анализ сложности и создание зон завершен, длина результата: " + (zonesAnalysis != null
-              ? zonesAnalysis.length() : "null"));
-
-    } catch (Exception e) {
-      System.err.println("❌ Ошибка в informationComplexityAndQuantityAnalyzeAndCreatingZone:");
-      System.err.println("   Weeks Info: " + (weeksInfo != null ?
-          weeksInfo.substring(0, Math.min(100, weeksInfo.length())) + "..." : "null"));
-      e.printStackTrace();
-      throw new RuntimeException("Ошибка анализа сложности и создания зон: " + e.getMessage(), e);
-    }
-
-    List<RoadmapZone> zones;
-    try {
-      zones = roadmapGenerateService.splittingWeeksIntoZones(zonesAnalysis, response.getWeeks());
-      System.out.println(
-          "✅ Недели разделены на зоны, количество зон: " + (zones != null ? zones.size() : "null"));
-
-    } catch (Exception e) {
-      System.err.println("❌ Ошибка в splittingWeeksIntoZones:");
-      System.err.println("   Zones Analysis: " + (zonesAnalysis != null ?
-          zonesAnalysis.substring(0, Math.min(100, zonesAnalysis.length())) + "..." : "null"));
-      System.err.println("   Weeks count: " + (response != null && response.getWeeks() != null
-          ? response.getWeeks().size() : "null"));
-      e.printStackTrace();
-      throw new RuntimeException("Ошибка разделения недель на зоны: " + e.getMessage(), e);
-    }
-
-    Roadmap generatedRoadmap;
-    try {
       // Генерируем roadmap
-      generatedRoadmap = roadmapGenerateService.identifyingThematicallySimilarZones(zones);
-      System.out.println(
-          "✅ Roadmap сгенерирован, ID: " + (generatedRoadmap != null ? generatedRoadmap.getId()
-              : "null"));
-    } catch (Exception e) {
-      System.err.println("❌ Ошибка в identifyingThematicallySimilarZones:");
-      System.err.println("   Zones count: " + (zones != null ? zones.size() : "null"));
-      System.err.println("   Zones: " + (zones != null ? zones.stream().map(RoadmapZone::getName)
-          .collect(Collectors.toList()) : "null"));
-      e.printStackTrace();
-      throw new RuntimeException("Ошибка идентификации тематически схожих зон: " + e.getMessage(),
-          e);
-    }
+      Roadmap generatedRoadmap = roadmapGenerateService.identifyingThematicallySimilarZones(zones);
 
-    Roadmap savedRoadmap;
-    try {
       // ✅ СОХРАНЯЕМ в БД через RoadmapService
       // Нужно установить userId (можно передавать через параметры или контекст)
-      generatedRoadmap.setUserId(user.getId());
-      savedRoadmap = roadmapService.saveCompleteRoadmap(generatedRoadmap);
-      System.out.println(
-          "✅ Roadmap сохранен в БД, ID: " + (savedRoadmap != null ? savedRoadmap.getId() : "null"));
-      System.out.println("🎉 Процесс генерации и сохранения roadmap успешно завершен!");
-      return savedRoadmap;
+      // generatedRoadmap.setUserId(userId);
+      Roadmap savedRoadmap = roadmapService.saveCompleteRoadmap(generatedRoadmap);
+
+      return savedRoadmap; // Возвращаем сохраненную версию
 
     } catch (Exception e) {
-      System.err.println("❌ Ошибка при сохранении roadmap в БД:");
-      System.err.println(
-          "   Generated Roadmap: " + (generatedRoadmap != null ? generatedRoadmap.toString()
-              : "null"));
-      System.err.println(
-          "   Roadmap ID: " + (generatedRoadmap != null ? generatedRoadmap.getId() : "null"));
-      e.printStackTrace();
-      throw new RuntimeException("Ошибка сохранения roadmap в базу данных: " + e.getMessage(), e);
+      throw new RoadmapGenerationException(
+          RoadmapGenerationException.Type.INFRASTRUCTURE_ERROR,
+          "Ошибка генерации дорожной карты",
+          e
+      );
     }
   }
+
 
 
   /**
@@ -447,15 +383,15 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
   public Roadmap getSavedRoadmap(Long userId) throws RoadmapGenerationException {
     try {
       return roadmapService.findRoadmapByUserId(userId)
-              .orElseThrow(() -> new RoadmapGenerationException(
-                      RoadmapGenerationException.Type.MISSING_COURSE_DATA,
-                      "Roadmap не найдена для пользователя: " + userId
-              ));
+          .orElseThrow(() -> new RoadmapGenerationException(
+              RoadmapGenerationException.Type.MISSING_COURSE_DATA,
+              "Roadmap не найдена для пользователя: " + userId
+          ));
     } catch (Exception e) {
       throw new RoadmapGenerationException(
-              RoadmapGenerationException.Type.INFRASTRUCTURE_ERROR,
-              "Ошибка при получении roadmap",
-              e
+          RoadmapGenerationException.Type.INFRASTRUCTURE_ERROR,
+          "Ошибка при получении roadmap",
+          e
       );
     }
   }
@@ -465,15 +401,15 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
     Task task1 = new Task();
     task1.setDescription("Изучить базовый синтаксис Java");
     task1.setUrls(List.of(
-            "https://docs.oracle.com/javase/tutorial/",
-            "https://learnjavaonline.org/"
+        "https://docs.oracle.com/javase/tutorial/",
+        "https://learnjavaonline.org/"
     ));
 
     Task task2 = new Task();
     task2.setDescription("Установить IntelliJ IDEA и настроить проект");
     task2.setUrls(List.of(
-            "https://www.jetbrains.com/idea/download/",
-            "https://www.jetbrains.com/help/idea/creating-and-running-your-first-java-application.html"
+        "https://www.jetbrains.com/idea/download/",
+        "https://www.jetbrains.com/help/idea/creating-and-running-your-first-java-application.html"
     ));
 
     Week week1 = new Week();
@@ -485,14 +421,14 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
     Task task3 = new Task();
     task3.setDescription("Изучить основы Spring Boot: создать REST-контроллер");
     task3.setUrls(List.of(
-            "https://spring.io/guides/gs/spring-boot/",
-            "https://www.baeldung.com/spring-boot-rest"
+        "https://spring.io/guides/gs/spring-boot/",
+        "https://www.baeldung.com/spring-boot-rest"
     ));
 
     Task task4 = new Task();
     task4.setDescription("Работа с аннотациями @RestController, @GetMapping");
     task4.setUrls(List.of(
-            "https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/RestController.html"
+        "https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/RestController.html"
     ));
 
     Week week2 = new Week();
@@ -504,8 +440,8 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
     Task task5 = new Task();
     task5.setDescription("Подключить базу данных (H2/PostgreSQL) через Spring Data JPA");
     task5.setUrls(List.of(
-            "https://spring.io/guides/gs/accessing-data-jpa/",
-            "https://www.baeldung.com/spring-boot-jpa"
+        "https://spring.io/guides/gs/accessing-data-jpa/",
+        "https://www.baeldung.com/spring-boot-jpa"
     ));
 
     Week week3 = new Week();
