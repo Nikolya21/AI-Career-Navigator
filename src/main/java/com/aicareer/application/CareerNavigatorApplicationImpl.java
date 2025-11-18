@@ -257,8 +257,8 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
 
         // 3. Парсинг вакансии
         String parsingResult = selectVacancy.formingByParsing(selectedPotentialVacancy);
-        System.out.println("✅ Парсинг завершен, длина результата: " + parsingResult.length());
-        System.out.println(parsingResult);
+        System.out.println("✅ Парсинг завершен, длина результатa: " + parsingResult.length());
+        //System.out.println(parsingResult);
 
         // 4. Формирование финальных требований
         FinalVacancyRequirements finalVacancyRequirements = selectVacancy.formingFinalVacancyRequirements(

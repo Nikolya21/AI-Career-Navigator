@@ -109,12 +109,18 @@ public class SelectVacancy implements SelectOfVacancy {
     String newPromt = "";
     int neededCountOfVacancies = 0;
     for (int i = 0; i < Math.min(100, vacancies.size()); i++) {
-      if (vacancies.get(i).getVacancyRequirements() != null || vacancies.get(i).getSalary() != null){
-        neededCountOfVacancies++;
+      if (vacancies.get(i).getVacancyRequirements() != null || vacancies.get(i).getSalary() != null) {
+
         RealVacancy vacancy = vacancies.get(i);
-        newPromt += (vacancy.getNameOfVacancy() + "\n" +vacancy.getSalary() + "\n" +vacancy.getVacancyRequirements().get(0) + "\n");
+        if (vacancy.getVacancyRequirements() != null) {
+          newPromt += (vacancy.getNameOfVacancy() + "\n" + vacancy.getSalary() + "\n"
+              + vacancy.getVacancyRequirements().get(0) + "\n");
+          neededCountOfVacancies++;
+        } else{
+          newPromt += (vacancy.getNameOfVacancy() + "\n" + vacancy.getSalary() + "\n");
+        }
       }
-      if (neededCountOfVacancies == 10){
+      if (neededCountOfVacancies == 3){
         break;
       }
     }
