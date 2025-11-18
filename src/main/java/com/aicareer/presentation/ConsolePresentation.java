@@ -44,7 +44,7 @@ public class ConsolePresentation {
       ResponseByWeek responseByWeek = application.getLearningPlanAssembler().assemblePlan(courseRequest);
       System.out.println("✅ Курс сгенерирован: " + responseByWeek.getWeeks().size() + " недель");
 
-      Roadmap roadmap = handleRoadmapGeneration(responseByWeek);
+      Roadmap roadmap = handleRoadmapGeneration(responseByWeek, currentUser);
       if (roadmap == null) return;
 
       displaySuccess(roadmap);
@@ -144,10 +144,10 @@ public class ConsolePresentation {
     }
   }
 
-  private Roadmap handleRoadmapGeneration(ResponseByWeek responseByWeek) {
+  private Roadmap handleRoadmapGeneration(ResponseByWeek responseByWeek, User user) {
     System.out.println("\n🗺️ Цикл: Генерация учебного плана и дорожной карты");
     try {
-      return application.generateRoadmap(responseByWeek);
+      return application.generateRoadmap(responseByWeek, user);
     } catch (Exception e) {
       System.err.println("❌ Ошибка при генерации Roadmap: " + e.getMessage());
       return null;

@@ -171,7 +171,7 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
     }
 
     try {
-      //Запускаем диалог с пользователем
+      // ✅ ВАЖНО: Запускаем диалог с пользователем!
       chatBeforeVacancyService.starDialogWithUser();
       chatBeforeVacancyService.askingStandardQuestions();
       System.out.println("first");
@@ -340,7 +340,7 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
     }
   }
   @Override
-  public Roadmap generateRoadmap(ResponseByWeek responseByWeek)
+  public Roadmap generateRoadmap(ResponseByWeek responseByWeek, User user)
       throws RoadmapGenerationException {
     if (responseByWeek == null) {
       throw new RoadmapGenerationException(
@@ -350,33 +350,94 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
     }
 
     try {
-
       // Вручную вызываем методы RoadmapGenerateService
-      String weeksInfo = roadmapGenerateService.gettingWeeksInformation(responseByWeek);
-      String zonesAnalysis = roadmapGenerateService.informationComplexityAndQuantityAnalyzeAndCreatingZone(weeksInfo);
-      List<RoadmapZone> zones = roadmapGenerateService.splittingWeeksIntoZones(zonesAnalysis, responseByWeek.getWeeks());
+      String weeksInfo = null;
+      try {
+        weeksInfo = roadmapGenerateService.gettingWeeksInformation(responseByWeek);
+        System.out.println("✅ weeksInfo успешно получен: " + (weeksInfo != null ? weeksInfo.substring(0, Math.min(weeksInfo.length(), 100)) + "..." : "null"));
+      } catch (Exception e) {
+        System.out.println("❌ Ошибка в gettingWeeksInformation: " + e.getMessage());
+        e.printStackTrace();
+        throw new RuntimeException("Ошибка при получении информации о неделях", e);
+      }
+
+      String zonesAnalysis = null;
+      try {
+        zonesAnalysis = roadmapGenerateService.informationComplexityAndQuantityAnalyzeAndCreatingZone(weeksInfo);
+        System.out.println("✅ zonesAnalysis успешно получен: " + (zonesAnalysis != null ? zonesAnalysis.substring(0, Math.min(zonesAnalysis.length(), 100)) + "..." : "null"));
+      } catch (Exception e) {
+        System.out.println("❌ Ошибка в informationComplexityAndQuantityAnalyzeAndCreatingZone: " + e.getMessage());
+        e.printStackTrace();
+        throw new RuntimeException("Ошибка при анализе сложности и создании зон", e);
+      }
+
+      List<RoadmapZone> zones = null;
+      try {
+        zones = roadmapGenerateService.splittingWeeksIntoZones(zonesAnalysis, responseByWeek.getWeeks());
+        System.out.println("✅ zones успешно созданы, количество: " + (zones != null ? zones.size() : 0));
+        if (zones != null) {
+          for (int i = 0; i < zones.size(); i++) {
+            System.out.println("Зона " + i + ": " + zones.get(i));
+          }
+        }
+      } catch (Exception e) {
+        System.out.println("❌ Ошибка в splittingWeeksIntoZones: " + e.getMessage());
+        e.printStackTrace();
+        throw new RuntimeException("Ошибка при разделении недель по зонам", e);
+      }
 
       // Генерируем roadmap
-      Roadmap generatedRoadmap = roadmapGenerateService.identifyingThematicallySimilarZones(zones);
+      Roadmap generatedRoadmap = null;
+      try {
+        generatedRoadmap = roadmapGenerateService.identifyingThematicallySimilarZones(zones);
+        generatedRoadmap.setUserId(user.getId());
+        System.out.println("✅ Roadmap успешно сгенерирован: " + (generatedRoadmap != null ? generatedRoadmap.toString() : "null"));
+      } catch (Exception e) {
+        System.out.println("❌ Ошибка в identifyingThematicallySimilarZones: " + e.getMessage());
+        e.printStackTrace();
+        throw new RuntimeException("Ошибка при идентификации тематически схожих зон", e);
+      }
 
-      // СОХРАНЯЕМ в БД через RoadmapService
-      // Нужно установить userId (можно передавать через параметры или контекст)
-      // generatedRoadmap.setUserId(userId);
-      Roadmap savedRoadmap = roadmapService.saveCompleteRoadmap(generatedRoadmap);
+      // ✅ СОХРАНЯЕМ в БД через RoadmapService
+      Roadmap savedRoadmap = null;
+      try {
+        // Нужно установить userId (можно передавать через параметры или контекст)
+        // generatedRoadmap.setUserId(userId);
+        savedRoadmap = roadmapService.saveCompleteRoadmap(generatedRoadmap);
+        System.out.println("✅ Roadmap успешно сохранен в БД с ID: " + (savedRoadmap != null ? savedRoadmap.getId() : "null"));
 
-      return savedRoadmap; // Возвращаем сохраненную версию
+        // Возвращаем результат если все успешно
+        return savedRoadmap;
 
+      } catch (Exception e) {
+        System.out.println("❌ Ошибка при сохранении roadmap в БД: " + e.getMessage());
+        e.printStackTrace();
+        throw new RuntimeException("Ошибка при сохранении roadmap в базу данных", e);
+      }
+
+    } catch (RuntimeException e) {
+      // Перехватываем уже обернутые исключения
+      System.out.println("💥 Критическая ошибка в процессе создания roadmap: " + e.getMessage());
+      e.printStackTrace();
+      throw e;
     } catch (Exception e) {
-      throw new RoadmapGenerationException(
-          RoadmapGenerationException.Type.INFRASTRUCTURE_ERROR,
-          "Ошибка генерации дорожной карты",
-          e
-      );
+      // На всякий случай перехватываем все остальные исключения
+      System.out.println("💥 Неожиданная ошибка в процессе создания roadmap: " + e.getMessage());
+      e.printStackTrace();
+      throw new RuntimeException("Неожиданная ошибка при создании roadmap", e);
+    } finally {
+      // Блок finally выполнится в любом случае - успех или ошибка
+      System.out.println("🔚 Завершение процесса создания roadmap");
+      // Здесь можно добавить очистку ресурсов, если нужно
     }
   }
 
 
 
+
+  /**
+   * НОВЫЙ МЕТОД: Получить сохраненную roadmap пользователя
+   */
   public Roadmap getSavedRoadmap(Long userId) throws RoadmapGenerationException {
     try {
       return roadmapService.findRoadmapByUserId(userId)
@@ -446,7 +507,7 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
     week3.setGoal("Работа с базой данных через JPA");
     week3.setTasks(List.of(task5));
 
-    // Собираем ResponseByWeek
+    // === Собираем ResponseByWeek ===
     ResponseByWeek response = new ResponseByWeek();
     response.setWeeks(List.of(week1, week2, week3));
     return response;
