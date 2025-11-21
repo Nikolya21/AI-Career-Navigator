@@ -42,7 +42,8 @@ public class SelectVacancy implements SelectOfVacancy {
         + "ПРИМЕР: Javamiddle - \n"
         + "QA tester - \n"
         + "TeamLead -  \n"
-        + "::: Javamiddle,Qa tester,TeamLead \n");
+        + "::: Javamiddle,Qa tester,TeamLead \n"
+        + "после этих трех профессий ты должен закончить ответ и не добавлять больше символов!!!");
     String gigachatAnswer = gigaChatService.sendMessage(promtAnalyze);
     this.analysisResult = gigachatAnswer;
     extractThreeVacancies(gigachatAnswer);
