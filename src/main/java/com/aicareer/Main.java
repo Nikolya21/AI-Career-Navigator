@@ -46,6 +46,7 @@ public class Main {
       System.out.println("✅ База данных инициализирована");
 
       // 2. Репозитории User
+      // 2. Репозиторий User
       UserRepository userRepository = new UserRepositoryImpl(dataSource);
       UserPreferencesRepository userPreferencesRepository = new UserPreferencesRepositoryImpl(dataSource);
       CVDataRepository cvDataRepository = new CVDataRepositoryImpl(dataSource);
