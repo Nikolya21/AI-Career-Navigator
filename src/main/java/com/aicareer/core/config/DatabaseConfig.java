@@ -28,7 +28,7 @@ public class DatabaseConfig {
 
         Properties props = loadDatabaseProperties();
 
-        String url = "jdbc:" + props.getProperty("database.url");
+        String url = props.getProperty("database.url");
         String username = props.getProperty("database.username");
         String password = props.getProperty("database.password");
 
