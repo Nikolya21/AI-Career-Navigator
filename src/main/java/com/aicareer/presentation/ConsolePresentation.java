@@ -27,28 +27,36 @@ public class ConsolePresentation {
     System.out.println("================================================");
 
     try {
-      User currentUser = handleAuthentication();
-      if (currentUser == null) return;
+      Long currentUserID = handleAuthentication();
+      if (currentUserID == null) return;
 
-      UserPreferences userPreferences = handleUserPreferences(currentUser);
-      if (userPreferences == null) return;
 
-      FinalVacancyRequirements vacancyRequirements = handleVacancySelection(userPreferences);
-      if (vacancyRequirements == null) return;
+      // показ всего
+      System.out.println("Вы сейчас находитесь в меню презентации.");
+      while (true) {
+        System.out.println("Выберите страницу:");
+        System.out.println("1 - Личный кабинет");
+        System.out.println("2 - \"Роудмапа\"");
+        System.out.println("3 - Выход");
+        System.out.print("Ваш выбор: ");
+        String choice = scanner.nextLine().trim();
 
-      CourseRequirements courseRequirements = handleCourseDefinition(vacancyRequirements);
-      if (courseRequirements == null) return;
-
-      System.out.println("\n📚 Передаём требования в генератор курса...");
-      CourseRequest courseRequest = new CourseRequest(courseRequirements);
-      ResponseByWeek responseByWeek = application.getLearningPlanAssembler().assemblePlan(courseRequest);
-      System.out.println("✅ Курс сгенерирован: " + responseByWeek.getWeeks().size() + " недель");
-
-      Roadmap roadmap = handleRoadmapGeneration(responseByWeek, currentUser);
-      if (roadmap == null) return;
-
-      displaySuccess(roadmap);
-
+        switch (choice) {
+          case "1":
+            User currentUser = application.getUserProfile(currentUserID);
+            displayUserProfile(currentUser);
+            break;
+          case "2":
+            Roadmap roadmap = application.getSavedRoadmap(currentUserID);
+            displaySuccess(roadmap);
+            break;
+          case "3":
+            System.out.println("👋 До свидания!");
+            return;
+          default:
+            System.out.println("❌ Неверный выбор. Попробуйте снова.");
+        }
+      }
     } catch (Exception e) {
       System.err.println("💥 КРИТИЧЕСКАЯ ОШИБКА: " + e.getMessage());
       e.printStackTrace();
@@ -57,7 +65,7 @@ public class ConsolePresentation {
     }
   }
 
-  private User handleAuthentication() {
+  private Long handleAuthentication() {
     System.out.println("\n🔐 Цикл: Регистрация/Аутентификация");
     while (true) {
       System.out.println("\nВыберите действие:");
@@ -81,7 +89,7 @@ public class ConsolePresentation {
     }
   }
 
-  private User registerUser() {
+  private Long registerUser() {
     System.out.println("\n📝 Регистрация нового пользователя");
     System.out.print("Введите email: ");
     String email = scanner.nextLine().trim();
@@ -98,7 +106,7 @@ public class ConsolePresentation {
     }
   }
 
-  private User loginUser() {
+  private Long loginUser() {
     System.out.println("\n🔑 Аутентификация пользователя");
     System.out.print("Введите email: ");
     String email = scanner.nextLine().trim();
@@ -113,50 +121,15 @@ public class ConsolePresentation {
     }
   }
 
-  private UserPreferences handleUserPreferences(User user) {
-    System.out.println("\n💬 Цикл: Знакомство с пользователем (AI-чат)");
-    String cvText = "Петров Алексей Сергеевич\nЦель: Замещение должности Java-разработчика..."; // Можно сделать ввод с консоли
-    try {
-      return application.gatherUserPreferences(user, cvText);
-    } catch (Exception e) {
-      System.err.println("❌ Ошибка в AI-знакомстве: " + e.getMessage());
-      return null;
-    }
-  }
-
-  private FinalVacancyRequirements handleVacancySelection(UserPreferences preferences) {
-    System.out.println("\n🎯 Цикл: Подбор и анализ вакансии");
-    try {
-      return application.selectVacancy(preferences);
-    } catch (Exception e) {
-      System.err.println("❌ Ошибка при подборе вакансии: " + e.getMessage());
-      return null;
-    }
-  }
-
-  private CourseRequirements handleCourseDefinition(FinalVacancyRequirements vacancyRequirements) {
-    System.out.println("\n🎓 Цикл: Формирование требований к курсу");
-    try {
-      return application.defineCourseRequirements(vacancyRequirements);
-    } catch (Exception e) {
-      System.err.println("❌ Ошибка при формировании CourseRequirements: " + e.getMessage());
-      return null;
-    }
-  }
-
-  private Roadmap handleRoadmapGeneration(ResponseByWeek responseByWeek, User user) {
-    System.out.println("\n🗺️ Цикл: Генерация учебного плана и дорожной карты");
-    try {
-      return application.generateRoadmap(responseByWeek, user);
-    } catch (Exception e) {
-      System.err.println("❌ Ошибка при генерации Roadmap: " + e.getMessage());
-      return null;
-    }
-  }
-
   private void displaySuccess(Roadmap roadmap) {
-    System.out.println("\n✅ УСПЕХ: полный цикл завершён!");
     System.out.println("📋 Сгенерированная дорожная карта:");
     System.out.println(roadmap.getRoadmapZones());
+  }
+
+  private void displayUserProfile(User user) {
+    System.out.println("\nUser ID: " + user.getId());
+    System.out.println("Name: " + user.getName());
+    System.out.println("Email: " + user.getEmail());
+    System.out.println("Selected vacancy: " + user.getVacancyNow() + "\n");
   }
 }

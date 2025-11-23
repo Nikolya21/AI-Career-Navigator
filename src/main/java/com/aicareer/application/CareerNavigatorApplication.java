@@ -12,12 +12,14 @@ import com.aicareer.repository.course.AssemblePlan;
 
 public interface CareerNavigatorApplication {
 
-  User register(String email, String password, String name) throws AuthenticationException;
-  User authenticate(String email, String password) throws AuthenticationException;
+  Long register(String email, String password, String name) throws AuthenticationException;
+  Long authenticate(String email, String password) throws AuthenticationException;
 
   UserPreferences gatherUserPreferences(User user, String cvText) throws ChatException;
 
   FinalVacancyRequirements selectVacancy(UserPreferences preferences) throws VacancySelectionException;
+
+  User getUserProfile(Long userId);
 
   CourseRequirements defineCourseRequirements(FinalVacancyRequirements vacancyRequirements) throws CourseDefinitionException;
 

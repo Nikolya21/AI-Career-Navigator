@@ -1,5 +1,6 @@
 package com.aicareer.application;
 
+import com.aicareer.core.dto.courseDto.CourseRequest;
 import com.aicareer.core.dto.user.LoginRequestDto;
 import com.aicareer.core.dto.user.UserRegistrationDto;
 import com.aicareer.core.dto.courseDto.ResponseByWeek;
@@ -7,7 +8,6 @@ import com.aicareer.core.exception.*;
 import com.aicareer.core.model.courseModel.Task;
 import com.aicareer.core.model.courseModel.Week;
 import com.aicareer.core.model.roadmap.RoadmapZone;
-import com.aicareer.core.model.user.CVData;
 import com.aicareer.core.model.user.User;
 import com.aicareer.core.model.user.UserPreferences;
 import com.aicareer.core.model.vacancy.FinalVacancyRequirements;
@@ -27,7 +27,9 @@ import com.aicareer.repository.user.CVDataRepository;
 import com.aicareer.repository.user.UserPreferencesRepository;
 import com.aicareer.repository.user.UserSkillsRepository;
 
+import java.io.File;
 import java.util.List;
+import java.util.Scanner;
 
 public class CareerNavigatorApplicationImpl implements CareerNavigatorApplication {
 
@@ -67,21 +69,8 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
   }
 
   @Override
-  public User register(String email, String password, String name)
+  public Long register(String email, String password, String name)
       throws AuthenticationException {
-    // Валидация
-    if (email == null || email.trim().isEmpty()) {
-      throw new AuthenticationException(
-          AuthenticationException.Type.INVALID_EMAIL_FORMAT,
-          "Email не может быть пустым"
-      );
-    }
-    if (password == null || password.length() < 6) {
-      throw new AuthenticationException(
-          AuthenticationException.Type.WEAK_PASSWORD,
-          "Пароль должен содержать минимум 6 символов"
-      );
-    }
 
     try {
       // Создаём DTO
@@ -90,19 +79,58 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
       dto.setPassword(password);
       dto.setName(name);
 
-      // Вызываем UserService
+      // сохраняем user без доп данных
       RegistrationResult result = userService.registerUser(dto);
-      User user = result.getUser(); //todo cvData adding
+      User currentUser = result.getUser();
+      Long userId = currentUser.getId();
 
-      if (result.isSuccess()) {
-        return result.getUser();
-      } else {
+      if (!result.isSuccess()) {
         throw new AuthenticationException(
             AuthenticationException.Type.USER_ALREADY_EXISTS,
             "Регистрация не удалась: " + String.join("; ", result.getErrors())
         );
       }
 
+      // сохранение резюме (пока из локального файла)
+      File cvFile;
+      while (true) {
+        System.out.println("\nВыберите вариант резюме:\n1 - PDF\n2 - DOCX\nВаш выбор: ");
+        Scanner scanner = new Scanner(System.in);
+        String choice = scanner.nextLine();
+        if (choice.equals("1")) {
+          cvFile = new File("TestCV.pdf");
+          break;
+        } else if (choice.equals("2")) {
+          cvFile = new File("TestCV.docx");
+          break;
+        } else {
+          System.out.println("❌ Неверный выбор. Попробуйте снова.");
+        }
+      }
+      userService.uploadCV(cvFile, userId);
+
+      UserPreferences userPreferences = handleUserPreferences(currentUser);
+      if (userPreferences == null) return userId;
+
+      FinalVacancyRequirements vacancyRequirements = handleVacancySelection(userPreferences);
+      if (vacancyRequirements == null) return userId;
+
+      CourseRequirements courseRequirements = handleCourseDefinition(vacancyRequirements);
+      if (courseRequirements == null) return userId;
+
+      System.out.println("\n📚 Передаём требования в генератор курса...");
+      CourseRequest courseRequest = new CourseRequest(courseRequirements);
+      ResponseByWeek responseByWeek = getLearningPlanAssembler().assemblePlan(courseRequest);
+      System.out.println("✅ Курс сгенерирован: " + responseByWeek.getWeeks().size() + " недель");
+
+      Roadmap roadmap = handleRoadmapGeneration(responseByWeek, currentUser);
+      if (roadmap == null) return userId;
+      userService.updateRoadmap(roadmap.getId(), userId);
+
+
+      System.out.println("\n✅ УСПЕХ: полный цикл завершён!");
+
+      return userId;
     } catch (Exception e) {
       throw new AuthenticationException(
           AuthenticationException.Type.ACCOUNT_LOCKED,
@@ -111,11 +139,12 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
       );
     }
   }
+
   public LearningPlanAssembler getLearningPlanAssembler() {
     return learningPlanAssembler;
   }
   @Override
-  public User authenticate(String email, String password)
+  public Long authenticate(String email, String password)
       throws AuthenticationException {
     // Валидация для входа
     if (email == null || email.trim().isEmpty()) {
@@ -141,7 +170,7 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
       AuthenticationResult result = userService.authenticateUser(loginDto);
 
       if (result.isSuccess()) {
-        return result.getUser();
+        return result.getUser().getId();
       } else {
         throw new AuthenticationException(
             AuthenticationException.Type.USER_ALREADY_EXISTS,
@@ -174,30 +203,9 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
       // ✅ ВАЖНО: Запускаем диалог с пользователем!
       chatBeforeVacancyService.starDialogWithUser();
       chatBeforeVacancyService.askingStandardQuestions();
-      System.out.println("first");
 
-      // 1. Сохраняем CVData
-      CVData cvData = CVData.builder()
-          .userId(user.getId())
-          .information(cvText)
-          .build();
-      try {
-        cvDataRepository.save(cvData);
-        System.out.println("✅ CV data saved successfully");
-      } catch (RuntimeException e) {
-        System.err.println("❌ Error saving CV data: " + e.getMessage());
-        e.printStackTrace(); // Добавляем stack trace для диагностики
-        throw new ChatException(
-            ChatException.Type.MODEL_ERROR,
-            "Ошибка при сохранении данных CV: " + e.getMessage(),
-            e
-        );
-      }
-      System.out.println("second");
-
-      // 2. Генерируем и сохраняем UserPreferences через ИИ
+      // Генерируем и сохраняем UserPreferences через ИИ
       UserPreferences userPreferences = chatBeforeVacancyService.analyzeCombinedData();
-      System.out.println("third");
 
       if (userPreferences == null) {
         throw new ChatException(
@@ -207,10 +215,8 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
       }
 
       userPreferences.setUserId(user.getId());
-      System.out.println("fourth");
 
       UserPreferences savedPreferences = userPreferencesRepository.save(userPreferences);
-      System.out.println("fifth");
 
       return savedPreferences;
 
@@ -255,6 +261,9 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
         SelectedPotentialVacancy selectedPotentialVacancy = selectVacancy.choosenVacansy(
             threeVacancies);
         System.out.println("✅ Выбрана вакансия: " + selectedPotentialVacancy.getNameOfVacancy());
+        // сохранение вакансии
+        userService.updateVacancy(selectedPotentialVacancy.getNameOfVacancy(),
+            preferences.getUserId());
 
         // 3. Парсинг вакансии
         String parsingResult = selectVacancy.formingByParsing(selectedPotentialVacancy);
@@ -313,6 +322,11 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
           e
       );
     }
+  }
+
+  @Override
+  public User getUserProfile(Long userId) {
+    return userService.getUserProfile(userId);
   }
 
   @Override
@@ -432,9 +446,6 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
     }
   }
 
-
-
-
   /**
    * НОВЫЙ МЕТОД: Получить сохраненную roadmap пользователя
    */
@@ -511,5 +522,46 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
     ResponseByWeek response = new ResponseByWeek();
     response.setWeeks(List.of(week1, week2, week3));
     return response;
+  }
+
+  private UserPreferences handleUserPreferences(User user) {
+    System.out.println("\n💬 Цикл: Знакомство с пользователем (AI-чат)");
+    String cvText = cvDataRepository.findByUserId(user.getId()).orElseThrow().getInformation();
+    try {
+      return gatherUserPreferences(user, cvText);
+    } catch (Exception e) {
+      System.err.println("❌ Ошибка в AI-знакомстве: " + e.getMessage());
+      return null;
+    }
+  }
+
+  private FinalVacancyRequirements handleVacancySelection(UserPreferences preferences) {
+    System.out.println("\n🎯 Цикл: Подбор и анализ вакансии");
+    try {
+      return selectVacancy(preferences);
+    } catch (Exception e) {
+      System.err.println("❌ Ошибка при подборе вакансии: " + e.getMessage());
+      return null;
+    }
+  }
+
+  private CourseRequirements handleCourseDefinition(FinalVacancyRequirements vacancyRequirements) {
+    System.out.println("\n🎓 Цикл: Формирование требований к курсу");
+    try {
+      return defineCourseRequirements(vacancyRequirements);
+    } catch (Exception e) {
+      System.err.println("❌ Ошибка при формировании CourseRequirements: " + e.getMessage());
+      return null;
+    }
+  }
+
+  private Roadmap handleRoadmapGeneration(ResponseByWeek responseByWeek, User user) {
+    System.out.println("\n🗺️ Цикл: Генерация учебного плана и дорожной карты");
+    try {
+      return generateRoadmap(responseByWeek, user);
+    } catch (Exception e) {
+      System.err.println("❌ Ошибка при генерации Roadmap: " + e.getMessage());
+      return null;
+    }
   }
 }
