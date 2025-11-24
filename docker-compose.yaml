@@ -1,28 +1,30 @@
-version: '3.8'
-
 services:
-  # Приложение AI-Career Navigator
-  aicareer-app:
+  alcareer-app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: aicareer-app
     environment:
-      # Настройки базы данных - подключаемся к локальной PostgreSQL
-      DATABASE_URL: jdbc:postgresql://host.docker.internal:5432/aicareer_db
-      DATABASE_USERNAME: postgres
-      DATABASE_PASSWORD: KRNSmo0Rnx
-
-      # Настройки приложения
-      APP_LOGGING_LEVEL: INFO
-      APP_NAME: AiCareer
-      APP_VERSION: 1.0.0
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/aicareer_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: KRMSnoQRnx
     ports:
-      - "8080:8080"  # Если будет веб-интерфейс
+      - "8080:8080"
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_DB: aicareer_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: KRMSnoQRnx
+    ports:
+      - "5432:5432"
     volumes:
-      - ./logs:/app/logs  # Логи приложения
-      - ./config:/app/config  # Конфигурационные файлы
-    stdin_open: true  # Для консольного ввода
-    tty: true         # Для интерактивного режима
-    extra_hosts:
-      - "host.docker.internal:host-gateway"  # Доступ к localhost из контейнера
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
