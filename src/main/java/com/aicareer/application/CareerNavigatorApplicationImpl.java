@@ -451,7 +451,7 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
    */
   public Roadmap getSavedRoadmap(Long userId) throws RoadmapGenerationException {
     try {
-      return roadmapService.findRoadmapByUserId(userId)
+      return roadmapService.findFullRoadmapById((roadmapService.findRoadmapByUserId(userId)).get().getId())
           .orElseThrow(() -> new RoadmapGenerationException(
               RoadmapGenerationException.Type.MISSING_COURSE_DATA,
               "Roadmap не найдена для пользователя: " + userId
