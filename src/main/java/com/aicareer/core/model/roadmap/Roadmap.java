@@ -37,7 +37,7 @@ public class Roadmap {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Roadmap #").append(id).append(" (User: ").append(userId).append(")\n");
+        sb.append("Roadmap #").append(" (User: ").append(userId).append(")\n");
 
         if (roadmapZones != null) {
             for (int i = 0; i < roadmapZones.size(); i++) {
