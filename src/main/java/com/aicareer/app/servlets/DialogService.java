@@ -1,7 +1,6 @@
-package com.aicareer.servlet;
+package com.aicareer.app.servlets;
 
 import java.io.IOException;
-import java.net.http.HttpRequest;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;

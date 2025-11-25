@@ -1,4 +1,4 @@
-package com.aicareer.servlet;
+package com.aicareer.app.servlets;
 
 import java.io.IOException;
 
