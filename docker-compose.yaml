@@ -1,18 +1,4 @@
 services:
-  alcareer-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: aicareer-app
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/aicareer_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: KRMSnoQRnx
-    ports:
-      - "8080:8080"
-    depends_on:
-      - postgres
 
   postgres:
     image: postgres:15-alpine
