@@ -16,7 +16,7 @@ public class DialogService {
 
     private final boolean testMode;
 
-    private Scanner scanner;
+    private Scanner scanner = new Scanner(System.in);
 
     public String userAnswer(String question, String context) { // в зависимость от mode выбираем, кто отвечает: AI или человек
         if (isTestMode()) {
