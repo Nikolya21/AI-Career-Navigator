@@ -101,9 +101,32 @@ public class DatabaseConfig {
           executeSqlFile(conn, "db/schema/07_weeks.sql");
           executeSqlFile(conn, "db/schema/08_tasks.sql");
 
+            // ✅ ГЕНЕРАЦИЯ ТЕСТОВЫХ ДАННЫХ
+            generateTestDataUsingServices();
+
             System.out.println("✅ Database schema initialized successfully");
         } catch (SQLException e) {
             System.err.println("❌ Failed to initialize database: " + e.getMessage());
+        }
+    }
+
+    private static void generateTestDataUsingServices() {
+        try {
+            System.out.println("🎲 Generating test data using services...");
+
+            ServiceDataGenerator generator = new ServiceDataGenerator(dataSource);
+            generator.generateAllTestData();
+
+            System.out.println("🎉 Demo accounts created successfully:");
+            System.out.println("   👤 demo@aicareer.com / demo123");
+            System.out.println("   👤 alex@demo.com / hash123");
+            System.out.println("   👤 maria@demo.com / hash123");
+            System.out.println("   👤 ivan@demo.com / hash123");
+            System.out.println("   📊 Each account has: CV data, skills, preferences, and roadmap");
+
+        } catch (Exception e) {
+            System.err.println("❌ Error generating test data: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
