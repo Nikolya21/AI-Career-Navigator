@@ -97,7 +97,6 @@ public class ConsolePresentation {
     String password = scanner.nextLine().trim();
     System.out.print("Введите имя: ");
     String name = scanner.nextLine().trim();
-
     try {
       return application.register(email, password, name);
     } catch (Exception e) {

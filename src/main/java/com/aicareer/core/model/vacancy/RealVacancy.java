@@ -1,7 +1,9 @@
 package com.aicareer.core.model.vacancy;
 
 import java.util.List;
+import lombok.Data;
 
+@Data
 public class RealVacancy {
   private String nameOfVacancy;
   private String salary;
@@ -24,10 +26,5 @@ public class RealVacancy {
   public List<String> getVacancyRequirements() {
     return vacancyRequirements;
   }
-  @Override
-  public String toString(){
-    return String.format("Зарплата: %s\nОпыт: %s\n",
-        nameOfVacancy, salary != null ? salary : "не указана", vacancyRequirements
-        );
-  }
+
 }
