@@ -31,11 +31,11 @@ public class UserSkillsRepositoryImpl implements UserSkillsRepository {
       if (skills.getId() == null) {
         skillsStmt.setLong(1, skills.getUserId());
         skillsStmt.setDouble(2, skills.getFullCompliancePercentage());
-        skillsStmt.setTimestamp(3, Timestamp.valueOf(String.valueOf(Instant.now())));
+        skillsStmt.setTimestamp(3, Timestamp.from(Instant.now()));
       } else {
         skillsStmt.setLong(1, skills.getUserId());
         skillsStmt.setDouble(2, skills.getFullCompliancePercentage());
-        skillsStmt.setTimestamp(3, Timestamp.valueOf(String.valueOf(Instant.now())));
+        skillsStmt.setTimestamp(3, Timestamp.from(Instant.now()));
         skillsStmt.setLong(4, skills.getId());
       }
 

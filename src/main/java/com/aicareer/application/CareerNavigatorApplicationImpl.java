@@ -165,10 +165,8 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
       LoginRequestDto loginDto = new LoginRequestDto();
       loginDto.setEmail(email);
       loginDto.setPassword(password);
-
       // Вызываем UserService для аутентификации
       AuthenticationResult result = userService.authenticateUser(loginDto);
-
       if (result.isSuccess()) {
         return result.getUser().getId();
       } else {

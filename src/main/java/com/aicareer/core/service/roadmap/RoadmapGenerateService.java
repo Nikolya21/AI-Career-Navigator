@@ -144,7 +144,15 @@ public class RoadmapGenerateService implements RoadmapGenerate {
     @Override
     public Roadmap identifyingThematicallySimilarZones(List<RoadmapZone> roadmapZones) {
         Roadmap roadmap = new Roadmap();
-        for (RoadmapZone roadmapZone : roadmapZones) {
+
+        // ФИЛЬТРАЦИЯ: убираем зоны без недель
+        List<RoadmapZone> filteredZones = roadmapZones.stream()
+                .filter(zone -> zone.getWeeks() != null && !zone.getWeeks().isEmpty())
+                .collect(Collectors.toList());
+
+        System.out.println("После фильтрации: " + filteredZones.size() + " зон (было: " + roadmapZones.size() + ")");
+
+        for (RoadmapZone roadmapZone : filteredZones) {
             roadmap.addRoadmapZone(roadmapZone);
         }
         return roadmap;
