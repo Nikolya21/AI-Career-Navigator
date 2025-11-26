@@ -17,6 +17,7 @@ public class GigaChatService {
     public String sendMessage(String prompt) {
         GigaChatClient client = GigaChatClient.builder()
                 .verifySslCerts(false)
+                .readTimeout(120)
                 .authClient(AuthClient.builder()
                         .withOAuth(AuthClientBuilder.OAuthBuilder.builder()
                                 .scope(Scope.GIGACHAT_API_PERS)
