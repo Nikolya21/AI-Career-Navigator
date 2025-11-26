@@ -30,14 +30,18 @@
     </div>
     <% } %>
 
-    <form action="${pageContext.request.contextPath}/register" method="post" class="register-form">
+    <form action="${pageContext.request.contextPath}/register" method="post" class="register-form" id="registerForm">
         <div class="input-group">
             <input type="text"
                    name="name"
                    value="<%= prefilledName != null ? prefilledName : "" %>"
                    placeholder="Имя"
                    required
-                   maxlength="100">
+                   minlength="2"
+                   maxlength="100"
+                   pattern="[A-Za-zА-Яа-яЁё\s]+"
+                   title="Только буквы и пробелы">
+            <small class="hint">Только буквы и пробелы (мин. 2 символа)</small>
         </div>
 
         <div class="input-group">
@@ -47,6 +51,7 @@
                    placeholder="Электронная почта"
                    required
                    maxlength="255">
+            <small class="hint">Введите действительный email адрес</small>
         </div>
 
         <div class="input-group">
@@ -55,8 +60,10 @@
                    placeholder="Пароль"
                    required
                    minlength="6"
-                   maxlength="100">
-            <small class="password-hint">Минимум 6 символов</small>
+                   maxlength="100"
+                   pattern="^(?=.*[A-Za-z])(?=.*\d).{6,}$"
+                   title="Минимум 6 символов, включая буквы и цифры">
+            <small class="hint">Минимум 6 символов, включая буквы и цифры</small>
         </div>
 
         <div class="input-group">
@@ -66,6 +73,7 @@
                    required
                    minlength="6"
                    maxlength="100">
+            <small class="hint">Повторите пароль для подтверждения</small>
         </div>
 
         <button type="submit" class="btn-register">Зарегистрироваться</button>
@@ -76,5 +84,18 @@
         </div>
     </form>
 </div>
+
+<script>
+  document.getElementById('registerForm').addEventListener('submit', function(e) {
+    const password = document.querySelector('input[name="password"]');
+    const confirmPassword = document.querySelector('input[name="confirmPassword"]');
+
+    if (password.value !== confirmPassword.value) {
+      e.preventDefault();
+      alert('Пароли не совпадают!');
+      confirmPassword.focus();
+    }
+  });
+</script>
 </body>
 </html>
