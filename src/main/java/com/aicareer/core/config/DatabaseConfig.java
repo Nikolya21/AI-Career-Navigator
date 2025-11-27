@@ -127,7 +127,13 @@ public class DatabaseConfig {
             System.out.println("   👤 alex@demo.com / hash123WW");
             System.out.println("   👤 maria@demo.com / hash123WW");
             System.out.println("   👤 ivan@demo.com / hash123WW");
-            System.out.println("   📊 Each account has: CV data, skills, preferences, and roadmap");
+            System.out.println("   👤 ekaterina@demo.com / hash123WW");
+            System.out.println("   👤 dmitry@demo.com / hash123WW");
+            System.out.println("   👤 olga@demo.com / hash123WW");
+            System.out.println("   👤 sergey@demo.com / hash123WW");
+            System.out.println("   👤 anna@demo.com / hash123WW");
+            System.out.println("   👤 pavel@demo.com / hash123WW");
+            System.out.println("   📊 Each account has: CV data, preferences, and roadmap (without skills)");
 
         } catch (Exception e) {
             System.err.println("❌ Error generating test data: " + e.getMessage());

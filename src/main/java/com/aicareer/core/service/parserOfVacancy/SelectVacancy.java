@@ -68,10 +68,6 @@ public class SelectVacancy implements SelectOfVacancy {
       if (parts.length > 1) {
         String vacanciesPart = parts[1].trim();
         String[] vacanciesArray = vacanciesPart.split(",");
-        if (vacanciesArray.length < 3) {
-          gigachatAnswer = validateAndFixResponse(gigachatAnswer);
-          extractThreeVacancies(gigachatAnswer);
-        }
         listOfThreeVacancy.clear();
         for (String vacancy : vacanciesArray) {
           listOfThreeVacancy.add(vacancy.trim());
