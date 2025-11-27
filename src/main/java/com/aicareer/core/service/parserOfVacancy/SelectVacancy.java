@@ -68,7 +68,10 @@ public class SelectVacancy implements SelectOfVacancy {
       if (parts.length > 1) {
         String vacanciesPart = parts[1].trim();
         String[] vacanciesArray = vacanciesPart.split(",");
-
+        if (vacanciesArray.length < 3) {
+          gigachatAnswer = validateAndFixResponse(gigachatAnswer);
+          extractThreeVacancies(gigachatAnswer);
+        }
         listOfThreeVacancy.clear();
         for (String vacancy : vacanciesArray) {
           listOfThreeVacancy.add(vacancy.trim());
@@ -81,6 +84,9 @@ public class SelectVacancy implements SelectOfVacancy {
         String validateString = validateAndFixResponse(gigachatAnswer);
         extractThreeVacancies(validateString);
       }
+    } else {
+      gigachatAnswer = validateAndFixResponse(gigachatAnswer);
+      extractThreeVacancies(gigachatAnswer);
     }
     System.out.println("Предложенные вакансии: " + listOfThreeVacancy);
    return listOfThreeVacancy;
@@ -194,10 +200,10 @@ public class SelectVacancy implements SelectOfVacancy {
   public String formingByParsing(SelectedPotentialVacancy selectedVacancy) {
 
     String selectedVacancy1 = this.selectedVacancy.getNameOfVacancy();
-    List<RealVacancy> vacancies = ParserService.getVacancies(selectedVacancy1, "1", 100);
+    List<RealVacancy> vacancies = ParserService.getVacancies(selectedVacancy1, "1", 50);
     String newPromt = "";
     int neededCountOfVacancies = 0;
-    for (int i = 0; i < Math.min(100, vacancies.size()); i++) {
+    for (int i = 0; i < Math.min(50, vacancies.size()); i++) {
       RealVacancy vacancy = vacancies.get(i);
       if (vacancies.get(i).getVacancyRequirements() != null || vacancies.get(i).getSalary() != null) {
 
@@ -207,7 +213,7 @@ public class SelectVacancy implements SelectOfVacancy {
             newPromt += vacancy.getVacancyRequirements().get(j);
           }
           neededCountOfVacancies++;
-        } else{
+        } else {
           newPromt += (vacancy.getNameOfVacancy() + "\n" + vacancy.getSalary() + "\n");
         }
       }
