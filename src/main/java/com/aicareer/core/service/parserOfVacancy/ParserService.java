@@ -42,7 +42,7 @@ public class ParserService {
 
         List<String> keySkills = getKeySkillsForVacancy(item.optJSONObject("key_skills"));
 
-        vacancies.add(new RealVacancy(title,  keySkills, salary));
+        vacancies.add(new RealVacancy(title,  keySkills, salary, experience));
       }
     } catch (Exception e) {
       System.err.println("Ошибка при получении" + e.getMessage());
@@ -124,7 +124,7 @@ public class ParserService {
         String experience = item.getJSONObject("experience").getString("name");
         List<String> keySkills = getKeySkillsForVacancy(item.optJSONObject("key_skills"));
 
-        vacancies.add(new RealVacancy(title, keySkills, salary));
+        vacancies.add(new RealVacancy(title, keySkills, salary, experience));
       }
     } catch (Exception e) {
       throw new RuntimeException("Ошибка парсинга для ключевого слова: " + keyword, e);
@@ -155,8 +155,8 @@ public class ParserService {
   private static List<String> getDefaultAlternativeKeywords(String searchText) {
     // Дефолтные альтернативы на случай ошибок
     return List.of(
-            searchText + " разработчик",
-            searchText + " программист",
+            searchText + " developer",
+            searchText + " QA",
             searchText + " engineer"
     );
   }
