@@ -12,18 +12,5 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  app:
-    build: .                            # использует Dockerfile
-    container_name: aicareer-app
-    ports:
-      - "8080:8080"                    # наружу на 8080 порт
-    depends_on:
-      - postgres                       # ждем запуска БД
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/aicareer_db
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=KRMSnoQRnx
-    # restart: unless-stopped          # опционально: авто-перезапуск
-
 volumes:
   postgres_data:

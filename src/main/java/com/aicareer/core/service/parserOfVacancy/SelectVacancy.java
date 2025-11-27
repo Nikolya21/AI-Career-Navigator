@@ -68,7 +68,10 @@ public class SelectVacancy implements SelectOfVacancy {
       if (parts.length > 1) {
         String vacanciesPart = parts[1].trim();
         String[] vacanciesArray = vacanciesPart.split(",");
-
+        if (vacanciesArray.length < 3) {
+          gigachatAnswer = validateAndFixResponse(gigachatAnswer);
+          extractThreeVacancies(gigachatAnswer);
+        }
         listOfThreeVacancy.clear();
         for (String vacancy : vacanciesArray) {
           listOfThreeVacancy.add(vacancy.trim());
@@ -81,6 +84,9 @@ public class SelectVacancy implements SelectOfVacancy {
         String validateString = validateAndFixResponse(gigachatAnswer);
         extractThreeVacancies(validateString);
       }
+    } else {
+      gigachatAnswer = validateAndFixResponse(gigachatAnswer);
+      extractThreeVacancies(gigachatAnswer);
     }
     System.out.println("Предложенные вакансии: " + listOfThreeVacancy);
    return listOfThreeVacancy;
@@ -198,16 +204,18 @@ public class SelectVacancy implements SelectOfVacancy {
     String newPromt = "";
     int neededCountOfVacancies = 0;
     for (int i = 0; i < Math.min(100, vacancies.size()); i++) {
+      System.out.println(vacancies.get(i).getVacancyRequirements());
+      System.out.println(vacancies.get(i).getSalary());
       if (vacancies.get(i).getVacancyRequirements() != null || vacancies.get(i).getSalary() != null) {
-
         RealVacancy vacancy = vacancies.get(i);
+        System.out.println(vacancy.getVacancyRequirements());
         if (vacancy.getVacancyRequirements() != null) {
           newPromt += (vacancy.getNameOfVacancy() + "\n" + vacancy.getSalary() + "\n");
           for (int j = 0; j < vacancy.getVacancyRequirements().size(); j++) {
             newPromt += vacancy.getVacancyRequirements().get(j);
           }
           neededCountOfVacancies++;
-        } else{
+        } else {
           newPromt += (vacancy.getNameOfVacancy() + "\n" + vacancy.getSalary() + "\n");
         }
       }
