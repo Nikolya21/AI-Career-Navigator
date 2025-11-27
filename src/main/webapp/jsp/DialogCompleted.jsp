@@ -122,7 +122,7 @@
 
         <div class="actions">
             <form action="${pageContext.request.contextPath}/dialog-completed" method="post">
-                <button type="submit" class="btn-new-dialog">Начать новый диалог</button>
+                <button type="submit" class="btn-new-dialog">Перейти к выбору вакансии</button>
             </form>
         </div>
     </div>
