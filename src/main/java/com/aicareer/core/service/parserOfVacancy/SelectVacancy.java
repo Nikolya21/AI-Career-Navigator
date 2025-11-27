@@ -231,7 +231,7 @@ public class SelectVacancy implements SelectOfVacancy {
 
   @Override
   public FinalVacancyRequirements formingFinalVacancyRequirements(String newPromt) {
-      String gigachatFinalReqirements = gigaChatService.sendMessage(newPromt);
-    return new FinalVacancyRequirements(gigachatFinalReqirements);
+      String gigachatFinalRequirements = gigaChatService.sendMessage(newPromt);
+    return new FinalVacancyRequirements(gigachatFinalRequirements);
   }
 }
