@@ -8,6 +8,7 @@ import com.aicareer.core.service.user.model.RegistrationResult;
 import com.aicareer.core.service.user.model.UpdateResult;
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
 import com.aicareer.core.dto.user.LoginRequestDto;
@@ -131,5 +132,14 @@ public class LoginServlet extends HttpServlet {
       request.setAttribute("email", email);
       request.getRequestDispatcher("/jsp/login.jsp").forward(request, response);
     }
+    HttpSession session = request.getSession();
+    session.setAttribute("user", result.getUser());
+    session.setAttribute("userEmail", email);
+    session.setAttribute("authenticated", true);
+
+    String userName = email.split("@")[0];
+    session.setAttribute("userName", userName);
+
+    session.setAttribute("registrationDate", new Date());
   }
 }

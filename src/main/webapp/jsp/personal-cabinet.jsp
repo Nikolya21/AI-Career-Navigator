@@ -1,11 +1,13 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="com.aicareer.core.model.user.User" %>
 <html>
 <head>
     <title>Личный кабинет - МТС</title>
-    <link rel="stylesheet" href="css/personal-cabinet.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/personal-cabinet.css">
 </head>
 <body>
     <div class="container">
+        <!-- Шапка в стиле МТС -->
         <header class="mts-header">
             <div class="header-content">
                 <div class="logo">
@@ -13,7 +15,7 @@
                     <span class="logo-text">Личный кабинет</span>
                 </div>
                 <nav class="header-nav">
-                    <a href="main.jsp" class="nav-link">Главная</a>
+                    <a href="${pageContext.request.contextPath}/send-message" class="nav-link">Главная</a>
                     <a href="#" class="nav-link">Услуги</a>
                     <a href="#" class="nav-link">Помощь</a>
                 </nav>
@@ -27,42 +29,77 @@
                 <div class="avatar-section">
                     <div class="avatar-container">
                         <div class="avatar">
-                            <span class="avatar-initials">${empty user.firstName ? 'И' : user.firstName.charAt(0)}${empty user.lastName ? 'Ф' : user.lastName.charAt(0)}</span>
+                            <%
+                                String userEmail = (String) session.getAttribute("userEmail");
+                                String userName = (String) session.getAttribute("userName");
+                                String initials = "П";
+                                if (userName != null && !userName.isEmpty()) {
+                                    initials = userName.substring(0, 1).toUpperCase();
+                                } else if (userEmail != null && !userEmail.isEmpty()) {
+                                    initials = userEmail.substring(0, 1).toUpperCase();
+                                }
+                            %>
+                            <span class="avatar-initials"><%= initials %></span>
                         </div>
                         <button class="change-avatar-btn">Изменить фото</button>
                     </div>
                 </div>
 
+                <!-- Информация о пользователе -->
                 <div class="user-info-section">
                     <h1 class="user-name">
-                        ${empty user.firstName ? 'Иван' : user.firstName} ${empty user.lastName ? 'Иванов' : user.lastName}
+                        <%
+                            if (userName != null && !userName.isEmpty()) {
+                                out.print(userName);
+                            } else {
+                                out.print("Пользователь");
+                            }
+                        %>
                     </h1>
 
                     <div class="info-grid">
                         <div class="info-item">
                             <label class="info-label">Электронная почта</label>
-                            <div class="info-value">${empty user.email ? 'example@mts.ru' : user.email}</div>
+                            <div class="info-value">
+                                <%= userEmail != null ? userEmail : "Не указано" %>
+                            </div>
                         </div>
 
                         <div class="info-item">
-                            <label class="info-label">Номер телефона</label>
-                            <div class="info-value">+7 (999) 123-45-67</div>
+                            <label class="info-label">ID пользователя</label>
+                            <div class="info-value">
+                                <%
+                                    Long userId = (Long) session.getAttribute("userId");
+                                    out.print(userId != null ? userId : "Не указано");
+                                %>
+                            </div>
                         </div>
 
                         <div class="info-item">
-                            <label class="info-label">Прохождение</label>
-                            <div class="info-value">«Профессия»</div>
+                            <label class="info-label">Статус</label>
+                            <div class="info-value">Активный</div>
                         </div>
 
                         <div class="info-item">
-                            <label class="info-label">Баланс</label>
-                            <div class="info-value balance">150.50 ₽</div>
+                            <label class="info-label">Дата регистрации</label>
+                            <div class="info-value">
+                                <%
+                                    java.util.Date registrationDate = (java.util.Date) session.getAttribute("registrationDate");
+                                    if (registrationDate != null) {
+                                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd.MM.yyyy");
+                                        out.print(sdf.format(registrationDate));
+                                    } else {
+                                        out.print("Сегодня");
+                                    }
+                                %>
+                            </div>
                         </div>
                     </div>
                 </div>
 
+                <!-- Кнопки действий -->
                 <div class="actions-section">
-                    <button class="btn btn-primary" onclick="location.href='main.jsp'">
+                    <button class="btn btn-primary" onclick="location.href='${pageContext.request.contextPath}/send-message'">
                         📋 На главную
                     </button>
                     <button class="btn btn-secondary" onclick="history.back()">
@@ -77,18 +114,24 @@
             <!-- Дополнительные карточки -->
             <div class="additional-cards">
                 <div class="service-card">
-                    <h3>Мои услуги</h3>
+                    <h3>Активность</h3>
                     <ul class="services-list">
-                        <li>Интернет: 15 ГБ</li>
-                        <li>Звонки: безлимит</li>
-                        <li>Сообщения: 100 SMS</li>
+                        <li>Сообщений отправлено:
+                            <%
+                                java.util.List<String> messageHistory = (java.util.List<String>) session.getAttribute("messageHistory");
+                                int messageCount = messageHistory != null ? messageHistory.size() / 2 : 0;
+                                out.print(messageCount);
+                            %>
+                        </li>
+                        <li>Последняя активность: Сегодня</li>
+                        <li>Статус: Online</li>
                     </ul>
                 </div>
 
                 <div class="promo-card">
                     <h3>Специальные предложения</h3>
-                    <p>Получите скидку 20% на дополнительные пакеты интернета</p>
-                    <button class="btn-promo">Подробнее</button>
+                    <p>Получите персональную консультацию по карьерному развитию</p>
+                    <button class="btn-promo" onclick="location.href='${pageContext.request.contextPath}/send-message'">Начать диалог</button>
                 </div>
             </div>
         </main>
@@ -97,7 +140,7 @@
     <script>
         function logout() {
             if (confirm('Вы уверены, что хотите выйти из аккаунта?')) {
-                window.location.href = 'logout.jsp';
+                window.location.href = '${pageContext.request.contextPath}/logout';
             }
         }
     </script>
