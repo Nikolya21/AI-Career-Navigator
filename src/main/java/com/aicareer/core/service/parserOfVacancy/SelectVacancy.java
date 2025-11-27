@@ -6,6 +6,8 @@ import com.aicareer.core.model.vacancy.RealVacancy;
 import com.aicareer.core.model.vacancy.SelectedPotentialVacancy;
 import com.aicareer.core.model.user.UserPreferences;
 import com.aicareer.repository.parsing.SelectOfVacancy;
+
+import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 import com.aicareer.core.service.gigachat.GigaChatService;
@@ -53,8 +55,16 @@ public class SelectVacancy implements SelectOfVacancy {
   @Override
   public List<String> extractThreeVacancies(String gigachatAnswer) {
     System.out.println(gigachatAnswer);
-    if (gigachatAnswer.contains(":::")) {
+    if (gigachatAnswer.contains(":::")) { //todo тут беда с форматом - упало на тесте, когда gigachat вывел:
+                                          //::
+                                          //Data Scientist, Business Analyst, Analytics Manager
       String[] parts = gigachatAnswer.split(":::");
+      System.out.println("PastsArray.toString() " + Arrays.toString(parts));
+      if (parts.length < 3) {
+        gigachatAnswer = validateAndFixResponse(gigachatAnswer);
+        extractThreeVacancies(gigachatAnswer);
+      }
+      System.out.println(Arrays.toString(parts));
       if (parts.length > 1) {
         String vacanciesPart = parts[1].trim();
         String[] vacanciesArray = vacanciesPart.split(",");
@@ -67,10 +77,88 @@ public class SelectVacancy implements SelectOfVacancy {
         while (listOfThreeVacancy.size() < 3) {
           listOfThreeVacancy.add("Вакансия " + (listOfThreeVacancy.size() + 1));
         }
+      } else { //todo else (нужен нормальный рерол, если результата нет)
+        String validateString = validateAndFixResponse(gigachatAnswer);
+        extractThreeVacancies(validateString);
       }
     }
     System.out.println("Предложенные вакансии: " + listOfThreeVacancy);
    return listOfThreeVacancy;
+  }
+
+  public String validateAndFixResponse(String rawResponse) {
+    // Сначала проверим простые случаи которые можно починить без запроса к нейронке
+    System.out.println("validateAndFixResponse ACTIVATE");
+    String simplified = preprocessResponse(rawResponse);
+    if (isValidFormat(simplified)) {
+      return simplified;
+    }
+
+    // Если простые методы не помогли - используем нейронку для исправления
+    String validationPrompt = """
+        КРИТИЧЕСКАЯ ЗАДАЧА: Исправь формат данных строго по шаблону
+        
+        ТВОЯ РОЛЬ: Форматировщик данных
+        ЦЕЛЬ: Привести данные к строгому шаблону
+        
+        ШАБЛОН (обязателен):
+        ":::Профессия1,Профессия2,Профессия3"
+        
+        ПРАВИЛА:
+        - Начало: ровно 3 двоеточия ":::"
+        - Затем 3 профессии через запятую
+        - Без переносов строк
+        - Без лишних символов
+        - Только латиница/кириллица, запятые и пробелы между словами
+        
+        ДАННЫЕ ДЛЯ ИСПРАВЛЕНИЯ:
+        %s
+        
+        КРИТИЧЕСКИЕ ТРЕБОВАНИЯ:
+        1. Если профессий > 3 - оставь первые 3
+        2. Если профессий < 3 - дополни до 3 (используй логику контекста)
+        3. Удали все лишние символы, кроме букв, запятых и пробелов в названиях
+        4. Убери все переносы строк
+        5. Убедись в начале ровно ":::"
+        
+        ВЕРНИ ТОЛЬКО ИСПРАВЛЕННУЮ СТРОКУ БЕЗ ОБЪЯСНЕНИЙ!
+        Пример: ":::Data Scientist,Business Analyst,Analytics Manager"
+        """;
+
+    return gigaChatService.sendMessage(String.format(validationPrompt, rawResponse));
+  }
+
+  private String preprocessResponse(String raw) {
+    if (raw == null) return ":::Программист,Аналитик,Менеджер";
+
+    // Убираем переносы строк и лишние пробелы
+    String cleaned = raw.replace("\n", "").replace("\r", "").trim();
+
+    // Простая попытка почистить формат
+    if (cleaned.startsWith("::") && !cleaned.startsWith(":::")) {
+      cleaned = ":::" + cleaned.substring(2);
+    } else if (cleaned.startsWith(":") && !cleaned.startsWith(":::")) {
+      cleaned = ":::" + cleaned.substring(1);
+    } else if (!cleaned.startsWith(":::")) {
+      cleaned = ":::" + cleaned;
+    }
+
+    return cleaned;
+  }
+
+  private boolean isValidFormat(String response) {
+    return response != null &&
+            response.startsWith(":::") &&
+            response.length() > 3 &&
+            countCommas(response) >= 2; // Должно быть минимум 2 запятые для 3 профессий
+  }
+
+  private int countCommas(String str) {
+    int count = 0;
+    for (char c : str.toCharArray()) {
+      if (c == ',') count++;
+    }
+    return count;
   }
 
 

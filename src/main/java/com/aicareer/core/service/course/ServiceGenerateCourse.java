@@ -4,6 +4,9 @@ import com.aicareer.core.dto.courseDto.CourseRequest;
 import com.aicareer.core.service.gigachat.GigaChatService;
 import com.aicareer.repository.course.GenerateCourseFromGpt;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ServiceGenerateCourse implements GenerateCourseFromGpt {
 
   private final ServicePrompt servicePrompt;
@@ -31,5 +34,10 @@ public class ServiceGenerateCourse implements GenerateCourseFromGpt {
       e.printStackTrace();
       throw new RuntimeException("Не удалось сгенерировать курс: " + e.getMessage(), e);
     }
+  }
+
+  private String validateAndFixResponse(String gigaChatAnswer) {
+    List<String> checkerArray = List.of(gigaChatAnswer.split(" "));
+    return checkerArray.get(0);
   }
 }

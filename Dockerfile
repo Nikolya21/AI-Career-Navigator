@@ -1,16 +1,6 @@
 # Берем готовый образ с Tomcat + Java
 FROM tomcat:10.1-jdk17
 
-# Устанавливаем Maven
-RUN apt-get update && apt-get install -y maven
-
-# Копируем исходный код
-COPY . /app
-WORKDIR /app
-
-# Собираем проект
-RUN mvn clean package -DskipTests
-
 # Очищаем дефолтные приложения (чтобы было только наше)
 RUN rm -rf /usr/local/tomcat/webapps/*
 
