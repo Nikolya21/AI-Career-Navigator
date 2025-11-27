@@ -1,0 +1,30 @@
+package com.aicareer.app.servlets;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import java.io.IOException;
+
+@WebServlet("/personal-cabinet")
+public class PersonalCabinetServlet extends HttpServlet {
+
+  @Override
+  protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    throws ServletException, IOException {
+
+    HttpSession session = request.getSession(false);
+    if (session == null || session.getAttribute("authenticated") == null) {
+      response.sendRedirect(request.getContextPath() + "/login");
+      return;
+    }
+
+    String userEmail = (String) session.getAttribute("userEmail");
+    request.setAttribute("userEmail", userEmail);
+
+
+    request.getRequestDispatcher("/jsp/personal-cabinet.jsp").forward(request, response);
+  }
+}

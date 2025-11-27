@@ -41,14 +41,22 @@
 </head>
 <body>
 <div class="header">
+    <!-- Кнопка личного кабинета в левом верхнем углу -->
+    <div class="header-left">
+        <a href="${pageContext.request.contextPath}/personal-cabinet" class="cabinet-btn">
+            👤 Личный кабинет
+        </a>
+    </div>
+
     <h1>Career Navigator</h1>
+
     <div class="user-info">
         <%
             String userEmail = (String) session.getAttribute("userEmail");
             if (userEmail != null) {
         %>
         <span>Вы вошли как: <%= userEmail %></span>
-        <a href="/ai_career_navigator_war/login" class="logout-btn">Выйти</a>
+        <a href="${pageContext.request.contextPath}/logout" class="logout-btn">Выйти</a>
         <% } %>
     </div>
 </div>
