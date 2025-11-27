@@ -40,6 +40,22 @@
     </style>
 </head>
 <body>
+<%
+    String selectedVacancy = (String) request.getAttribute("selectedVacancy");
+    if (selectedVacancy != null) {
+%>
+<div class="selected-vacancy-info" style="background: #e7f3ff; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #007BFF;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <strong>🎯 Целевая вакансия:</strong> <%= selectedVacancy %>
+        </div>
+        <a href="${pageContext.request.contextPath}/real-vacancies"
+           style="background: #28a745; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 14px;">
+            📊 Показать реальные вакансии
+        </a>
+    </div>
+</div>
+<% } %>
 <div class="header">
     <!-- Кнопка личного кабинета в левом верхнем углу -->
     <div class="header-left">
@@ -155,7 +171,23 @@
     </div>
     <% } %>
 </div>
-
+<%-- Добавьте в конец DialogService.jsp перед закрывающими тегами --%>
+<div style="text-align: center; margin-top: 20px; padding: 20px;">
+    <form action="${pageContext.request.contextPath}/complete-dialog" method="post">
+        <button type="submit"
+                style="background: linear-gradient(135deg, #28a745, #20c997);
+                       color: white;
+                       padding: 15px 30px;
+                       border: none;
+                       border-radius: 10px;
+                       font-size: 16px;
+                       font-weight: 600;
+                       cursor: pointer;
+                       transition: all 0.3s ease;">
+            ✅ Завершить диалог и перейти к выбору вакансии
+        </button>
+    </form>
+</div>
 <script>
   // Автопрокрутка к последнему сообщению
   function scrollToBottom() {
