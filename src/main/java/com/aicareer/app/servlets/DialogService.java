@@ -35,6 +35,13 @@ public class DialogService extends HttpServlet {
       return;
     }
 
+    // Проверяем, не завершен ли уже диалог
+    Boolean dialogCompleted = (Boolean) session.getAttribute("dialogCompleted");
+    if (dialogCompleted != null && dialogCompleted) {
+      response.sendRedirect(request.getContextPath() + "/dialog-completed");
+      return;
+    }
+
     // Устанавливаем атрибуты для отображения истории
     setupMessageHistory(request);
 
@@ -49,6 +56,13 @@ public class DialogService extends HttpServlet {
     HttpSession session = request.getSession(false);
     if (session == null || session.getAttribute("authenticated") == null) {
       response.sendRedirect(request.getContextPath() + "/login");
+      return;
+    }
+
+    // Проверяем, не завершен ли уже диалог
+    Boolean dialogCompleted = (Boolean) session.getAttribute("dialogCompleted");
+    if (dialogCompleted != null && dialogCompleted) {
+      response.sendRedirect(request.getContextPath() + "/dialog-completed");
       return;
     }
 
@@ -67,17 +81,35 @@ public class DialogService extends HttpServlet {
       // Добавляем сообщение пользователя
       messageHistory.add(message.trim());
 
+      // Подсчитываем количество вопросов пользователя (каждое второе сообщение)
+      int userQuestionsCount = (messageHistory.size() + 1) / 2;
+      System.out.println("❓ User questions count: " + userQuestionsCount);
+
       try {
-        // Генерируем промпт с контекстом для нейросети
-        String prompt = buildPrompt(message, messageHistory);
-        System.out.println("🤖 Sending prompt to AI: " + prompt);
+        // Проверяем, не достигли ли лимита в 5 вопросов
+        if (userQuestionsCount >= 5) {
+          // Лимит достигнут - отправляем финальное сообщение
+          String finalResponse = buildFinalResponse(messageHistory);
+          messageHistory.add(finalResponse);
 
-        // Получаем ответ от реальной нейросети
-        String aiResponse = gigaChatService.sendMessage(prompt);
-        System.out.println("🤖 AI Response: " + aiResponse);
+          // Помечаем диалог как завершенный
+          session.setAttribute("dialogCompleted", true);
+          session.setAttribute("dialogEndTime", System.currentTimeMillis());
 
-        // Добавляем ответ AI
-        messageHistory.add(aiResponse);
+          System.out.println("🎯 Dialog completed after " + userQuestionsCount + " questions");
+
+        } else {
+          // Продолжаем обычный диалог
+          String prompt = buildPrompt(message, messageHistory, userQuestionsCount);
+          System.out.println("🤖 Sending prompt to AI: " + prompt);
+
+          // Получаем ответ от реальной нейросети
+          String aiResponse = gigaChatService.sendMessage(prompt);
+          System.out.println("🤖 AI Response: " + aiResponse);
+
+          // Добавляем ответ AI
+          messageHistory.add(aiResponse);
+        }
 
       } catch (Exception e) {
         System.err.println("❌ Error calling AI service: " + e.getMessage());
@@ -89,6 +121,13 @@ public class DialogService extends HttpServlet {
       // Сохраняем историю в сессии
       session.setAttribute("messageHistory", messageHistory);
       System.out.println("✅ Message history updated. Total messages: " + messageHistory.size());
+    }
+
+    // Проверяем снова, не завершился ли диалог
+    dialogCompleted = (Boolean) session.getAttribute("dialogCompleted");
+    if (dialogCompleted != null && dialogCompleted) {
+      response.sendRedirect(request.getContextPath() + "/dialog-completed");
+      return;
     }
 
     // ВМЕСТО redirect используем forward чтобы сохранить данные
@@ -103,10 +142,20 @@ public class DialogService extends HttpServlet {
       if (messageHistory != null) {
         request.setAttribute("messageHistory", messageHistory);
       }
+
+      // Добавляем информацию о статусе диалога
+      Boolean dialogCompleted = (Boolean) session.getAttribute("dialogCompleted");
+      request.setAttribute("dialogCompleted", dialogCompleted != null && dialogCompleted);
+
+      // Считаем количество вопросов для отображения прогресса
+      if (messageHistory != null) {
+        int questionsCount = (messageHistory.size() + 1) / 2;
+        request.setAttribute("questionsCount", questionsCount);
+      }
     }
   }
 
-  private String buildPrompt(String currentMessage, List<String> messageHistory) {
+  private String buildPrompt(String currentMessage, List<String> messageHistory, int questionsCount) {
     StringBuilder prompt = new StringBuilder();
 
     // Системный промпт для нейросети
@@ -114,6 +163,8 @@ public class DialogService extends HttpServlet {
     prompt.append("Твоя роль - помогать пользователям с вопросами карьеры, обучения и профессионального развития. ");
     prompt.append("Отвечай профессионально, но дружелюбно. Будь полезным и поддерживающим. ");
     prompt.append("Фокусируйся на карьерных темах: профориентация, навыки, обучение, поиск работы, карьерный рост. ");
+    prompt.append("Это вопрос номер ").append(questionsCount).append(" из 5. ");
+    prompt.append("После 5 вопросов диалог будет завершен. ");
     prompt.append("Если вопрос не по теме, вежливо направляй разговор в профессиональное русло.\n\n");
 
     // Добавляем историю диалога для контекста
@@ -135,5 +186,39 @@ public class DialogService extends HttpServlet {
     prompt.append("Ответь на вопрос пользователя, учитывая контекст диалога:");
 
     return prompt.toString();
+  }
+
+  private String buildFinalResponse(List<String> messageHistory) {
+    StringBuilder finalPrompt = new StringBuilder();
+
+    finalPrompt.append("Ты - AI помощник по карьерному развитию 'Career Navigator'. ");
+    finalPrompt.append("Пользователь задал 5 вопросов и диалог завершается. ");
+    finalPrompt.append("Напиши финальное, завершающее сообщение которое:\n");
+    finalPrompt.append("1. Подводит итоги диалога\n");
+    finalPrompt.append("2. Дает общие рекомендации по карьерному развитию\n");
+    finalPrompt.append("3. Побуждает пользователя к действию\n");
+    finalPrompt.append("4. Прощается и желает успехов\n");
+    finalPrompt.append("5. Сообщает что диалог завершен\n\n");
+
+    finalPrompt.append("История диалога:\n");
+    for (int i = 0; i < messageHistory.size(); i += 2) {
+      if (i < messageHistory.size()) {
+        finalPrompt.append("Пользователь: ").append(messageHistory.get(i)).append("\n");
+      }
+      if (i + 1 < messageHistory.size()) {
+        finalPrompt.append("AI: ").append(messageHistory.get(i + 1)).append("\n");
+      }
+    }
+    finalPrompt.append("\nНапиши финальное сообщение:");
+
+    try {
+      return gigaChatService.sendMessage(finalPrompt.toString());
+    } catch (Exception e) {
+      System.err.println("❌ Error generating final response: " + e.getMessage());
+      return "Благодарю за диалог! Вы задали 5 вопросов, и наша беседа подошла к концу. " +
+          "Надеюсь, я смог помочь вам с вопросами карьерного развития. " +
+          "Желаю успехов в профессиональном росте и достижении ваших целей! " +
+          "Диалог завершен.";
+    }
   }
 }
