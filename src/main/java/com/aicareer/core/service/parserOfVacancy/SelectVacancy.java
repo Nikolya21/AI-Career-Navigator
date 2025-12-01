@@ -54,17 +54,14 @@ public class SelectVacancy implements SelectOfVacancy {
 
   @Override
   public List<String> extractThreeVacancies(String gigachatAnswer, int count) {
-    System.out.println(gigachatAnswer);
+
     if (gigachatAnswer.contains(":::")) { //todo тут беда с форматом - упало на тесте, когда gigachat вывел:
                                           //::
                                           //Data Scientist, Business Analyst, Analytics Manager
       String[] parts = gigachatAnswer.split(":::");
-      System.out.println("PastsArray.toString() " + Arrays.toString(parts));
       if (parts.length < 3 && count < 5) {
         gigachatAnswer = validateAndFixResponse(gigachatAnswer);
-        extractThreeVacancies(gigachatAnswer, ++count);
       }
-      System.out.println(Arrays.toString(parts));
       if (parts.length > 1) {
         String vacanciesPart = parts[1].trim();
         String[] vacanciesArray = vacanciesPart.split(",");
@@ -90,7 +87,6 @@ public class SelectVacancy implements SelectOfVacancy {
 
   public String validateAndFixResponse(String rawResponse) {
     // Сначала проверим простые случаи которые можно починить без запроса к нейронке
-    System.out.println("validateAndFixResponse ACTIVATE");
     String simplified = preprocessResponse(rawResponse);
     if (isValidFormat(simplified)) {
       return simplified;
