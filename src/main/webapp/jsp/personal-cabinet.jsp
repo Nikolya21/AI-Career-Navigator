@@ -7,7 +7,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- Шапка в стиле МТС -->
         <header class="mts-header">
             <div class="header-content">
                 <div class="logo">
@@ -96,8 +95,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Кнопки действий -->
                 <div class="actions-section">
                     <button class="btn btn-primary" onclick="location.href='${pageContext.request.contextPath}/send-message'">
                         📋 На главную

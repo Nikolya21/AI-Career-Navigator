@@ -1,3 +1,4 @@
+// com.aicareer.core.service.roadmap.RoadmapGenerateService
 package com.aicareer.core.service.roadmap;
 
 import com.aicareer.core.dto.courseDto.ResponseByWeek;
@@ -11,142 +12,166 @@ import com.aicareer.repository.roadmap.RoadmapGenerate;
 import lombok.Data;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Data
 public class RoadmapGenerateService implements RoadmapGenerate {
 
-    private final GigaChatService gigaChatApiService;
+  private final GigaChatService gigaChatApiService;
 
-    public RoadmapGenerateService(GigaChatService gigaChatApiService) {
-        this.gigaChatApiService = gigaChatApiService;
-    }
-    @Override
-    public String gettingWeeksInformation(ResponseByWeek responseByWeek) {
-        return responseByWeek.getWeeks().size() + "\n" +responseByWeek.getWeeks().stream()
-                .map(this::formatWeek)
-                .collect(Collectors.joining("\n"));
-    }
+  public RoadmapGenerateService(GigaChatService gigaChatApiService) {
+    this.gigaChatApiService = gigaChatApiService;
+  }
 
-    private String formatWeek(Week week) {
-        String weekHeader = "number of the week: " + week.getNumber() + "\n" +
-                "goal for the week" + week.getNumber() + ": " + week.getGoal();
+  @Override
+  public String gettingWeeksInformation(ResponseByWeek responseByWeek) {
+    return responseByWeek.getWeeks().size() + "\n" +
+      responseByWeek.getWeeks().stream()
+        .map(this::formatWeek)
+        .collect(Collectors.joining("\n"));
+  }
 
-        String tasksInfo = week.getTasks().stream()
-                .map(this::formatTask)
-                .collect(Collectors.joining("\n"));
+  private String formatWeek(Week week) {
+    String weekHeader = "number of the week: " + week.getNumber() + "\n" +
+      "goal for the week" + week.getNumber() + ": " + week.getGoal();
 
-        String weekLinks = "Links for the week" + week.getNumber() + ": \n" +
-                week.getTasks().stream()
-                        .flatMap(task -> task.getUrls().stream())
-                        .collect(Collectors.joining("\n"));
+    String tasksInfo = week.getTasks().stream()
+      .map(this::formatTask)
+      .collect(Collectors.joining("\n"));
 
-        return weekHeader + "\n" + tasksInfo + "\n" + weekLinks;
-    }
+    String weekLinks = "Links for the week" + week.getNumber() + ": \n" +
+      week.getTasks().stream()
+        .flatMap(task -> task.getUrls().stream())
+        .collect(Collectors.joining("\n"));
 
-    private String formatTask(Task task) {
-        return "description for the task: " + "\n" +
-                task.getDescription();
-    }
+    return weekHeader + "\n" + tasksInfo + "\n" + weekLinks;
+  }
 
-    @Override
-    public String informationComplexityAndQuantityAnalyzeAndCreatingZone(String weeksInformation) {
-        int quantityOfWeeks = Integer.parseInt(weeksInformation.split("\n")[0].trim());
-        RoadmapPrompts.setQuantityOfWeeks(quantityOfWeeks);
+  private String formatTask(Task task) {
+    return "description for the task: " + "\n" +
+      task.getDescription();
+  }
 
-        String prompt = RoadmapPrompts.DIVISION_INTO_ZONES + weeksInformation;
-        return gigaChatApiService.sendMessage(prompt);
-    }
+  @Override
+  public String informationComplexityAndQuantityAnalyzeAndCreatingZone(String weeksInformation) {
+    int quantityOfWeeks = Integer.parseInt(weeksInformation.split("\n")[0].trim());
+    RoadmapPrompts.setQuantityOfWeeks(quantityOfWeeks);
 
-    @Override
-    public List<RoadmapZone> splittingWeeksIntoZones(String resultOfComplexityAndQuantityAnalyze, List<Week> weeks) {
-        // Очищаем ответ от возможных квадратных скобок в начале и конце
-        String cleanedResponse = resultOfComplexityAndQuantityAnalyze.trim();
-        if (cleanedResponse.startsWith("[") && cleanedResponse.endsWith("]")) {
-            cleanedResponse = cleanedResponse.substring(1, cleanedResponse.length() - 1).trim();
-        }
+    String prompt = RoadmapPrompts.DIVISION_INTO_ZONES + weeksInformation;
+    return gigaChatApiService.sendMessage(prompt);
+  }
 
-        // Разделяем на зоны по разделителю "---"
-        List<String> roadmapZoneInString = List.of(cleanedResponse.split("---"));
-        System.out.println("Found zones: " + roadmapZoneInString.size());
+  @Override
+  public List<RoadmapZone> splittingWeeksIntoZones(String zonesAnalysis, List<Week> allWeeks) {
+    System.out.println("🔄 Распределение " + allWeeks.size() + " недель по зонам (алгоритмически)");
 
-        List<RoadmapZone> roadmapZones = new ArrayList<>();
-        int zoneOrder = 1;
-        for (String zone : roadmapZoneInString) {
-            if (zone.trim().isEmpty()) continue;
-
-            System.out.println("Processing zone: " + zone.substring(0, Math.min(50, zone.length())) + "...");
-
-            RoadmapZone roadmapZone = new RoadmapZone();
-
-            // Парсим каждое поле зоны
-            String name = extractFieldValue(zone, "НАЗВАНИЕ:");
-            String weeksRange = extractFieldValue(zone, "НЕДЕЛИ:");
-            String skills = extractFieldValue(zone, "НАВЫКИ:");
-            String complexity = extractFieldValue(zone, "СЛОЖНОСТЬ:");
-
-            // Устанавливаем значения
-            roadmapZone.setName(name);
-            roadmapZone.setLearningGoal(skills);
-            roadmapZone.setComplexityLevel(complexity);
-            roadmapZone.setZoneOrder(zoneOrder++);
-
-            // Обрабатываем диапазон недель
-            if (weeksRange != null) {
-                List<String> weekNumbers = List.of(weeksRange.trim().split("\\s+"));
-                if (weekNumbers.size() >= 2) {
-                    try {
-                        int start = Integer.parseInt(weekNumbers.get(0));
-                        int end = Integer.parseInt(weekNumbers.get(1));
-
-                        // Проверяем валидность диапазона
-                        if (start >= 1 && end <= weeks.size() && start <= end) {
-                            roadmapZone.setWeeks(weeks.subList(start - 1, end));
-                        } else {
-                            System.err.println("Invalid week range: " + start + "-" + end);
-                        }
-                    } catch (NumberFormatException e) {
-                        System.err.println("Error parsing week numbers: " + weeksRange);
-                    }
-                }
-            }
-
-            roadmapZones.add(roadmapZone);
-        }
-
-        System.out.println("Processed zones: " + roadmapZones.size());
-        return roadmapZones;
+    if (allWeeks == null || allWeeks.isEmpty()) {
+      throw new IllegalArgumentException("Список недель не может быть пустым");
     }
 
-    // Вспомогательный метод для извлечения значений полей
-    private String extractFieldValue(String zoneText, String fieldName) {
-        int fieldIndex = zoneText.indexOf(fieldName);
-        if (fieldIndex == -1) {
-            return null;
-        }
+    // ✅ ИСПРАВЛЕНИЕ: создаём изменяемую копию перед сортировкой
+    List<Week> mutableWeeks = new ArrayList<>(allWeeks);
+    mutableWeeks.sort(Comparator.comparingInt(Week::getNumber));
 
-        int valueStart = fieldIndex + fieldName.length();
-        int valueEnd = zoneText.indexOf('\n', valueStart);
+    int total = mutableWeeks.size();
+    // Рекомендуемое: 3 зоны для 6–8 недель, 4 зоны для 9–12
+    int zonesCount = (total <= 6) ? 3 : (total <= 9 ? 4 : 5);
+    zonesCount = Math.min(zonesCount, total); // не больше, чем недель
 
-        if (valueEnd == -1) {
-            valueEnd = zoneText.length();
-        }
+    List<RoadmapZone> zones = new ArrayList<>();
+    int start = 0;
 
-        String value = zoneText.substring(valueStart, valueEnd).trim();
+    for (int i = 0; i < zonesCount; i++) {
+      int baseSize = total / zonesCount;
+      int remainder = total % zonesCount;
+      int size = baseSize + (i < remainder ? 1 : 0);
+      int end = Math.min(start + size, total);
 
-        // Убираем возможные кавычки и лишние символы
-        value = value.replaceAll("^[\"']|[\"']$", "");
+      if (start >= end) break;
 
-        return value;
+      List<Week> zoneWeeks = new ArrayList<>(mutableWeeks.subList(start, end));
+      RoadmapZone zone = createZoneFromWeeks(zoneWeeks, i + 1, zonesAnalysis);
+      zones.add(zone);
+
+      System.out.println("✅ Зона " + (i + 1) + ": недели " +
+        zoneWeeks.stream().map(Week::getNumber).collect(Collectors.toList()));
+      start = end;
     }
 
-    @Override
-    public Roadmap identifyingThematicallySimilarZones(List<RoadmapZone> roadmapZones) {
-        Roadmap roadmap = new Roadmap();
-        for (RoadmapZone roadmapZone : roadmapZones) {
-            roadmap.addRoadmapZone(roadmapZone);
-        }
-        return roadmap;
+    return zones;
+  }
+
+  private RoadmapZone createZoneFromWeeks(List<Week> weeks, int zoneOrder, String zonesAnalysis) {
+    RoadmapZone zone = new RoadmapZone();
+    zone.setZoneOrder(zoneOrder);
+
+    // Имя — из первой недели или из zonesAnalysis (если есть)
+    String baseName = weeks.get(0).getGoal();
+    String name = extractZoneName(baseName);
+    zone.setName(name.isEmpty() ? "Зона " + zoneOrder : name);
+
+    // Skills / learningGoal — объединяем цели
+    String learningGoal = weeks.stream()
+      .map(Week::getGoal)
+      .filter(s -> s != null && !s.trim().isEmpty())
+      .distinct()
+      .collect(Collectors.joining("; "));
+    zone.setLearningGoal(learningGoal.isEmpty() ? "Развитие профессиональных компетенций" : learningGoal);
+
+    // Сложность — по номеру последней недели
+    int maxWeek = weeks.stream().mapToInt(Week::getNumber).max().orElse(1);
+    zone.setComplexityLevel(
+      maxWeek <= 3 ? "начальный" :
+        maxWeek <= 6 ? "средний" : "сложный"
+    );
+
+    zone.setWeeks(weeks);
+    return zone;
+  }
+
+  private String extractZoneName(String goal) {
+    if (goal == null) return "";
+    // Убираем глаголы и оставляем суть
+    String clean = goal
+      .replaceAll("(?i)^[Оо]своить|[Нн]аучиться|[Иi]зучить|[Пп]олучить навыки|[Рr]азвить", "")
+      .replaceAll("[.,;:!?]+$", "")
+      .trim();
+    String[] words = clean.split("\\s+");
+    return words.length == 0 ? "" : String.join(" ",
+      Arrays.copyOfRange(words, 0, Math.min(4, words.length)));
+  }
+
+  // Вспомогательный метод для извлечения значений полей
+  private String extractFieldValue(String zoneText, String fieldName) {
+    int fieldIndex = zoneText.indexOf(fieldName);
+    if (fieldIndex == -1) {
+      return null;
     }
+
+    int valueStart = fieldIndex + fieldName.length();
+    int valueEnd = zoneText.indexOf('\n', valueStart);
+
+    if (valueEnd == -1) {
+      valueEnd = zoneText.length();
+    }
+
+    String value = zoneText.substring(valueStart, valueEnd).trim();
+
+    // Убираем возможные кавычки и лишние символы
+    value = value.replaceAll("^[\"']|[\"']$", "");
+
+    return value;
+  }
+
+  @Override
+  public Roadmap identifyingThematicallySimilarZones(List<RoadmapZone> roadmapZones) {
+    Roadmap roadmap = new Roadmap();
+    for (RoadmapZone roadmapZone : roadmapZones) {
+      roadmap.addRoadmapZone(roadmapZone);
+    }
+    return roadmap;
+  }
 }
