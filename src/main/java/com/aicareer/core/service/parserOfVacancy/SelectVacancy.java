@@ -138,4 +138,19 @@ public class SelectVacancy implements SelectOfVacancy {
       String gigachatFinalReqirements = gigaChatService.sendMessage(newPromt);
     return new FinalVacancyRequirements(gigachatFinalReqirements);
   }
+  public SelectedPotentialVacancy chooseVacancyManually(List<String> listOfThreeVacancy, String chosenVacancyName) {
+    if (listOfThreeVacancy == null || !listOfThreeVacancy.contains(chosenVacancyName)) {
+      return null;
+    }
+
+    PotentialVacancy potentialVacancy = new PotentialVacancy();
+    potentialVacancy.setNameOfVacancy(chosenVacancyName);
+
+    this.selectedVacancy = new SelectedPotentialVacancy(potentialVacancy);
+
+    System.out.println("Выбрана вакансия: " +
+        (selectedVacancy != null ? selectedVacancy.getNameOfVacancy() : "не выбрана"));
+
+    return selectedVacancy;
+  }
 }

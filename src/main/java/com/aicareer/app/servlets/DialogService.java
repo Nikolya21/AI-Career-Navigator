@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.aicareer.core.model.user.UserPreferences;
 import com.aicareer.core.service.gigachat.GigaChatService;
 
 import jakarta.servlet.ServletException;
@@ -28,23 +29,20 @@ public class DialogService extends HttpServlet {
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
 
-    // Проверяем аутентификацию пользователя
     HttpSession session = request.getSession(false);
     if (session == null || session.getAttribute("authenticated") == null) {
       response.sendRedirect(request.getContextPath() + "/login");
       return;
     }
 
-    // Проверяем, не завершен ли уже диалог
-    Boolean dialogCompleted = (Boolean) session.getAttribute("dialogCompleted");
-    if (dialogCompleted != null && dialogCompleted) {
-      response.sendRedirect(request.getContextPath() + "/dialog-completed");
-      return;
+    String chatType = request.getParameter("chatType");
+
+    if ("clarification".equals(chatType)) {
+      // Начинаем уточняющую беседу после показа вакансий
+      startClarificationChat(session);
     }
 
-    // Устанавливаем атрибуты для отображения истории
     setupMessageHistory(request);
-
     request.getRequestDispatcher("/jsp/DialogService.jsp").forward(request, response);
   }
 
@@ -52,17 +50,9 @@ public class DialogService extends HttpServlet {
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
 
-    // Проверяем аутентификацию пользователя
     HttpSession session = request.getSession(false);
     if (session == null || session.getAttribute("authenticated") == null) {
       response.sendRedirect(request.getContextPath() + "/login");
-      return;
-    }
-
-    // Проверяем, не завершен ли уже диалог
-    Boolean dialogCompleted = (Boolean) session.getAttribute("dialogCompleted");
-    if (dialogCompleted != null && dialogCompleted) {
-      response.sendRedirect(request.getContextPath() + "/dialog-completed");
       return;
     }
 
@@ -71,66 +61,150 @@ public class DialogService extends HttpServlet {
 
     System.out.println("📨 Message from " + userEmail + ": " + message);
 
-    if (message != null && !message.trim().isEmpty()) {
-      // Получаем или создаем историю сообщений
-      List<String> messageHistory = (List<String>) session.getAttribute("messageHistory");
-      if (messageHistory == null) {
-        messageHistory = new ArrayList<>();
-      }
+    // Проверяем тип чата
+    String chatType = (String) session.getAttribute("currentChatType");
 
-      // Добавляем сообщение пользователя
-      messageHistory.add(message.trim());
-
-      // Подсчитываем количество вопросов пользователя (каждое второе сообщение)
-      int userQuestionsCount = (messageHistory.size() + 1) / 2;
-      System.out.println("❓ User questions count: " + userQuestionsCount);
-
-      try {
-        // Проверяем, не достигли ли лимита в 5 вопросов
-        if (userQuestionsCount >= 5) {
-          // Лимит достигнут - отправляем финальное сообщение
-          String finalResponse = buildFinalResponse(messageHistory);
-          messageHistory.add(finalResponse);
-
-          // Помечаем диалог как завершенный
-          session.setAttribute("dialogCompleted", true);
-          session.setAttribute("dialogEndTime", System.currentTimeMillis());
-
-          System.out.println("🎯 Dialog completed after " + userQuestionsCount + " questions");
-
-        } else {
-          // Продолжаем обычный диалог
-          String prompt = buildPrompt(message, messageHistory, userQuestionsCount);
-          System.out.println("🤖 Sending prompt to AI: " + prompt);
-
-          // Получаем ответ от реальной нейросети
-          String aiResponse = gigaChatService.sendMessage(prompt);
-          System.out.println("🤖 AI Response: " + aiResponse);
-
-          // Добавляем ответ AI
-          messageHistory.add(aiResponse);
-        }
-
-      } catch (Exception e) {
-        System.err.println("❌ Error calling AI service: " + e.getMessage());
-        // Fallback ответ в случае ошибки
-        String fallbackResponse = "Извините, в настоящее время сервис AI временно недоступен. Пожалуйста, попробуйте позже.";
-        messageHistory.add(fallbackResponse);
-      }
-
-      // Сохраняем историю в сессии
-      session.setAttribute("messageHistory", messageHistory);
-      System.out.println("✅ Message history updated. Total messages: " + messageHistory.size());
-    }
-
-    // Проверяем снова, не завершился ли диалог
-    dialogCompleted = (Boolean) session.getAttribute("dialogCompleted");
-    if (dialogCompleted != null && dialogCompleted) {
-      response.sendRedirect(request.getContextPath() + "/dialog-completed");
+    if ("clarification".equals(chatType)) {
+      handleClarificationChat(session, message, response, request);
       return;
     }
 
-    // ВМЕСТО redirect используем forward чтобы сохранить данные
+    // Оригинальная логика для обычного диалога
+    handleRegularDialog(session, message, response, request);
+  }
+
+  private void startClarificationChat(HttpSession session) {
+    String selectedField = (String) session.getAttribute("selectedField");
+
+    // Генерируем первый уточняющий вопрос
+    String firstQuestion = generateFirstClarificationQuestion(selectedField);
+
+    // Инициализируем историю для уточняющего чата
+    List<String> clarificationHistory = new ArrayList<>();
+    clarificationHistory.add(firstQuestion);
+
+    session.setAttribute("clarificationChatHistory", clarificationHistory);
+    session.setAttribute("clarificationQuestionCount", 1);
+    session.setAttribute("currentChatType", "clarification");
+    session.setAttribute("messageHistory", clarificationHistory); // Для отображения в JSP
+  }
+
+  private void handleClarificationChat(HttpSession session, String message,
+      HttpServletResponse response, HttpServletRequest request)
+      throws ServletException, IOException {
+
+    List<String> clarificationHistory = (List<String>) session.getAttribute("clarificationChatHistory");
+    Integer questionCount = (Integer) session.getAttribute("clarificationQuestionCount");
+    String selectedField = (String) session.getAttribute("selectedField");
+
+    // Добавляем ответ пользователя
+    clarificationHistory.add(message);
+
+    if (questionCount < 5) {
+      // Генерируем следующий вопрос
+      String nextQuestion = generateNextClarificationQuestion(clarificationHistory, selectedField, questionCount);
+      clarificationHistory.add(nextQuestion);
+
+      session.setAttribute("clarificationQuestionCount", questionCount + 1);
+      session.setAttribute("clarificationChatHistory", clarificationHistory);
+      session.setAttribute("messageHistory", clarificationHistory);
+
+      setupMessageHistory(request);
+      request.getRequestDispatcher("/jsp/DialogService.jsp").forward(request, response);
+    } else {
+      // Завершаем уточняющую беседу и генерируем roadmap
+      completeClarificationAndGenerateRoadmap(session, clarificationHistory, selectedField, response, request);
+    }
+  }
+
+  private String generateFirstClarificationQuestion(String field) {
+    String prompt = "Пользователь выбрал направление: " + field +
+        ". Он только что посмотрел 10 реальных вакансий с hh.ru в этой области. " +
+        "Задай первый уточняющий вопрос чтобы понять его текущий уровень, опыт и цели. " +
+        "Вопрос должен быть конкретным и помогать составить персонализированный roadmap.";
+    return gigaChatService.sendMessage(prompt);
+  }
+
+  private String generateNextClarificationQuestion(List<String> history, String field, int currentQuestion) {
+    StringBuilder chatContext = new StringBuilder();
+    for (int i = 0; i < history.size(); i++) {
+      if (i % 2 == 0) {
+        chatContext.append("AI: ").append(history.get(i)).append("\n");
+      } else {
+        chatContext.append("User: ").append(history.get(i)).append("\n");
+      }
+    }
+
+    String prompt = "История уточняющей беседы:\n" + chatContext.toString() +
+        "\nНаправление: " + field +
+        "\nЗадай следующий уточняющий вопрос (" + (currentQuestion + 1) + "/5). " +
+        "Вопрос должен углублять понимание потребностей пользователя для составления roadmap.";
+    return gigaChatService.sendMessage(prompt);
+  }
+
+  private void completeClarificationAndGenerateRoadmap(HttpSession session, List<String> history,
+      String field, HttpServletResponse response,
+      HttpServletRequest request)
+      throws IOException, ServletException {
+
+    StringBuilder fullDialog = new StringBuilder();
+    for (int i = 0; i < history.size(); i++) {
+      if (i % 2 == 0) {
+        fullDialog.append("AI: ").append(history.get(i)).append("\n");
+      } else {
+        fullDialog.append("User: ").append(history.get(i)).append("\n");
+      }
+    }
+
+    String roadmapPrompt = "На основе всего диалога и выбранного направления создай подробный roadmap.\n" +
+        "Направление: " + field + "\n" +
+        "Полный диалог:\n" + fullDialog.toString() + "\n\n" +
+        "Создай структурированный план обучения с этапами, сроками и конкретными шагами.";
+
+    String roadmap = gigaChatService.sendMessage(roadmapPrompt);
+    session.setAttribute("finalRoadmap", roadmap);
+
+    // Перенаправляем на страницу с roadmap
+    response.sendRedirect(request.getContextPath() + "/career-roadmap");
+  }
+
+  private void handleRegularDialog(HttpSession session, String message,
+      HttpServletResponse response, HttpServletRequest request)
+      throws ServletException, IOException {
+
+    // Ваша оригинальная логика для обычного диалога
+    List<String> messageHistory = (List<String>) session.getAttribute("messageHistory");
+    if (messageHistory == null) {
+      messageHistory = new ArrayList<>();
+    }
+
+    if (message != null && (message.equalsIgnoreCase("/complete") ||
+        message.equalsIgnoreCase("/finish") ||
+        message.equalsIgnoreCase("завершить"))) {
+      completeDialogAndRedirect(session, response, request);
+      return;
+    }
+
+    if (message != null && !message.trim().isEmpty()) {
+      messageHistory.add(message.trim());
+
+      try {
+        String prompt = buildPrompt(message, messageHistory);
+        String aiResponse = gigaChatService.sendMessage(prompt);
+        messageHistory.add(aiResponse);
+
+        if (isDialogComplete(messageHistory)) {
+          completeDialogAndRedirect(session, response, request);
+          return;
+        }
+      } catch (Exception e) {
+        String fallbackResponse = "Извините, в настоящее время сервис AI временно недоступен.";
+        messageHistory.add(fallbackResponse);
+      }
+
+      session.setAttribute("messageHistory", messageHistory);
+    }
+
     setupMessageHistory(request);
     request.getRequestDispatcher("/jsp/DialogService.jsp").forward(request, response);
   }
@@ -142,20 +216,10 @@ public class DialogService extends HttpServlet {
       if (messageHistory != null) {
         request.setAttribute("messageHistory", messageHistory);
       }
-
-      // Добавляем информацию о статусе диалога
-      Boolean dialogCompleted = (Boolean) session.getAttribute("dialogCompleted");
-      request.setAttribute("dialogCompleted", dialogCompleted != null && dialogCompleted);
-
-      // Считаем количество вопросов для отображения прогресса
-      if (messageHistory != null) {
-        int questionsCount = (messageHistory.size() + 1) / 2;
-        request.setAttribute("questionsCount", questionsCount);
-      }
     }
   }
 
-  private String buildPrompt(String currentMessage, List<String> messageHistory, int questionsCount) {
+  private String buildPrompt(String currentMessage, List<String> messageHistory) {
     StringBuilder prompt = new StringBuilder();
 
     // Системный промпт для нейросети
@@ -163,8 +227,6 @@ public class DialogService extends HttpServlet {
     prompt.append("Твоя роль - помогать пользователям с вопросами карьеры, обучения и профессионального развития. ");
     prompt.append("Отвечай профессионально, но дружелюбно. Будь полезным и поддерживающим. ");
     prompt.append("Фокусируйся на карьерных темах: профориентация, навыки, обучение, поиск работы, карьерный рост. ");
-    prompt.append("Это вопрос номер ").append(questionsCount).append(" из 5. ");
-    prompt.append("После 5 вопросов диалог будет завершен. ");
     prompt.append("Если вопрос не по теме, вежливо направляй разговор в профессиональное русло.\n\n");
 
     // Добавляем историю диалога для контекста
@@ -188,37 +250,57 @@ public class DialogService extends HttpServlet {
     return prompt.toString();
   }
 
-  private String buildFinalResponse(List<String> messageHistory) {
-    StringBuilder finalPrompt = new StringBuilder();
+  private boolean isDialogComplete(List<String> messageHistory) {
+    // Логика определения завершения диалога
+    if (messageHistory == null) return false;
 
-    finalPrompt.append("Ты - AI помощник по карьерному развитию 'Career Navigator'. ");
-    finalPrompt.append("Пользователь задал 5 вопросов и диалог завершается. ");
-    finalPrompt.append("Напиши финальное, завершающее сообщение которое:\n");
-    finalPrompt.append("1. Подводит итоги диалога\n");
-    finalPrompt.append("2. Дает общие рекомендации по карьерному развитию\n");
-    finalPrompt.append("3. Побуждает пользователя к действию\n");
-    finalPrompt.append("4. Прощается и желает успехов\n");
-    finalPrompt.append("5. Сообщает что диалог завершен\n\n");
+    // Простая логика: если есть хотя бы 6 сообщений (3 от пользователя, 3 от AI)
+    return messageHistory.size() >= 6;
+  }
 
-    finalPrompt.append("История диалога:\n");
-    for (int i = 0; i < messageHistory.size(); i += 2) {
-      if (i < messageHistory.size()) {
-        finalPrompt.append("Пользователь: ").append(messageHistory.get(i)).append("\n");
-      }
-      if (i + 1 < messageHistory.size()) {
-        finalPrompt.append("AI: ").append(messageHistory.get(i + 1)).append("\n");
-      }
-    }
-    finalPrompt.append("\nНапиши финальное сообщение:");
+  private void completeDialogAndRedirect(HttpSession session, HttpServletResponse response, HttpServletRequest request)
+      throws IOException {
 
     try {
-      return gigaChatService.sendMessage(finalPrompt.toString());
+      // Создаем UserPreferences на основе диалога
+      UserPreferences userPreferences = new UserPreferences();
+
+      // Заполняем данными из истории сообщений
+      List<String> messageHistory = (List<String>) session.getAttribute("messageHistory");
+      String userInfo = "Информация из диалога:\n";
+
+      if (messageHistory != null && !messageHistory.isEmpty()) {
+        for (int i = 0; i < messageHistory.size(); i += 2) {
+          if (i < messageHistory.size()) {
+            userInfo += "Пользователь: " + messageHistory.get(i) + "\n";
+          }
+          if (i + 1 < messageHistory.size()) {
+            userInfo += "AI: " + messageHistory.get(i + 1) + "\n";
+          }
+        }
+      } else {
+        userInfo = "Пользователь прошел краткий диалог";
+      }
+
+      userPreferences.setInfoAboutPerson(userInfo);
+
+      Long userId = (Long) session.getAttribute("userId");
+      if (userId != null) {
+        userPreferences.setUserId(userId);
+      }
+
+      // Сохраняем в сессии
+      session.setAttribute("userPreferences", userPreferences);
+
+      System.out.println("✅ Диалог завершен, UserPreferences сохранены");
+
+      // Перенаправляем на выбор вакансии
+      response.sendRedirect(request.getContextPath() + "/choose-vacancy");
+
     } catch (Exception e) {
-      System.err.println("❌ Error generating final response: " + e.getMessage());
-      return "Благодарю за диалог! Вы задали 5 вопросов, и наша беседа подошла к концу. " +
-          "Надеюсь, я смог помочь вам с вопросами карьерного развития. " +
-          "Желаю успехов в профессиональном росте и достижении ваших целей! " +
-          "Диалог завершен.";
+      System.err.println("❌ Ошибка при завершении диалога: " + e.getMessage());
+      e.printStackTrace();
+      response.sendRedirect(request.getContextPath() + "/send-message");
     }
   }
 }
