@@ -81,7 +81,7 @@ public class Main {
       );
 
       RoadmapService roadmapService = new RoadmapService(dataSource);
-      DialogService dialogService = new DialogService(gigaChatService, true);
+      DialogService dialogService = new DialogService(gigaChatService, false);
 
       // 6. Сервисы бизнес-логики
       System.out.println("🔧 Инициализация бизнес-сервисов...");

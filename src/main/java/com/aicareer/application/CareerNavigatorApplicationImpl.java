@@ -252,9 +252,9 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
         System.out.println("🔍 Начало процесса подбора вакансий...");
 
         // 1. Извлечение трех вакансий
-        List<String> threeVacancies = selectVacancy.extractThreeVacancies(analysisResult);
+        List<String> threeVacancies = selectVacancy.extractThreeVacancies(analysisResult, 0);
         if (threeVacancies.isEmpty()){
-          threeVacancies = selectVacancy.extractThreeVacancies(analysisResult);
+          threeVacancies = selectVacancy.extractThreeVacancies(analysisResult, 0);
         }
         System.out.println("✅ Извлечено вакансий: " + threeVacancies.size());
 

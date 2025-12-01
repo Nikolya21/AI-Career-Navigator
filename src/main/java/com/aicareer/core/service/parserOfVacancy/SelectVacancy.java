@@ -48,21 +48,21 @@ public class SelectVacancy implements SelectOfVacancy {
         + "после этих трех профессий ты должен закончить ответ и не добавлять больше символов!!!");
     String gigachatAnswer = gigaChatService.sendMessage(promtAnalyze);
     this.analysisResult = gigachatAnswer;
-    extractThreeVacancies(gigachatAnswer);
+    extractThreeVacancies(gigachatAnswer, 0);
     return gigachatAnswer;
   }
 
   @Override
-  public List<String> extractThreeVacancies(String gigachatAnswer) {
+  public List<String> extractThreeVacancies(String gigachatAnswer, int count) {
     System.out.println(gigachatAnswer);
     if (gigachatAnswer.contains(":::")) { //todo тут беда с форматом - упало на тесте, когда gigachat вывел:
                                           //::
                                           //Data Scientist, Business Analyst, Analytics Manager
       String[] parts = gigachatAnswer.split(":::");
       System.out.println("PastsArray.toString() " + Arrays.toString(parts));
-      if (parts.length < 3) {
+      if (parts.length < 3 && count < 5) {
         gigachatAnswer = validateAndFixResponse(gigachatAnswer);
-        extractThreeVacancies(gigachatAnswer);
+        extractThreeVacancies(gigachatAnswer, ++count);
       }
       System.out.println(Arrays.toString(parts));
       if (parts.length > 1) {
@@ -78,11 +78,11 @@ public class SelectVacancy implements SelectOfVacancy {
         }
       } else { //todo else (нужен нормальный рерол, если результата нет)
         String validateString = validateAndFixResponse(gigachatAnswer);
-        extractThreeVacancies(validateString);
+        extractThreeVacancies(validateString, ++count);
       }
     } else {
       gigachatAnswer = validateAndFixResponse(gigachatAnswer);
-      extractThreeVacancies(gigachatAnswer);
+      extractThreeVacancies(gigachatAnswer, ++count);
     }
     System.out.println("Предложенные вакансии: " + listOfThreeVacancy);
    return listOfThreeVacancy;

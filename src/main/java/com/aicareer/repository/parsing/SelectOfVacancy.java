@@ -9,7 +9,7 @@ import java.util.List;
 public interface SelectOfVacancy {
   String analyzeUserPreference(UserPreferences infoAboutPerson);
 
-  List<String> extractThreeVacancies(String gigachatAnswer);
+  List<String> extractThreeVacancies(String gigachatAnswer, int count);
 
   SelectedPotentialVacancy choosenVacansy(List<String> listPotentialVacancy);
 
