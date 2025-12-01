@@ -6,6 +6,20 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/personal-cabinet.css">
 </head>
 <body>
+    <div class="container">
+        <header class="mts-header">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="mts-logo">МТС</span>
+                    <span class="logo-text">Личный кабинет</span>
+                </div>
+                <nav class="header-nav">
+                    <a href="${pageContext.request.contextPath}/send-message" class="nav-link">Главная</a>
+                    <a href="#" class="nav-link">Услуги</a>
+                    <a href="#" class="nav-link">Помощь</a>
+                </nav>
+            </div>
+        </header>
 <div class="container">
     <!-- Шапка в стиле МТС -->
     <header class="mts-header">

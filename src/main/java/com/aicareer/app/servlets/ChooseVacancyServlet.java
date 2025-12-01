@@ -51,11 +51,11 @@ public class ChooseVacancyServlet extends HttpServlet {
 
         // 1. Анализ предпочтений и извлечение вакансий
         String analysisResult = selectVacancy.analyzeUserPreference(userPreferences);
-        List<String> threeVacancies = selectVacancy.extractThreeVacancies(analysisResult);
+        List<String> threeVacancies = selectVacancy.extractThreeVacancies(analysisResult, 0);
 
         // Повторяем попытку если список пустой
         if (threeVacancies.isEmpty()) {
-          threeVacancies = selectVacancy.extractThreeVacancies(analysisResult);
+          threeVacancies = selectVacancy.extractThreeVacancies(analysisResult, 0);
         }
 
         System.out.println("✅ Извлечено вакансий: " + threeVacancies.size());

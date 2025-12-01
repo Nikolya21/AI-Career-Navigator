@@ -93,7 +93,7 @@ public class Roadmap {
                                         sb.append(isLastWeek ? "            " : "    │       ");
                                         sb.append(isLastTask ? "    " : "│   ");
                                         sb.append(isLastUrl ? "└── " : "├── ");
-                                        sb.append("URL ").append(m + 1).append(": ").append(url).append("\n");
+                                        sb.append("RESOURSES ").append(m + 1).append(": ").append(url).append("\n");
                                     }
                                 } else {
                                     sb.append(isLastZone ? "    " : "│   ");

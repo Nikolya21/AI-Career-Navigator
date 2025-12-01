@@ -38,8 +38,8 @@ public class ChatWithAiAfterDeterminingVacancyService implements ChatWithAiAfter
   @Override
   public void askingPersonalizedQuestions(List<String> generatedPersonalizedQuestions) {
     for (String question : generatedPersonalizedQuestions) {
+      if (question.isEmpty()) { continue; }
       askingQuestion(question);
-
       // только последние 2-3 реплики вместо всей истории
       List<String> recentHistory = getRecentDialogHistory(3);
       String context = String.join("\n", recentHistory);
