@@ -92,6 +92,7 @@ public class CareerRoadmapServlet extends HttpServlet {
       zone.setLearningGoal("Этап " + (i + 1) + " развития навыков");
       zone.setComplexityLevel(i == 0 ? "Начальный" : i == 1 ? "Средний" : "Продвинутый");
       zone.setWeeks(createWeeks(i * 2 + 1, i * 2 + 2, "Обучение"));
+      zone.updateTimestamps();
       zones.add(zone);
     }
 
@@ -115,6 +116,7 @@ public class CareerRoadmapServlet extends HttpServlet {
       week.setNumber(i);
       week.setGoal(goalPrefix + " - неделя " + i);
       week.setTasks(createBasicTasks());
+      week.updateTimestamps();
       weeks.add(week);
     }
     return weeks;
@@ -128,14 +130,17 @@ public class CareerRoadmapServlet extends HttpServlet {
 
     Task task1 = new Task();
     task1.setDescription("Изучение теоретического материала");
+    task1.updateTimestamps();
     tasks.add(task1);
 
     Task task2 = new Task();
     task2.setDescription("Практическое упражнение");
+    task2.updateTimestamps();
     tasks.add(task2);
 
     Task task3 = new Task();
     task3.setDescription("Мини-проект для закрепления знаний");
+    task3.updateTimestamps();
     tasks.add(task3);
 
     return tasks;
