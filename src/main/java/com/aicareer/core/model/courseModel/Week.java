@@ -47,8 +47,6 @@ public class Week {
 
                 // URLs
                 if (task.getUrls() != null && !task.getUrls().isEmpty()) {
-                    sb.append(i == tasks.size() - 1 ? "        └── " : "        ├── ")
-                            .append("URLs: ").append(task.getUrls().size()).append(" links\n");
 
                     for (int j = 0; j < task.getUrls().size(); j++) {
                         String url = task.getUrls().get(j);
