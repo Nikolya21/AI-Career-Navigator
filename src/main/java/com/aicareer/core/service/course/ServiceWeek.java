@@ -25,8 +25,8 @@ public class ServiceWeek implements CourseResponse {
     }
 
     // Логируем сырой ответ для отладки
-    String preview = llmResponse.length() > 500 ? llmResponse.substring(0, 500) + "..." : llmResponse;
-    System.out.println("🔍 Сырой ответ LLM (первыe 500 симв.):\n" + preview);
+//    String preview = llmResponse.length() > 500 ? llmResponse.substring(0, 500) + "..." : llmResponse;
+//    System.out.println("🔍 Сырой ответ LLM (первыe 500 симв.):\n" + preview);
 
     // Быстрая проверка на плохой текст
     String lower = llmResponse.toLowerCase();

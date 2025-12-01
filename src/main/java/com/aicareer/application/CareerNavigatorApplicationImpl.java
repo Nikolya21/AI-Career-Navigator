@@ -165,10 +165,8 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
       LoginRequestDto loginDto = new LoginRequestDto();
       loginDto.setEmail(email);
       loginDto.setPassword(password);
-
       // Вызываем UserService для аутентификации
       AuthenticationResult result = userService.authenticateUser(loginDto);
-
       if (result.isSuccess()) {
         return result.getUser().getId();
       } else {
@@ -254,9 +252,9 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
         System.out.println("🔍 Начало процесса подбора вакансий...");
 
         // 1. Извлечение трех вакансий
-        List<String> threeVacancies = selectVacancy.extractThreeVacancies(analysisResult);
+        List<String> threeVacancies = selectVacancy.extractThreeVacancies(analysisResult, 0);
         if (threeVacancies.isEmpty()){
-          threeVacancies = selectVacancy.extractThreeVacancies(analysisResult);
+          threeVacancies = selectVacancy.extractThreeVacancies(analysisResult, 0);
         }
         System.out.println("✅ Извлечено вакансий: " + threeVacancies.size());
 
@@ -271,7 +269,6 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
         // 3. Парсинг вакансии
         String parsingResult = selectVacancy.formingByParsing(selectedPotentialVacancy);
         System.out.println("✅ Парсинг завершен, длина результатa: " + parsingResult.length());
-        //System.out.println(parsingResult);
 
         // 4. Формирование финальных требований
         FinalVacancyRequirements finalVacancyRequirements = selectVacancy.formingFinalVacancyRequirements(
@@ -371,7 +368,7 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
       String weeksInfo = null;
       try {
         weeksInfo = roadmapGenerateService.gettingWeeksInformation(responseByWeek);
-        System.out.println("✅ weeksInfo успешно получен: " + (weeksInfo != null ? weeksInfo.substring(0, Math.min(weeksInfo.length(), 100)) + "..." : "null"));
+//        System.out.println("✅ weeksInfo успешно получен: " + (weeksInfo != null ? weeksInfo.substring(0, Math.min(weeksInfo.length(), 100)) + "..." : "null"));
       } catch (Exception e) {
         System.out.println("❌ Ошибка в gettingWeeksInformation: " + e.getMessage());
         e.printStackTrace();
@@ -381,7 +378,7 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
       String zonesAnalysis = null;
       try {
         zonesAnalysis = roadmapGenerateService.informationComplexityAndQuantityAnalyzeAndCreatingZone(weeksInfo);
-        System.out.println("✅ zonesAnalysis успешно получен: " + (zonesAnalysis != null ? zonesAnalysis.substring(0, Math.min(zonesAnalysis.length(), 100)) + "..." : "null"));
+
       } catch (Exception e) {
         System.out.println("❌ Ошибка в informationComplexityAndQuantityAnalyzeAndCreatingZone: " + e.getMessage());
         e.printStackTrace();
@@ -392,11 +389,11 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
       try {
         zones = roadmapGenerateService.splittingWeeksIntoZones(zonesAnalysis, responseByWeek.getWeeks());
         System.out.println("✅ zones успешно созданы, количество: " + (zones != null ? zones.size() : 0));
-        if (zones != null) {
-          for (int i = 0; i < zones.size(); i++) {
-            System.out.println("Зона " + i + ": " + zones.get(i));
-          }
-        }
+//        if (zones != null) {
+//          for (int i = 0; i < zones.size(); i++) {
+//            System.out.println("Зона " + i + ": " + zones.get(i));
+//          }
+//        }
       } catch (Exception e) {
         System.out.println("❌ Ошибка в splittingWeeksIntoZones: " + e.getMessage());
         e.printStackTrace();

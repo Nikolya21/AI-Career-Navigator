@@ -28,8 +28,8 @@ public class DialogService {
 
     public String userAnswerReal(String question, String context) { // отвечает реальный человек
         System.out.println("AI: " + question);
+        System.out.print("👉 Ваш ответ: ");
         String userAnswer = scanner.nextLine();
-        System.out.print("User: " + userAnswer);
 
         return userAnswer;
     }

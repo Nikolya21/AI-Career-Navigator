@@ -75,13 +75,18 @@ public class DatabaseConfig {
     private static boolean testConnection() {
         try (Connection conn = dataSource.getConnection()) {
             System.out.println("✅ Database connection successful");
+
+            // Дополнительная диагностика
             DatabaseMetaData meta = conn.getMetaData();
-            System.out.println("   Database: " + meta.getDatabaseProductName() + " " + meta.getDatabaseProductVersion());
+            System.out.println("   URL: " + meta.getURL());
+            System.out.println("   User: " + meta.getUserName());
+            System.out.println("   Database: " + meta.getDatabaseProductName());
             return true;
         } catch (SQLException e) {
-
-          e.printStackTrace();
-          System.err.println("❌ Database connection failed: " + e.getMessage());
+            System.err.println("❌ Database connection failed: " + e.getMessage());
+            System.err.println("   SQL State: " + e.getSQLState());
+            System.err.println("   Error Code: " + e.getErrorCode());
+            e.printStackTrace();
             return false;
         }
     }
@@ -101,9 +106,38 @@ public class DatabaseConfig {
           executeSqlFile(conn, "db/schema/07_weeks.sql");
           executeSqlFile(conn, "db/schema/08_tasks.sql");
 
+            // ✅ ГЕНЕРАЦИЯ ТЕСТОВЫХ ДАННЫХ
+            generateTestDataUsingServices();
+
             System.out.println("✅ Database schema initialized successfully");
         } catch (SQLException e) {
             System.err.println("❌ Failed to initialize database: " + e.getMessage());
+        }
+    }
+
+    private static void generateTestDataUsingServices() {
+        try {
+            System.out.println("🎲 Generating test data using services...");
+
+            ServiceDataGenerator generator = new ServiceDataGenerator(dataSource);
+            generator.generateAllTestData();
+
+            System.out.println("🎉 Demo accounts created successfully:");
+            System.out.println("   👤 demo@aicareer.com / demo123WW");
+            System.out.println("   👤 alex@demo.com / hash123WW");
+            System.out.println("   👤 maria@demo.com / hash123WW");
+            System.out.println("   👤 ivan@demo.com / hash123WW");
+            System.out.println("   👤 ekaterina@demo.com / hash123WW");
+            System.out.println("   👤 dmitry@demo.com / hash123WW");
+            System.out.println("   👤 olga@demo.com / hash123WW");
+            System.out.println("   👤 sergey@demo.com / hash123WW");
+            System.out.println("   👤 anna@demo.com / hash123WW");
+            System.out.println("   👤 pavel@demo.com / hash123WW");
+            System.out.println("   📊 Each account has: CV data, preferences, and roadmap (without skills)");
+
+        } catch (Exception e) {
+            System.err.println("❌ Error generating test data: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
