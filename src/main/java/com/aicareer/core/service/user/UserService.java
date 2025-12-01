@@ -16,32 +16,18 @@ public interface UserService {
   AuthenticationResult authenticateUser(LoginRequestDto loginRequest);
   boolean isEmailAvailable(String email);
 
-  // === ПОЛУЧЕНИЕ ДАННЫХ ===
   User getUserProfile(Long userId);
   List<User> getAllUsers();
 
-  // === USER PREFERENCES (НОВЫЕ МЕТОДЫ) ===
-
-  /**
-   * Получить настройки пользователя
-   */
   UserPreferences getUserPreferences(Long userId);
 
-  /**
-   * Обновить информацию о пользователе в настройках
-   */
   UpdateResult updateUserPreferencesInfo(Long userId, String newInfoAboutPerson);
 
-  /**
-   * Проверить есть ли настройки у пользователя
-   */
   boolean hasUserPreferences(Long userId);
 
-  // === ВАКАНСИИ И ROADMAP ===
   UpdateResult updateVacancy(String vacancy, Long userId);
   UpdateResult updateRoadmap(Long roadmapId, Long userId);
 
-  // === CV И НАВЫКИ ===
   UpdateResult uploadCV(File cv, Long userId);
   UpdateResult updateSkills(UserSkills skills, Long userId);
 }

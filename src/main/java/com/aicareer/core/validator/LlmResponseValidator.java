@@ -47,7 +47,7 @@ public class LlmResponseValidator {
       }
     }
 
-    if (weekLines.size() < 4) {
+    if (weekLines.size() < 4 && !weekLines.isEmpty()) {
       System.err.println("План должен содержать минимум 4 недели, получено: " + weekLines.size());
       return false;
     }

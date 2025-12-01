@@ -4,20 +4,34 @@ import com.aicareer.core.dto.user.LoginRequestDto;
 import com.aicareer.core.validator.util.ValidationUtil;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class AuthenticationValidator {
+  private static final Pattern EMAIL_PATTERN = Pattern.compile(
+      "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+  );
 
   public static List<String> validate(LoginRequestDto dto) {
     List<String> errors = new ArrayList<>();
 
-    try {
-      ValidationUtil.validateEmail(dto.getEmail(), "Email");
-    } catch (ValidationException e) {
-      errors.add(e.getMessage());
+    String email = dto.getEmail();
+    String password = dto.getPassword();
+
+    if (email == null || email.trim().isEmpty()) {
+      errors.add("Email не может быть пустым");
+    } else {
+      email = email.trim();
+      if (!EMAIL_PATTERN.matcher(email).matches()) {
+        errors.add("Некорректный формат email (должен содержать @ и домен, например: user@example.com)");
+      }
     }
 
-    if (dto.getPassword() == null || dto.getPassword().trim().isEmpty()) {
-      errors.add("Password is required");
+    if (password == null || password.trim().isEmpty()) {
+      errors.add("Пароль не может быть пустым");
+    } else {
+      if (password.length() > 10) {
+        errors.add("Пароль не может быть длиннее 10 символов");
+      }
     }
 
     return errors;

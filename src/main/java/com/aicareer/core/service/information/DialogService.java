@@ -16,7 +16,7 @@ public class DialogService {
 
     private final boolean testMode;
 
-    private Scanner scanner;
+    private Scanner scanner = new Scanner(System.in);
 
     public String userAnswer(String question, String context) { // в зависимость от mode выбираем, кто отвечает: AI или человек
         if (isTestMode()) {
@@ -28,9 +28,8 @@ public class DialogService {
 
     public String userAnswerReal(String question, String context) { // отвечает реальный человек
         System.out.println("AI: " + question);
-
+        System.out.print("👉 Ваш ответ: ");
         String userAnswer = scanner.nextLine();
-        System.out.print("User: " + userAnswer);
 
         return userAnswer;
     }

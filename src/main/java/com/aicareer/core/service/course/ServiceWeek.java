@@ -10,139 +10,273 @@ import java.util.regex.Pattern;
 
 public class ServiceWeek implements CourseResponse {
 
-  private static final Pattern WEEK_LINE_PATTERN = Pattern.compile("^week(\\d+):\\s*(.+)$");
-  private static final Pattern FIELD_PATTERN = Pattern.compile("(\\w+)\\s*:\\s*\"([^\"]*)\"");
+  // Для быстрой проверки плохих ответов
+  private static final Set<String> BAD_PHRASES = Set.of(
+    "к сожалению", "извините", "не могу", "превышено", "лимит"
+  );
 
   @Override
   public List<Week> parseCourseResponse(String llmResponse) {
+    System.out.println("📋 Начало парсинга строгого формата");
+
     if (llmResponse == null || llmResponse.trim().isEmpty()) {
-      return List.of();
+      System.out.println("❌ Ответ пуст");
+      return createFallbackWeeks();
     }
 
-    List<Week> weeks = new ArrayList<>();
-    String[] lines = llmResponse.trim().split("\\r?\\n");
+    // Логируем сырой ответ для отладки
+//    String preview = llmResponse.length() > 500 ? llmResponse.substring(0, 500) + "..." : llmResponse;
+//    System.out.println("🔍 Сырой ответ LLM (первыe 500 симв.):\n" + preview);
 
-    for (String line : lines) {
-      line = line.trim();
-      if (line.isEmpty()) continue;
-
-      Matcher weekMatcher = WEEK_LINE_PATTERN.matcher(line);
-      if (!weekMatcher.matches()) continue;
-
-      int weekNumber = Integer.parseInt(weekMatcher.group(1));
-      String content = weekMatcher.group(2);
-
-      Week week = parseWeekContent(weekNumber, content);
-      if (week != null) {
-        weeks.add(week);
+    // Быстрая проверка на плохой текст
+    String lower = llmResponse.toLowerCase();
+    for (String bad : BAD_PHRASES) {
+      if (lower.contains(bad)) {
+        System.out.println("🚨 Обнаружен недопустимый текст: '" + bad + "'");
+        return createFallbackWeeks();
       }
     }
 
-    weeks.sort(Comparator.comparingInt(Week::getNumber));
+    // Очищаем ВСЕ, кроме нашего формата
+    String cleanResponse = extractStrictFormat(llmResponse);
+
+    if (cleanResponse.isEmpty()) {
+      System.out.println("❌ Не найден строгий формат");
+      System.out.println("📝 Полный ответ:\n" + llmResponse);
+      return createFallbackWeeks();
+    }
+
+    List<Week> weeks = parseStrictFormat(cleanResponse);
+
+    if (weeks.isEmpty()) {
+      System.out.println("❌ Ошибка парсинга строгого формата");
+      return createFallbackWeeks();
+    }
+
+    // Гарантируем 8 недель
+    while (weeks.size() < 8) {
+      weeks.add(createDefaultWeek(weeks.size() + 1));
+    }
+    if (weeks.size() > 8) {
+      weeks = new ArrayList<>(weeks.subList(0, 8));
+    }
+
+    System.out.println("✅ Успешно распарсено: " + weeks.size() + " недель");
     return weeks;
   }
 
-  private Week parseWeekContent(int weekNumber, String content) {
-    if (content.endsWith(".")) {
-      content = content.substring(0, content.length() - 1);
-    }
+  private String extractStrictFormat(String response) {
+    // Ищем блоки с правильными делиметрими, игнорируя возможные ###
+    Pattern formatPattern = Pattern.compile(
+      "(?s).*?(?:^|\\s)[#\\s]*===WEEK_START===[#\\s]*(.*?)[#\\s]*===WEEK_END===[#\\s]*(?:$|\\s)",
+      Pattern.MULTILINE
+    );
+    Matcher matcher = formatPattern.matcher(response);
 
-    String[] segments = content.split("\\.\\s*(?=\\w+:)");
-
-    String goal = null;
-    List<Task> tasks = new ArrayList<>();
-    String currentTaskDescription = null;
-
-    for (String segment : segments) {
-      segment = segment.trim();
-      if (segment.isEmpty()) continue;
-      Matcher fieldMatcher = FIELD_PATTERN.matcher(segment);
-      if (fieldMatcher.find()) {
-        String key = fieldMatcher.group(1).toLowerCase();
-        String value = fieldMatcher.group(2);
-        switch (key) {
-          case "goal":
-            goal = value;
-            break;
-          case "urls":
-            if (currentTaskDescription != null && !currentTaskDescription.isEmpty()) {
-              List<String> urls = Arrays.stream(value.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .toList();
-              Task task = new Task();
-              task.setDescription(currentTaskDescription);
-              task.setUrls(urls);
-              tasks.add(task);
-              currentTaskDescription = null;
-            }
-            break;
-          default:
-            if (key.startsWith("task")) {
-              if (currentTaskDescription != null && !currentTaskDescription.isEmpty()) {
-                Task task = new Task();
-                task.setDescription(currentTaskDescription);
-                task.setUrls(List.of());
-                tasks.add(task);
-              }
-              currentTaskDescription = value;
-            }
-            break;
-        }
-      } else {
-        int colonIndex = segment.indexOf(':');
-        if (colonIndex == -1) continue;
-
-        String key = segment.substring(0, colonIndex).trim().toLowerCase();
-        String value = segment.substring(colonIndex + 1).trim();
-        if (value.startsWith("\"") && value.endsWith("\"")) {
-          value = value.substring(1, value.length() - 1);
-        }
-        switch (key) {
-          case "goal":
-            goal = value;
-            break;
-          case "urls":
-            if (currentTaskDescription != null && !currentTaskDescription.isEmpty()) {
-              List<String> urls = Arrays.stream(value.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .toList();
-              Task task = new Task();
-              task.setDescription(currentTaskDescription);
-              task.setUrls(urls);
-              tasks.add(task);;
-              currentTaskDescription = null;
-            }
-            break;
-          default:
-            if (key.startsWith("task")) {
-              if (currentTaskDescription != null && !currentTaskDescription.isEmpty()) {
-                Task task = new Task();
-                task.setDescription(currentTaskDescription);
-                task.setUrls(List.of());
-                tasks.add(task);
-              }
-              currentTaskDescription = value;
-            }
-            break;
-        }
+    StringBuilder strictContent = new StringBuilder();
+    while (matcher.find()) {
+      String block = matcher.group(1).trim();
+      if (!block.isEmpty()) {
+        strictContent.append("===WEEK_START===\n")
+          .append(block)
+          .append("\n===WEEK_END===\n");
       }
     }
-    if (currentTaskDescription != null && !currentTaskDescription.isEmpty()) {
-      Task task = new Task();
-      task.setDescription(currentTaskDescription);
-      task.setUrls(List.of());
-      tasks.add(task);
+
+    return strictContent.toString().trim();
+  }
+
+  private List<Week> parseStrictFormat(String content) {
+    List<Week> weeks = new ArrayList<>();
+    Pattern weekPattern = Pattern.compile("===WEEK_START===(.*?)===WEEK_END===", Pattern.DOTALL);
+    Matcher weekMatcher = weekPattern.matcher(content);
+
+    while (weekMatcher.find()) {
+      String weekContent = weekMatcher.group(1).trim();
+      if (weekContent.isEmpty()) continue;
+
+      try {
+        Week week = parseWeekBlock(weekContent);
+        if (week != null) {
+          weeks.add(week);
+        }
+      } catch (Exception e) {
+        System.out.println("❌ Ошибка парсинга недели: " + e.getMessage());
+      }
     }
 
-    if (goal == null || goal.isEmpty()) {
+    return weeks;
+  }
+
+  private Week parseWeekBlock(String weekContent) {
+    Week week = new Week();
+    List<Task> tasks = new ArrayList<>();
+
+    // Извлекаем номер недели
+    Pattern numberPattern = Pattern.compile("NUMBER:(\\d+)");
+    Matcher numberMatcher = numberPattern.matcher(weekContent);
+    if (!numberMatcher.find()) {
+      System.out.println("❌ Не найден номер недели");
       return null;
     }
+
+    int weekNumber = Integer.parseInt(numberMatcher.group(1));
+    week.setNumber(weekNumber);
+
+    // Извлекаем цель
+    Pattern goalPattern = Pattern.compile("GOAL:([^\n]+)");
+    Matcher goalMatcher = goalPattern.matcher(weekContent);
+    if (goalMatcher.find()) {
+      String goal = goalMatcher.group(1).trim();
+      if (!goal.isEmpty()) {
+        week.setGoal(goal);
+      } else {
+        week.setGoal("Неделя " + weekNumber);
+      }
+    } else {
+      week.setGoal("Неделя " + weekNumber);
+    }
+
+    // Извлекаем задачи
+    Pattern taskPattern = Pattern.compile("===TASK_START===(.*?)===TASK_END===", Pattern.DOTALL);
+    Matcher taskMatcher = taskPattern.matcher(weekContent);
+
+    while (taskMatcher.find()) {
+      Task task = parseTaskBlock(taskMatcher.group(1).trim());
+      if (task != null) {
+        tasks.add(task);
+      }
+    }
+
+    // Гарантируем минимум 2 задачи
+    if (tasks.size() < 2) {
+      while (tasks.size() < 2) {
+        tasks.add(createFallbackTask(weekNumber, tasks.size() + 1));
+      }
+    }
+
+    week.setTasks(tasks);
+    System.out.println("✅ Распарсена неделя " + weekNumber + " с " + tasks.size() + " задачами");
+    return week;
+  }
+
+  private Task parseTaskBlock(String taskContent) {
+    Task task = new Task();
+
+    // Извлекаем описание
+    Pattern descPattern = Pattern.compile("DESCRIPTION:([^\n]+)");
+    Matcher descMatcher = descPattern.matcher(taskContent);
+    if (descMatcher.find()) {
+      String description = descMatcher.group(1).trim();
+      if (description.isEmpty()) return null;
+      task.setDescription(description);
+    } else {
+      return null;
+    }
+
+    // Извлекаем ресурсы (без URL)
+    Pattern resourcesPattern = Pattern.compile("RESOURCES:([^\n]+)");
+    Matcher resourcesMatcher = resourcesPattern.matcher(taskContent);
+    List<String> resources = new ArrayList<>();
+
+    if (resourcesMatcher.find()) {
+      String resourcesString = resourcesMatcher.group(1).trim();
+      resources = parseResources(resourcesString);
+    }
+
+    // Если ресурсов нет или меньше 2, создаем заглушки
+    if (resources.size() < 2) {
+      resources = createFallbackResources(task.getDescription());
+    }
+
+    task.setUrls(resources);
+    return task;
+  }
+
+  private List<String> parseResources(String resourcesString) {
+    List<String> resources = new ArrayList<>();
+    if (resourcesString == null || resourcesString.trim().isEmpty()) {
+      return resources;
+    }
+
+    // Разделяем по запятой
+    String[] resourceArray = resourcesString.split(",");
+    for (String resource : resourceArray) {
+      String cleanResource = resource.trim();
+      if (!cleanResource.isEmpty() && !cleanResource.startsWith("http")) {
+        resources.add(cleanResource);
+      }
+    }
+
+    return resources;
+  }
+
+  private Task createFallbackTask(int weekNumber, int taskNumber) {
+    Task task = new Task();
+    task.setDescription("Задание " + taskNumber + " для недели " + weekNumber);
+    task.setUrls(createFallbackResources(task.getDescription()));
+    return task;
+  }
+
+  private List<String> createFallbackResources(String description) {
+    return List.of(
+      "Книга «Учебное пособие» автор А. Б. В. (главы 1-2)",
+      "Видео «Лекция по теме» на Rutube канал «Образование»"
+    );
+  }
+
+  private Week createDefaultWeek(int weekNumber) {
     Week week = new Week();
     week.setNumber(weekNumber);
-    week.setGoal(goal);
-    week.setTasks(tasks);
+    week.setGoal("Неделя " + weekNumber);
+    week.setTasks(List.of(
+      createFallbackTask(weekNumber, 1),
+      createFallbackTask(weekNumber, 2)
+    ));
     return week;
+  }
+
+  private List<Week> createFallbackWeeks() {
+    System.out.println("🔄 Создание запасного плана");
+    List<Week> weeks = new ArrayList<>();
+
+    String[] goals = {
+      "Введение и основы",
+      "Основные концепции",
+      "Практическое применение",
+      "Углубленное изучение",
+      "Работа с инструментами",
+      "Решение задач",
+      "Проектная работа",
+      "Финальное закрепление"
+    };
+
+    for (int i = 0; i < 8; i++) {
+      Week week = new Week();
+      week.setNumber(i + 1);
+      week.setGoal(goals[i]);
+
+      List<Task> tasks = new ArrayList<>();
+      Task task1 = new Task();
+      task1.setDescription("Теоретическое изучение материалов");
+      task1.setUrls(List.of(
+        "Книга «Основы темы» автор С. И. Петров (главы " + (i+1) + "-" + (i+2) + ")",
+        "Видео «Лекция по теме " + (i+1) + "» на Rutube канал «Образование»"
+      ));
+
+      Task task2 = new Task();
+      task2.setDescription("Практическое задание");
+      task2.setUrls(List.of(
+        "Статья «Практические примеры» на Хабр.ru",
+        "Курс «Практикум» на Stepik.org"
+      ));
+
+      tasks.add(task1);
+      tasks.add(task2);
+      week.setTasks(tasks);
+      weeks.add(week);
+    }
+
+    return weeks;
   }
 }

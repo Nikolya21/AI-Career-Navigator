@@ -28,10 +28,8 @@ public class LearningPlanAssembler implements AssemblePlan {
 
     try {
       String rawLlmResponse = courseGenerator.generateCoursePlan(request);
-      System.out.println("✅ Сырой ответ от LLM получен");
 
       List<Week> parsedWeeks = courseResponse.parseCourseResponse(rawLlmResponse);
-      System.out.println("✅ Недели распарсены: " + parsedWeeks.size());
 
       List<Week> distributedWeeks = distributionByWeek.distributionByWeek(parsedWeeks);
       System.out.println("✅ Распределение по неделям завершено");

@@ -37,7 +37,7 @@ public class Roadmap {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Roadmap #").append(id).append(" (User: ").append(userId).append(")\n");
+        sb.append("Roadmap #").append(" (User: ").append(userId).append(")\n");
 
         if (roadmapZones != null) {
             for (int i = 0; i < roadmapZones.size(); i++) {
@@ -93,7 +93,7 @@ public class Roadmap {
                                         sb.append(isLastWeek ? "            " : "    │       ");
                                         sb.append(isLastTask ? "    " : "│   ");
                                         sb.append(isLastUrl ? "└── " : "├── ");
-                                        sb.append("URL ").append(m + 1).append(": ").append(url).append("\n");
+                                        sb.append("RESOURSES ").append(m + 1).append(": ").append(url).append("\n");
                                     }
                                 } else {
                                     sb.append(isLastZone ? "    " : "│   ");

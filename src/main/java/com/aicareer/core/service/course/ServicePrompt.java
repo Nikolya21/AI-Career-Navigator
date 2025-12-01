@@ -1,46 +1,66 @@
 package com.aicareer.core.service.course;
 
 import com.aicareer.core.dto.courseDto.CourseRequest;
-import com.aicareer.core.validator.SyntaxValidator;
 import com.aicareer.repository.course.PromptGenerator;
 
 public class ServicePrompt implements PromptGenerator {
 
   @Override
   public String generatePrompt(CourseRequest request) {
-    // Временно отключаем валидацию для отладки
-    System.out.println("⚠️ Валидация временно отключена для отладки");
-    // if (!SyntaxValidator.validate(request)) {
-    //     throw new IllegalArgumentException("Validation failed. Cannot generate prompt.");
-    // }
+    String topic = request.getCourseRequirements();
 
-    return "«Вы — эксперт в разработке учебных программ с более чем 15-летним опытом в сфере образования по программированию.\n" +
-        "\n" +
-        "Вы получите структурированный ввод под названием CourseRequirements, в котором заданы точные требования к персонализированному курсу по программированию, включая:\n" +
-        "\n" +
-        "— основные темы и модули,\n" +
-        "— обязательные практические задания и проекты,\n" +
-        "— ожидаемые результаты обучения,\n" +
-        "— рекомендуемую продолжительность курса,\n" +
-        "— критерии успеха,\n" +
-        "— а также контекст пользователя: текущий уровень навыков, мотивацию, доступное время в неделю, страхи и пробелы в знаниях.\n" +
-        "\n" +
-        "Ваша задача — разработать максимально практичный недельный учебный план, полностью соответствующий этим требованиям.\n" +
-        "\n" +
-        "Правила:\n" +
-        "\n" +
-        "— Разбейте курс на недельные блоки (week1, week2, ..., до рекомендованной продолжительности).\n" +
-        "— Каждая неделя должна быть представлена в одной строке строго в следующем формате:\n" +
-        "weekN: goal: \"[четкая цель недели]\". task1: \"[конкретное практическое задание]\". urls: \"[надежные URL-адреса через запятую]\". task2: \"[ещё одно задание]\". urls: \"[соответствующие URL-адреса]\" ...\n" +
-        "— Включайте от 1 до 3 практических заданий в неделю в зависимости от доступного пользователю времени.\n" +
-        "— Каждое задание должно быть конкретным, выполнимым и ориентированным на проект (например, «Создайте список задач», а не «Прочитайте про массивы»).\n" +
-        "— Для каждого задания предоставляйте проверенные, качественные и бесплатные ресурсы (например, MDN, freeCodeCamp, Stepik, официальную документацию, надежные YouTube-каналы).\n" +
-        "— Учитывайте временные ограничения: например, если у пользователя 4 часа в неделю — максимум 2–4 небольших задания или 1 среднее.\n" +
-        "— Явно учитывайте страхи пользователя (например, если боится CSS — начните с визуальных инструментов или готовых стилей).\n" +
-        "— Последняя неделя обязательно должна содержать финальный проект (capstone) в качестве основного задания.\n" +
-        "— НЕ используйте Markdown, маркированные списки или переносы строк внутри описания недели.\n" +
-        "— НЕ добавляйте никакого текста до week1 или после последней недели.\n" +
-        "\n" +
-        "Теперь вот входные данные CourseRequirements: " + request;
+    return """
+STRICT FORMAT ONLY! DO NOT DEVIATE BY A SINGLE CHARACTER!
+
+Generate an 8-12-weeks learning plan on the topic: """ + topic + """
+
+MANDATORY REQUIREMENTS:
+1. EACH task MUST have at least 3 REAL educational RESOURCES (NOT URLs)
+2. Resources must be in Russian with proper formatting
+3. NEVER use URLs or web links
+4. NEVER leave RESOURCES empty
+
+FORMAT (REPEAT EXACTLY 8 TIMES):
+===WEEK_START===
+NUMBER:[1-8]
+GOAL:[week goal in Russian, 15-50 words]
+===TASK_START===
+DESCRIPTION:[task 1 in Russian: 10-30 words]
+RESOURCES:[resource1], [resource2], [resource3]
+===TASK_END===
+===TASK_START===
+DESCRIPTION:[task 2 in Russian: 10-30 words]
+RESOURCES:[resource1], [resource2]
+===TASK_END===
+===WEEK_END===
+
+RESOURCE FORMATS (MUST FOLLOW EXACTLY):
+- Книга «Название книги» автор И. И. Иванов (главы X-Y)
+- Статья «Название статьи» на Habr.ru
+- Видео «Название видео» на Rutube канал «Название канала»
+- Курс «Название курса» на Coursera
+- Документация «Название технологии» (раздел X)
+- Практика «Название задания» на Kaggle.com
+
+EXAMPLE FOR TOPIC 'PYTHON':
+===WEEK_START===
+NUMBER:1
+GOAL:Освоить базовый синтаксис Python и настроить среду разработки
+===TASK_START===
+DESCRIPTION:Установить Python и изучить базовые команды языка
+RESOURCES:Книга «Python. К вершинам мастерства» автор Лучано Рамальо (главы 1-2), Видео «Установка и настройка Python» на Rutube канал «ITVDN», Статья «Первые шаги в Python» на Хабр.ru
+===TASK_END===
+===TASK_START===
+DESCRIPTION:Изучить переменные, типы данных и основные операторы
+RESOURCES:Книга «Автоматизация рутины с помощью Python» автор Эл Свейгарт (главы 3-4), Курс «Основы программирования на Python» на Stepik.org
+===TASK_END===
+===WEEK_END===
+
+TOPIC FOR COURSE: """ + topic + """
+
+OUTPUT EXACTLY 8-12 WEEKS IN THIS FORMAT! NO DEVIATIONS!
+NEVER USE URLS OR WEB LINKS! ONLY USE RESOURCE NAMES IN SPECIFIED FORMAT!
+OUTPUT ONLY THE STRUCTURED CONTENT. NO INTRODUCTIONS. NO APOLOGIES. NO EXPLANATIONS.
+""";
   }
 }

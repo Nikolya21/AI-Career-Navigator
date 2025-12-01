@@ -66,10 +66,9 @@ public class UserServiceImpl implements UserService {
               .vacancyNow(null)
               .roadmapId(null)
               .build();
-      // ✅ Убрали cv, skills, userPreferences - их больше нет в модели
 
       user.updateTimestamps();
-      User savedUser = userRepository.save(user);
+      User savedUser = userRepository.save(user); // здесь также присваивается ID
 
       System.out.println("User registered successfully. ID: " + savedUser.getId());
       return RegistrationResult.success(savedUser);
@@ -124,6 +123,7 @@ public class UserServiceImpl implements UserService {
     User user = userOpt.get();
 
     User profile = new User();
+    profile.setId(user.getId());
     profile.setEmail(user.getEmail());
     profile.setName(user.getName());
     profile.setVacancyNow(user.getVacancyNow());
