@@ -16,7 +16,7 @@ public class GigaChatService {
   public String sendMessage(String prompt) {
     GigaChatClient client = GigaChatClient.builder()
       .verifySslCerts(false)
-      .readTimeout(180)
+      .readTimeout(30_000)
       .authClient(AuthClient.builder()
         .withOAuth(AuthClientBuilder.OAuthBuilder.builder()
           .scope(Scope.GIGACHAT_API_PERS)
@@ -32,7 +32,7 @@ public class GigaChatService {
         .role(ChatMessageRole.USER)
         .build())
       // 🔑 Критически: параметры здесь — для всех вызовов
-      .maxTokens(10000)
+      .maxTokens(12000)
       .temperature(0.3f)
       .topP(0.9f)
       .repetitionPenalty(1.05f)
