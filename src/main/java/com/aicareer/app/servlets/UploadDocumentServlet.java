@@ -4,45 +4,49 @@ import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
-@WebServlet("/upload-avatar")
+@WebServlet("/upload-document")
 @MultipartConfig(
-  fileSizeThreshold = 1024 * 1024,
-  maxFileSize = 5 * 1024 * 1024,
-  maxRequestSize = 10 * 1024 * 1024
+  fileSizeThreshold = 1024 * 1024, // 1 MB
+  maxFileSize = 5 * 1024 * 1024,    // 5 MB
+  maxRequestSize = 10 * 1024 * 1024 // 10 MB
 )
-public class UploadAvatarServlet extends HttpServlet {
+public class UploadDocumentServlet extends HttpServlet {
 
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException {
 
-    Part filePart = request.getPart("avatarFile");
+    Part filePart = request.getPart("documentFile");
     String uploadError = null;
 
     if (filePart == null || filePart.getSize() == 0) {
       uploadError = "Файл не выбран.";
     } else {
       String contentType = filePart.getContentType();
-      if (contentType == null || !contentType.equals("image/png")) {
-        uploadError = "Неверный формат. Разрешены только PNG.";
+      // Проверяем на PDF или DOCX
+      if (!"application/pdf".equals(contentType) &&
+        !"application/vnd.openxmlformats-officedocument.wordprocessingml.document".equals(contentType)) {
+        uploadError = "Разрешены только PDF или DOCX.";
       } else {
         HttpSession session = request.getSession();
         String fileName = extractFileName(filePart);
-        session.setAttribute("avatarFileName", fileName);
-        session.setAttribute("avatarUploaded", true);
-        // TODO: Сохранить InputStream в БД или на диск
-        // try (InputStream is = filePart.getInputStream()) { ... }
+        session.setAttribute("uploadedDocumentName", fileName);
+        session.setAttribute("documentUploaded", true);
+        // TODO: Сохранить файл (на диск / в БД)
       }
     }
 
-    // Возврат в личный кабинет с ошибкой или без
+    // Всегда редирект — чтобы избежать дублирования шапки
+    String redirectUrl = request.getContextPath() + "/personal-cabinet";
     if (uploadError != null) {
-      request.setAttribute("uploadError", uploadError);
-      request.getRequestDispatcher("/jsp/personal-cabinet.jsp").forward(request, response);
-    } else {
-      response.sendRedirect(request.getContextPath() + "/personal-cabinet");
+      String encodedError = URLEncoder.encode(uploadError, StandardCharsets.UTF_8);
+      redirectUrl += "?error=" + encodedError;
     }
+
+    response.sendRedirect(redirectUrl);
   }
 
   private String extractFileName(Part part) {
@@ -57,6 +61,6 @@ public class UploadAvatarServlet extends HttpServlet {
         }
       }
     }
-    return "avatar.png";
+    return "document.pdf";
   }
 }

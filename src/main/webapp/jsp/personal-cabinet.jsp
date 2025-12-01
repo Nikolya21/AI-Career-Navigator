@@ -9,15 +9,15 @@
     <div class="container">
         <header class="mts-header">
             <div class="header-content">
-                <!-- Форма загрузки PNG в левом верхнем углу -->
-                <form action="${pageContext.request.contextPath}/upload-avatar"
+                <!-- Форма загрузки документа в левом верхнем углу -->
+                <form action="${pageContext.request.contextPath}/upload-document"
                       method="post"
                       enctype="multipart/form-data"
                       class="upload-form">
-                    <input type="file" name="avatarFile" accept="image/png" required>
-                    <button type="submit" class="upload-png-btn">📁 Загрузить PNG</button>
+                    <input type="file" name="documentFile" accept=".pdf,.docx" required>
+                    <button type="submit" class="upload-png-btn">📄 Загрузить документ</button>
                     <%
-                        String uploadError = (String) request.getAttribute("uploadError");
+                        String uploadError = request.getParameter("error"); // Читаем из URL
                         if (uploadError != null && !uploadError.trim().isEmpty()) {
                     %>
                         <div class="upload-error">❌ <%= uploadError %></div>
@@ -55,7 +55,21 @@
                                     initials = userEmail.substring(0, 1).toUpperCase();
                                 }
                             %>
-                            <span class="avatar-initials"><%= initials %></span>
+                            <%
+                                Boolean documentUploaded = (Boolean) session.getAttribute("documentUploaded");
+                                String uploadedDocumentName = (String) session.getAttribute("uploadedDocumentName");
+
+                                if (documentUploaded != null && documentUploaded && uploadedDocumentName != null) {
+                            %>
+                                <span class="avatar-initials" style="font-size: 24px;">📄</span>
+                                <div style="font-size: 10px; color: #6c757d; margin-top: 5px;">Загружено: <%= uploadedDocumentName %></div>
+                            <%
+                                } else {
+                            %>
+                                <span class="avatar-initials"><%= initials %></span>
+                            <%
+                                }
+                            %>
                         </div>
                         <!-- Кнопка "Изменить фото" теперь не нужна — заменена формой -->
                     </div>
