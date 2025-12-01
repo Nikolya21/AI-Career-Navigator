@@ -1,310 +1,37 @@
-/* Общие стили */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    min-height: 100vh;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-/* Шапка в стиле МТС */
-.mts-header {
-    background: linear-gradient(135deg, #e30613 0%, #c40510 100%);
-    color: white;
-    padding: 15px 0;
-    box-shadow: 0 2px 10px rgba(227, 6, 19, 0.3);
-}
-
-.header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.logo {
+/* Форма загрузки PNG в шапке */
+.upload-form {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 8px;
+    margin-right: 20px;
 }
 
-.mts-logo {
-    font-size: 28px;
-    font-weight: bold;
-    background: white;
-    color: #e30613;
-    padding: 5px 10px;
-    border-radius: 8px;
-}
-
-.logo-text {
-    font-size: 18px;
-    font-weight: 500;
-}
-
-.header-nav {
-    display: flex;
-    gap: 30px;
-}
-
-.nav-link {
-    color: white;
-    text-decoration: none;
-    font-weight: 500;
-    transition: opacity 0.3s;
-}
-
-.nav-link:hover {
-    opacity: 0.8;
-}
-
-/* Основной контент */
-.main-content {
-    padding: 40px 0;
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 30px;
-    align-items: start;
-}
-
-.cabinet-card {
-    background: white;
-    border-radius: 20px;
-    padding: 40px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e9ecef;
-}
-
-/* Секция аватара */
-.avatar-section {
-    text-align: center;
-    margin-bottom: 30px;
-}
-
-.avatar-container {
-    display: inline-block;
-}
-
-.avatar {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #e30613 0%, #ff6b6b 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 15px;
-    border: 4px solid white;
-    box-shadow: 0 5px 15px rgba(227, 6, 19, 0.3);
-}
-
-.avatar-initials {
-    font-size: 36px;
-    font-weight: bold;
-    color: white;
-}
-
-.change-avatar-btn {
-    background: none;
-    border: 2px dashed #dee2e6;
-    color: #6c757d;
-    padding: 8px 16px;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: all 0.3s;
+.upload-form input[type="file"] {
     font-size: 14px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
 }
 
-.change-avatar-btn:hover {
-    border-color: #e30613;
-    color: #e30613;
-}
-
-/* Информация о пользователе */
-.user-info-section {
-    margin-bottom: 40px;
-}
-
-.user-name {
-    font-size: 28px;
-    color: #212529;
-    margin-bottom: 30px;
-    text-align: center;
-    font-weight: 600;
-}
-
-.info-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 25px;
-}
-
-.info-item {
-    padding: 20px;
-    background: #f8f9fa;
-    border-radius: 12px;
-    border-left: 4px solid #e30613;
-}
-
-.info-label {
-    font-size: 12px;
-    color: #6c757d;
-    text-transform: uppercase;
-    font-weight: 600;
-    margin-bottom: 5px;
-}
-
-.info-value {
-    font-size: 16px;
-    color: #212529;
-    font-weight: 500;
-}
-
-.balance {
-    color: #28a745;
-    font-weight: 600;
-    font-size: 18px;
-}
-
-/* Кнопки действий */
-.actions-section {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.btn {
-    padding: 15px 25px;
-    border: none;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-    text-align: center;
-    text-decoration: none;
-    display: block;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #e30613 0%, #c40510 100%);
-    color: white;
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(227, 6, 19, 0.4);
-}
-
-.btn-secondary {
-    background: #6c757d;
-    color: white;
-}
-
-.btn-secondary:hover {
-    background: #5a6268;
-    transform: translateY(-2px);
-}
-
-.btn-logout {
-    background: #dc3545;
-    color: white;
-}
-
-.btn-logout:hover {
-    background: #c82333;
-    transform: translateY(-2px);
-}
-
-/* Дополнительные карточки */
-.additional-cards {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.service-card, .promo-card {
-    background: white;
-    border-radius: 15px;
-    padding: 25px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-.service-card h3, .promo-card h3 {
-    color: #212529;
-    margin-bottom: 15px;
-    font-size: 18px;
-}
-
-.services-list {
-    list-style: none;
-}
-
-.services-list li {
-    padding: 8px 0;
-    border-bottom: 1px solid #e9ecef;
-    color: #495057;
-}
-
-.services-list li:last-child {
-    border-bottom: none;
-}
-
-.promo-card {
-    background: linear-gradient(135deg, #e30613 0%, #c40510 100%);
-    color: white;
-}
-
-.promo-card h3 {
-    color: white;
-}
-
-.btn-promo {
+.upload-png-btn {
     background: white;
     color: #e30613;
-    border: none;
-    padding: 10px 20px;
+    border: 2px solid #e30613;
+    padding: 6px 14px;
     border-radius: 20px;
     font-weight: 600;
     cursor: pointer;
-    margin-top: 10px;
-    transition: all 0.3s;
+    font-size: 14px;
+    transition: all 0.2s;
 }
 
-.btn-promo:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+.upload-png-btn:hover {
+    background: #e30613;
+    color: white;
 }
 
-/* Адаптивность */
-@media (max-width: 768px) {
-    .main-content {
-        grid-template-columns: 1fr;
-    }
-
-    .info-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .header-content {
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    .header-nav {
-        gap: 15px;
-    }
-
-    .cabinet-card {
-        padding: 25px;
-    }
+.upload-error {
+    color: #dc3545;
+    font-size: 12px;
+    white-space: nowrap;
 }

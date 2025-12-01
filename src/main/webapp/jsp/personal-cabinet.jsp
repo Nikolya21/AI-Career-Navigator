@@ -9,6 +9,23 @@
     <div class="container">
         <header class="mts-header">
             <div class="header-content">
+                <!-- Форма загрузки PNG в левом верхнем углу -->
+                <form action="${pageContext.request.contextPath}/upload-avatar"
+                      method="post"
+                      enctype="multipart/form-data"
+                      class="upload-form">
+                    <input type="file" name="avatarFile" accept="image/png" required>
+                    <button type="submit" class="upload-png-btn">📁 Загрузить PNG</button>
+                    <%
+                        String uploadError = (String) request.getAttribute("uploadError");
+                        if (uploadError != null && !uploadError.trim().isEmpty()) {
+                    %>
+                        <div class="upload-error">❌ <%= uploadError %></div>
+                    <%
+                        }
+                    %>
+                </form>
+
                 <div class="logo">
                     <span class="mts-logo">МТС</span>
                     <span class="logo-text">Личный кабинет</span>
@@ -40,7 +57,7 @@
                             %>
                             <span class="avatar-initials"><%= initials %></span>
                         </div>
-                        <button class="change-avatar-btn">Изменить фото</button>
+                        <!-- Кнопка "Изменить фото" теперь не нужна — заменена формой -->
                     </div>
                 </div>
 
@@ -96,13 +113,13 @@
                     </div>
                 </div>
                 <div class="actions-section">
-                    <button class="btn btn-primary" onclick="location.href='${pageContext.request.contextPath}/send-message'">
+                    <a href="${pageContext.request.contextPath}/send-message" class="btn btn-primary">
                         📋 На главную
-                    </button>
+                    </a>
                     <button class="btn btn-secondary" onclick="history.back()">
                         ↩️ Вернуться назад
                     </button>
-                    <button class="btn btn-logout" onclick="logout()">
+                    <button class="btn btn-logout" onclick="if(confirm('Вы уверены?'))location.href='${pageContext.request.contextPath}/logout'">
                         🚪 Выйти из аккаунта
                     </button>
                 </div>
@@ -128,18 +145,10 @@
                 <div class="promo-card">
                     <h3>Специальные предложения</h3>
                     <p>Получите персональную консультацию по карьерному развитию</p>
-                    <button class="btn-promo" onclick="location.href='${pageContext.request.contextPath}/send-message'">Начать диалог</button>
+                    <a href="${pageContext.request.contextPath}/send-message" class="btn-promo">Начать диалог</a>
                 </div>
             </div>
         </main>
     </div>
-
-    <script>
-        function logout() {
-            if (confirm('Вы уверены, что хотите выйти из аккаунта?')) {
-                window.location.href = '${pageContext.request.contextPath}/logout';
-            }
-        }
-    </script>
 </body>
 </html>
