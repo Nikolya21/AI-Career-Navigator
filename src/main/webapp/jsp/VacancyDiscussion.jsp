@@ -47,7 +47,6 @@
         transition: width 0.3s ease;
       }
 
-      /* Стили для кнопки перехода к Roadmap */
       .roadmap-button-section {
         text-align: center;
         margin: 30px 0;
@@ -96,18 +95,17 @@
         margin-bottom: 15px;
       }
 
-      /* Стили для индикатора генерации */
-      .generation-indicator {
+      .redirect-message {
         text-align: center;
         padding: 30px;
-        background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+        background: linear-gradient(135deg, #d4edda, #c3e6cb);
         border-radius: 10px;
-        border-left: 4px solid #ffc107;
+        border-left: 4px solid #28a745;
         margin: 20px 0;
       }
 
-      .generation-indicator h3 {
-        color: #856404;
+      .redirect-message h3 {
+        color: #155724;
         margin-bottom: 15px;
       }
 
@@ -170,7 +168,7 @@
             Вопрос <%= questionsCount %> из 5
         </div>
         <div class="progress-bar">
-            <div class="progress-fill" style="width: <%= questionsCount * 20 %>%;"></div>
+            <div class="progress-fill" style="width: <%= (questionsCount - 1) * 20 %>%;"></div>
         </div>
     </div>
     <% } %>
@@ -208,7 +206,7 @@
         %>
     </div>
 
-    <%-- Кнопка перехода к Roadmap (показывается после завершения диалога) --%>
+    <%-- Кнопка перехода к Roadmap (показывается если диалог завершен) --%>
     <%
         Boolean showRoadmapButton = (Boolean) request.getAttribute("showRoadmapButton");
         if (showRoadmapButton != null && showRoadmapButton) {
@@ -223,18 +221,9 @@
         <a href="${pageContext.request.contextPath}/career-roadmap" class="roadmap-btn">
             📊 Перейти к моему Roadmap
         </a>
-        <div style="margin-top: 15px; color: #666; font-size: 14px;">
-            <p>В roadmap вы найдете:</p>
-            <ul style="list-style: none; padding: 0; margin: 10px 0;">
-                <li>✅ Поэтапный план обучения</li>
-                <li>✅ Конкретные навыки для развития</li>
-                <li>✅ Рекомендации по проектам</li>
-                <li>✅ Советы по подготовке к собеседованию</li>
-            </ul>
-        </div>
     </div>
     <%
-    } else if (questionsCount != null && questionsCount < 5) {
+    } else if (questionsCount != null && questionsCount <= 5) {
     %>
     <%-- Форма ввода сообщения (показывается во время диалога) --%>
     <form action="${pageContext.request.contextPath}/vacancy-discussion" method="post"
@@ -244,14 +233,14 @@
         <button type="submit" class="btn-send">📤 Отправить</button>
     </form>
     <%
-    } else if (questionsCount != null && questionsCount == 5) {
+    } else {
     %>
     <%-- Сообщение о завершении и автоматическое перенаправление --%>
-    <div class="generation-indicator">
+    <div class="redirect-message">
         <div class="loading-spinner"></div>
-        <h3>Генерируем ваш персонализированный план развития...</h3>
-        <p>Это займет несколько секунд. Пожалуйста, подождите.</p>
-        <p><small>Происходит автоматическое перенаправление...</small></p>
+        <h3>✅ Диалог завершен!</h3>
+        <p>Спасибо за ваши ответы! Сейчас вы будете перенаправлены на страницу с вашим персонализированным планом развития.</p>
+        <p><small>Если перенаправление не произошло автоматически, <a href="${pageContext.request.contextPath}/career-roadmap">нажмите сюда</a>.</small></p>
     </div>
     <script>
       // Автоматический переход через 2 секунды
@@ -259,14 +248,6 @@
         console.log("🔄 Автоматическое перенаправление на страницу roadmap");
         window.location.href = "${pageContext.request.contextPath}/career-roadmap";
       }, 2000);
-
-      // Дублирующая проверка через 5 секунд на случай проблем
-      setTimeout(function() {
-        if (window.location.href.indexOf("career-roadmap") === -1) {
-          console.log("🔄 Принудительное перенаправление (резервное)");
-          window.location.href = "${pageContext.request.contextPath}/career-roadmap";
-        }
-      }, 5000);
     </script>
     <% } %>
 </div>

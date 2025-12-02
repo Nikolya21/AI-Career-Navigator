@@ -19,7 +19,7 @@ public class CareerRoadmapServlet extends HttpServlet {
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException {
+      throws ServletException, IOException {
 
     response.setContentType("text/html; charset=UTF-8");
     response.setCharacterEncoding("UTF-8");
@@ -66,11 +66,12 @@ public class CareerRoadmapServlet extends HttpServlet {
 
       // Создаем fallback roadmap при ошибке
       Roadmap fallbackRoadmap = createSimpleRoadmap(
-        (String) session.getAttribute("selectedVacancyName"),
-        session
+          (String) session.getAttribute("selectedVacancyName"),
+          session
       );
       request.setAttribute("roadmap", fallbackRoadmap);
-      request.setAttribute("error", "Временные технические работы. Roadmap будет улучшен в ближайшее время.");
+      request.setAttribute("error",
+          "Временные технические работы. Roadmap будет улучшен в ближайшее время.");
       request.getRequestDispatcher("/jsp/CareerRoadmap.jsp").forward(request, response);
     }
   }
@@ -147,7 +148,7 @@ public class CareerRoadmapServlet extends HttpServlet {
 
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException {
+      throws ServletException, IOException {
     doGet(request, response);
   }
 }
