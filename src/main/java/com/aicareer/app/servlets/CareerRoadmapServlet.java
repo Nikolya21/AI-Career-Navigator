@@ -4,15 +4,6 @@ import com.aicareer.core.model.roadmap.Roadmap;
 import com.aicareer.core.model.roadmap.RoadmapZone;
 import com.aicareer.core.model.courseModel.Week;
 import com.aicareer.core.model.courseModel.Task;
-import com.aicareer.core.service.course.LearningPlanAssembler;
-import com.aicareer.core.service.course.ServiceGenerateCourse;
-import com.aicareer.core.service.course.ServicePrompt;
-import com.aicareer.core.service.course.ServiceWeek;
-import com.aicareer.core.service.course.WeekDistributionService;
-import com.aicareer.core.service.roadmap.RoadmapGenerateService;
-import com.aicareer.core.dto.courseDto.CourseRequest;
-import com.aicareer.core.dto.courseDto.ResponseByWeek;
-import com.aicareer.core.service.gigachat.GigaChatService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -26,34 +17,9 @@ import java.util.List;
 @WebServlet("/career-roadmap")
 public class CareerRoadmapServlet extends HttpServlet {
 
-  private GigaChatService gigaChatService;
-  private LearningPlanAssembler learningPlanAssembler;
-  private RoadmapGenerateService roadmapGenerateService;
-
-  @Override
-  public void init() throws ServletException {
-    super.init();
-    this.gigaChatService = new GigaChatService();
-    initializeRoadmapServices();
-  }
-
-  private void initializeRoadmapServices() {
-    // Сервисы для генерации курса
-    ServicePrompt servicePrompt = new ServicePrompt();
-    ServiceGenerateCourse courseGenerator = new ServiceGenerateCourse(servicePrompt, gigaChatService);
-    ServiceWeek courseResponse = new ServiceWeek();
-    WeekDistributionService distributionService = new WeekDistributionService();
-
-    // Ассемблер учебного плана
-    this.learningPlanAssembler = new LearningPlanAssembler(courseGenerator, courseResponse, distributionService);
-
-    // Сервис генерации roadmap
-    this.roadmapGenerateService = new RoadmapGenerateService(gigaChatService);
-  }
-
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
-      throws ServletException, IOException {
+    throws ServletException, IOException {
 
     response.setContentType("text/html; charset=UTF-8");
     response.setCharacterEncoding("UTF-8");
@@ -65,158 +31,123 @@ public class CareerRoadmapServlet extends HttpServlet {
       return;
     }
 
+    // Проверяем, завершен ли диалог
+    Boolean discussionCompleted = (Boolean) session.getAttribute("vacancyDiscussionCompleted");
+    if (discussionCompleted == null || !discussionCompleted) {
+      System.out.println("⚠️ Диалог не завершен, перенаправляем к обсуждению");
+      response.sendRedirect(request.getContextPath() + "/vacancy-discussion");
+      return;
+    }
+
     try {
       String selectedVacancy = (String) session.getAttribute("selectedVacancyName");
       String personalizedPlan = (String) session.getAttribute("personalizedVacancyPlan");
-      String fullDiscussionPrompt = (String) session.getAttribute("fullDiscussionPrompt");
 
-      // ✅ ПОЛУЧАЕМ РЕАЛЬНЫЙ ROADMAP ИЗ СЕССИИ (сгенерированный в VacancyDiscussionServlet)
+      // Получаем roadmap из сессии (должен быть сгенерирован в VacancyDiscussionServlet)
       Roadmap roadmap = (Roadmap) session.getAttribute("generatedRoadmap");
 
       if (roadmap == null) {
-        // ✅ ЕСЛИ ROADMAP НЕТ В СЕССИИ - ГЕНЕРИРУЕМ ЕГО ЗДЕСЬ НА ОСНОВЕ ПРОМПТА
-        System.out.println("🔄 Roadmap не найден в сессии, запускаем генерацию...");
-        roadmap = generateRoadmapFromDiscussion(session, selectedVacancy, fullDiscussionPrompt, personalizedPlan);
-
-        if (roadmap != null) {
-          session.setAttribute("generatedRoadmap", roadmap);
-          System.out.println("✅ Roadmap успешно сгенерирован в CareerRoadmapServlet");
-        }
+        System.out.println("⚠️ Roadmap не найден в сессии, создаем базовый...");
+        // Создаем простой roadmap только если в сессии нет
+        roadmap = createSimpleRoadmap(selectedVacancy, session);
+        session.setAttribute("generatedRoadmap", roadmap);
       }
 
-      if (roadmap == null) {
-        // Если roadmap все еще не сгенерирован, перенаправляем обратно к обсуждению вакансии
-        System.err.println("❌ Не удалось сгенерировать roadmap");
-        response.sendRedirect(request.getContextPath() + "/vacancy-discussion");
-        return;
-      }
-
-      // Передаем реальные данные в JSP
+      // Передаем данные в JSP
       request.setAttribute("roadmap", roadmap);
       request.setAttribute("selectedVacancy", selectedVacancy);
       request.setAttribute("personalizedPlan", personalizedPlan);
-
-      // ✅ ПЕРЕДАЕМ ПРОМПТ ДЛЯ ОТОБРАЖЕНИЯ В JSP (если нужно)
-      request.setAttribute("hasDiscussionData", fullDiscussionPrompt != null && !fullDiscussionPrompt.isEmpty());
 
       request.getRequestDispatcher("/jsp/CareerRoadmap.jsp").forward(request, response);
 
     } catch (Exception e) {
       System.err.println("❌ Ошибка при загрузке roadmap: " + e.getMessage());
       e.printStackTrace();
-      request.setAttribute("error", "Временные технические работы. Roadmap будет доступен в ближайшее время.");
+
+      // Создаем fallback roadmap при ошибке
+      Roadmap fallbackRoadmap = createSimpleRoadmap(
+        (String) session.getAttribute("selectedVacancyName"),
+        session
+      );
+      request.setAttribute("roadmap", fallbackRoadmap);
+      request.setAttribute("error", "Временные технические работы. Roadmap будет улучшен в ближайшее время.");
       request.getRequestDispatcher("/jsp/CareerRoadmap.jsp").forward(request, response);
     }
   }
 
   /**
-   * ✅ МЕТОД ДЛЯ ГЕНЕРАЦИИ ROADMAP НА ОСНОВЕ ПРОМПТА ИЗ ДИАЛОГА
+   * Создание простого roadmap (используется только как fallback)
    */
-  private Roadmap generateRoadmapFromDiscussion(HttpSession session, String vacancy, String discussionPrompt, String personalizedPlan) {
-    try {
-      System.out.println("🚀 Запуск генерации roadmap на основе диалога для вакансии: " + vacancy);
+  private Roadmap createSimpleRoadmap(String vacancy, HttpSession session) {
+    Roadmap roadmap = new Roadmap();
+    List<RoadmapZone> zones = new ArrayList<>();
 
-      if (discussionPrompt == null || discussionPrompt.trim().isEmpty()) {
-        System.err.println("❌ Промпт диалога пустой, невозможно сгенерировать roadmap");
-        return null;
-      }
+    // Простая структура из 3 зон
+    String[] zoneNames = {"Основы", "Практика", "Проекты"};
 
-      System.out.println("📝 Используем промпт из диалога (" + discussionPrompt.length() + " символов)");
-
-      // 1. СОЗДАЕМ ТРЕБОВАНИЯ ДЛЯ КУРСА НА ОСНОВЕ ПРОМПТА ИЗ ДИАЛОГА
-      CourseRequest courseRequest = createPersonalizedCourseRequest(vacancy, discussionPrompt, personalizedPlan);
-
-      // 2. Генерируем учебный план (8 недель)
-      ResponseByWeek responseByWeek = learningPlanAssembler.assemblePlan(courseRequest);
-      System.out.println("✅ Учебный план сгенерирован: " + responseByWeek.getWeeks().size() + " недель");
-
-      // 3. Получаем информацию о неделях в текстовом формате
-      String weeksInformation = roadmapGenerateService.gettingWeeksInformation(responseByWeek);
-
-      // 4. Анализируем сложность и создаем зоны
-      String zonesAnalysis = roadmapGenerateService.informationComplexityAndQuantityAnalyzeAndCreatingZone(weeksInformation);
-
-      // 5. Разбиваем недели на зоны
-      List<RoadmapZone> zones = roadmapGenerateService.splittingWeeksIntoZones(
-          zonesAnalysis, responseByWeek.getWeeks());
-
-      // 6. Создаем финальный roadmap
-      Roadmap roadmap = roadmapGenerateService.identifyingThematicallySimilarZones(zones);
-
-      // 7. Устанавливаем пользователя
-      Long userId = (Long) session.getAttribute("userId");
-      if (userId != null) {
-        roadmap.setUserId(userId);
-      } else {
-        roadmap.setUserId(1L); // fallback
-      }
-
-      System.out.println("🎉 Roadmap успешно сгенерирован в CareerRoadmapServlet: " +
-          roadmap.getRoadmapZones().size() + " зон, " +
-          calculateTotalWeeks(roadmap) + " недель");
-
-      return roadmap;
-
-    } catch (Exception e) {
-      System.err.println("❌ Ошибка при генерации roadmap в CareerRoadmapServlet: " + e.getMessage());
-      e.printStackTrace();
-      return null;
+    for (int i = 0; i < zoneNames.length; i++) {
+      RoadmapZone zone = new RoadmapZone();
+      zone.setName(zoneNames[i] + " для " + vacancy);
+      zone.setZoneOrder(i + 1);
+      zone.setLearningGoal("Этап " + (i + 1) + " развития навыков");
+      zone.setComplexityLevel(i == 0 ? "Начальный" : i == 1 ? "Средний" : "Продвинутый");
+      zone.setWeeks(createWeeks(i * 2 + 1, i * 2 + 2, "Обучение"));
+      zone.updateTimestamps();
+      zones.add(zone);
     }
+
+    roadmap.setRoadmapZones(zones);
+
+    Long userId = (Long) session.getAttribute("userId");
+    roadmap.setUserId(userId != null ? userId : 1L);
+    roadmap.updateTimestamps();
+    System.out.println("✅ Простой roadmap создан");
+    return roadmap;
   }
 
   /**
-   * ✅ СОЗДАЕТ ПЕРСОНАЛИЗИРОВАННЫЕ ТРЕБОВАНИЯ КУРСА НА ОСНОВЕ ДИАЛОГА
+   * Создание недель для зоны
    */
-  private CourseRequest createPersonalizedCourseRequest(String vacancy, String discussionPrompt, String personalizedPlan) {
-    CourseRequest request = new CourseRequest();
-
-    // ✅ КОМБИНИРУЕМ ВАКАНСИЮ, ПРОМПТ ИЗ ДИАЛОГА И ПЕРСОНАЛИЗИРОВАННЫЙ ПЛАН
-    String courseRequirements = String.format(
-        "ПЕРСОНАЛИЗИРОВАННЫЕ ТРЕБОВАНИЯ ДЛЯ СОЗДАНИЯ КУРСА\n\n" +
-            "ЦЕЛЕВАЯ ВАКАНСИЯ: %s\n\n" +
-            "ИСТОРИЯ ДИАЛОГА С ПОЛЬЗОВАТЕЛЕМ:\n" +
-            "%s\n\n" +
-            "ПЕРСОНАЛИЗИРОВАННЫЙ ПЛАН РАЗВИТИЯ:\n" +
-            "%s\n\n" +
-            "ИНСТРУКЦИЯ ДЛЯ ГЕНЕРАЦИИ КУРСА:\n" +
-            "На основе полного диалога с пользователем создай детализированный учебный план, который:\n" +
-            "1. Учитывает текущий уровень знаний и опыт пользователя (определенный из диалога)\n" +
-            "2. Фокусируется на конкретных навыках, необходимых для вакансии '%s'\n" +
-            "3. Учитывает карьерные цели, предпочтения и ограничения пользователя\n" +
-            "4. Предоставляет практические задания, проекты и реальные кейсы\n" +
-            "5. Включает актуальные ресурсы для самостоятельного изучения\n" +
-            "6. Адаптирован под темп обучения и доступное время пользователя\n\n" +
-            "Структура курса должна быть логичной и последовательной, от основ к продвинутым темам.",
-        vacancy,
-        discussionPrompt.length() > 3000 ? discussionPrompt.substring(0, 3000) + "..." : discussionPrompt,
-        personalizedPlan != null ? personalizedPlan : "План будет определен на основе диалога",
-        vacancy
-    );
-
-    request.setCourseRequirements(courseRequirements);
-
-    System.out.println("📋 Созданы персонализированные требования курса на основе диалога");
-    return request;
+  private List<Week> createWeeks(int startWeek, int endWeek, String goalPrefix) {
+    List<Week> weeks = new ArrayList<>();
+    for (int i = startWeek; i <= endWeek; i++) {
+      Week week = new Week();
+      week.setNumber(i);
+      week.setGoal(goalPrefix + " - неделя " + i);
+      week.setTasks(createBasicTasks());
+      week.updateTimestamps();
+      weeks.add(week);
+    }
+    return weeks;
   }
 
   /**
-   * ✅ ВСПОМОГАТЕЛЬНЫЙ МЕТОД ДЛЯ ПОДСЧЕТА НЕДЕЛЬ
+   * Создание базовых задач
    */
-  private int calculateTotalWeeks(Roadmap roadmap) {
-    if (roadmap.getRoadmapZones() == null) return 0;
-    int totalWeeks = 0;
-    for (RoadmapZone zone : roadmap.getRoadmapZones()) {
-      if (zone.getWeeks() != null) {
-        totalWeeks += zone.getWeeks().size();
-      }
-    }
-    return totalWeeks;
+  private List<Task> createBasicTasks() {
+    List<Task> tasks = new ArrayList<>();
+
+    Task task1 = new Task();
+    task1.setDescription("Изучение теоретического материала");
+    task1.updateTimestamps();
+    tasks.add(task1);
+
+    Task task2 = new Task();
+    task2.setDescription("Практическое упражнение");
+    task2.updateTimestamps();
+    tasks.add(task2);
+
+    Task task3 = new Task();
+    task3.setDescription("Мини-проект для закрепления знаний");
+    task3.updateTimestamps();
+    tasks.add(task3);
+
+    return tasks;
   }
 
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
-      throws ServletException, IOException {
-    // Обработка POST запросов (если понадобится)
+    throws ServletException, IOException {
     doGet(request, response);
   }
 }
