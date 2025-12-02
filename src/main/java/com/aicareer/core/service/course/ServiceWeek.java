@@ -156,7 +156,7 @@ public class ServiceWeek implements CourseResponse {
     }
 
     week.setTasks(tasks);
-    System.out.println("✅ Распарсена неделя " + weekNumber + " с " + tasks.size() + " задачами");
+//    System.out.println("✅ Распарсена неделя " + weekNumber + " с " + tasks.size() + " задачами");
     return week;
   }
 
