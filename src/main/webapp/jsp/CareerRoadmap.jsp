@@ -4,6 +4,9 @@
 <%@ page import="com.aicareer.core.model.courseModel.Week" %>
 <%@ page import="com.aicareer.core.model.courseModel.Task" %>
 <%@ page import="java.util.List" %>
+<%@ page import="org.commonmark.node.*" %>
+<%@ page import="org.commonmark.parser.Parser" %>
+<%@ page import="org.commonmark.renderer.html.HtmlRenderer" %>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -11,6 +14,130 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ваш карьерный план - AI Career Navigator</title>
     <style>
+      .markdown-content {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        line-height: 1.6;
+        color: #333;
+      }
+
+      .markdown-content h1,
+      .markdown-content h2,
+      .markdown-content h3,
+      .markdown-content h4 {
+        color: #2c3e50;
+        margin-top: 1.5em;
+        margin-bottom: 0.5em;
+        font-weight: 600;
+      }
+
+      .markdown-content h1 {
+        font-size: 1.8em;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 0.3em;
+      }
+
+      .markdown-content h2 {
+        font-size: 1.5em;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 0.3em;
+      }
+
+      .markdown-content h3 {
+        font-size: 1.3em;
+      }
+
+      .markdown-content h4 {
+        font-size: 1.1em;
+      }
+
+      .markdown-content p {
+        margin-bottom: 1em;
+      }
+
+      .markdown-content ul,
+      .markdown-content ol {
+        margin-bottom: 1em;
+        padding-left: 2em;
+      }
+
+      .markdown-content li {
+        margin-bottom: 0.5em;
+      }
+
+      .markdown-content code {
+        background-color: #f8f9fa;
+        padding: 0.2em 0.4em;
+        border-radius: 3px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9em;
+      }
+
+      .markdown-content pre {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 1em;
+        overflow-x: auto;
+        margin: 1em 0;
+      }
+
+      .markdown-content pre code {
+        background-color: transparent;
+        padding: 0;
+      }
+
+      .markdown-content blockquote {
+        border-left: 4px solid #3498db;
+        padding-left: 1em;
+        margin: 1em 0;
+        color: #555;
+        font-style: italic;
+      }
+
+      .markdown-content a {
+        color: #3498db;
+        text-decoration: none;
+      }
+
+      .markdown-content a:hover {
+        text-decoration: underline;
+      }
+
+      .markdown-content strong {
+        font-weight: 600;
+        color: #2c3e50;
+      }
+
+      .markdown-content em {
+        font-style: italic;
+      }
+
+      .markdown-content table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 1em 0;
+      }
+
+      .markdown-content th,
+      .markdown-content td {
+        border: 1px solid #dee2e6;
+        padding: 0.75em;
+        text-align: left;
+      }
+
+      .markdown-content th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+      }
+
+      /* Дополнительные стили для улучшения читаемости */
+      .personalized-section .markdown-content {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        border: 1px solid #d4edda;
+      }
+
       * {
         margin: 0;
         padding: 0;
@@ -284,16 +411,20 @@
     </div>
     <% } %>
 
-    <%-- ✅ ОТОБРАЖЕНИЕ ПЕРСОНАЛИЗИРОВАННОЙ ИНФОРМАЦИИ --%>
+    <%-- ✅ ОТОБРАЖЕНИЕ ПЕРСОНАЛИЗИРОВАННОЙ ИНФОРМАЦИИ С MARKDOWN --%>
     <%
         String personalizedPlan = (String) session.getAttribute("personalizedVacancyPlan");
         String fullDiscussionPrompt = (String) session.getAttribute("fullDiscussionPrompt");
 
         if (personalizedPlan != null && !personalizedPlan.trim().isEmpty()) {
+            // Конвертируем Markdown в HTML
+            String markdownHtml = convertMarkdownToHtml(personalizedPlan);
     %>
     <div class="personalized-section">
         <h3>📝 Ваш персонализированный план</h3>
-        <p><%= personalizedPlan %></p>
+        <div class="markdown-content">
+            <%= markdownHtml %>
+        </div>
 
         <% if (fullDiscussionPrompt != null && fullDiscussionPrompt.length() > 500) { %>
         <div class="dialog-summary">
@@ -431,6 +562,33 @@
 
 <%!
     // Вспомогательные методы для JSP
+
+    // Метод для конвертации Markdown в HTML
+    private String convertMarkdownToHtml(String markdown) {
+        try {
+            Parser parser = Parser.builder().build();
+            Node document = parser.parse(markdown);
+            HtmlRenderer renderer = HtmlRenderer.builder().build();
+            return renderer.render(document);
+        } catch (Exception e) {
+            // Если произошла ошибка, возвращаем текст как есть с базовой обработкой
+            return escapeHtml(markdown)
+                    .replace("\n", "<br>")
+                    .replace("\\*\\*", "<strong>")
+                    .replace("\\*", "<em>");
+        }
+    }
+
+    // Метод для экранирования HTML
+    private String escapeHtml(String text) {
+        if (text == null) return "";
+        return text.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
+    }
+
     private int calculateTotalWeeks(Roadmap roadmap) {
         if (roadmap.getRoadmapZones() == null) return 0;
         int totalWeeks = 0;
@@ -453,7 +611,6 @@
 
     private String getDomainFromUrl(String url) {
         try {
-            // Простая обработка URL без использования java.net.URI
             if (url.contains("://")) {
                 String domain = url.split("://")[1].split("/")[0];
                 return domain.startsWith("www.") ? domain.substring(4) : domain;

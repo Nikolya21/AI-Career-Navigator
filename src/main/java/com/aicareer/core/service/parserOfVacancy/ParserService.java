@@ -17,7 +17,8 @@ public class ParserService {
 
   private static final GigaChatService gigaChatService = new GigaChatService();
 
-    public static List<RealVacancy> getVacancies(String searchText, String area, int perPage) {
+
+  public static List<RealVacancy> getVacancies(String searchText, String area, int perPage) {
     List<RealVacancy> vacancies = new ArrayList<>();
     try {
       String apiUrl = String.format(
@@ -26,36 +27,62 @@ public class ParserService {
           area,
           perPage
       );
+
+      System.out.println("🌐 Запрашиваем API: " + apiUrl);
       String jsonResponse = sendGetRequest(apiUrl);
       JSONObject jsonObject = new JSONObject(jsonResponse);
       JSONArray items = jsonObject.getJSONArray("items");
+
+      System.out.println("📊 Найдено вакансий в API: " + items.length());
+
       for (int i = 0; i < items.length(); i++) {
         JSONObject item = items.getJSONObject(i);
 
         String id = item.getString("id");
-
         String title = item.getString("name");
-
         String salary = parseSalary(item.optJSONObject("salary"));
 
-        String experience = item.getJSONObject("experience").getString("name");
+        JSONObject experienceObj = item.getJSONObject("experience");
+        String experience = experienceObj.getString("name");
 
-        List<String> keySkills = getKeySkillsForVacancy(item.optJSONObject("key_skills"));
+        JSONObject ageObj = item.optJSONObject("age_restriction");
+        String age = (ageObj != null) ? ageObj.getString("name") : "Не указано";
 
-        vacancies.add(new RealVacancy(title,  keySkills, salary, experience));
+        JSONObject employerObj = item.getJSONObject("employer");
+        String employer = employerObj.getString("name");
+
+        // Получаем ключевые навыки - ВНИМАНИЕ: key_skills находится прямо в item
+        JSONArray keySkillsArray = item.optJSONArray("key_skills");
+        List<String> keySkills = new ArrayList<>();
+
+        if (keySkillsArray != null) {
+          for (int j = 0; j < keySkillsArray.length(); j++) {
+            JSONObject skill = keySkillsArray.getJSONObject(j);
+            keySkills.add(skill.getString("name"));
+          }
+        }
+
+        System.out.println("✅ Вакансия: " + title + ", Навыков: " + keySkills.size());
+
+        vacancies.add(new RealVacancy(title, keySkills, salary, experience, age, employer));
       }
     } catch (Exception e) {
-      System.err.println("Ошибка при получении" + e.getMessage());
-    }
-      // FALLBACK ЛОГИКА
-      if (vacancies.isEmpty()) {
-        vacancies = getVacanciesWithFallback(searchText, area, perPage); //todo развлекайся, братанкчик:)
-      }
-
-      return vacancies;
+      System.err.println("❌ Ошибка при получении вакансий: " + e.getMessage());
+      e.printStackTrace();
     }
 
-  private static List<RealVacancy> getVacanciesWithFallback(String searchText, String area, int perPage) { //todo сделай, чтобы работало - я в тебя верю :)
+    // FALLBACK ЛОГИКА
+    if (vacancies.isEmpty()) {
+      System.out.println("⚠️ Основной поиск не дал результатов, запускаем fallback");
+      vacancies = getVacanciesWithFallback(searchText, area, perPage);
+    }
+
+    System.out.println("🏁 Итоговое количество вакансий: " + vacancies.size());
+    return vacancies;
+  }
+
+  private static List<RealVacancy> getVacanciesWithFallback(String searchText, String area,
+      int perPage) { //todo сделай, чтобы работало - я в тебя верю :)
     List<RealVacancy> vacancies = new ArrayList<>();
 
     System.out.println("Вакансия '" + searchText + "' не найдена. Ищу альтернативные названия...");
@@ -69,15 +96,19 @@ public class ParserService {
       System.out.println("Пробую альтернативу: " + trimmedAlternative);
 
       try {
-        List<RealVacancy> alternativeVacancies = parseVacanciesForKeyword(trimmedAlternative, area, perPage);
+        List<RealVacancy> alternativeVacancies = parseVacanciesForKeyword(trimmedAlternative, area,
+            perPage);
 
         if (!alternativeVacancies.isEmpty()) {
-          System.out.println("Найдено " + alternativeVacancies.size() + " вакансий по альтернативе: " + trimmedAlternative);
+          System.out.println(
+              "Найдено " + alternativeVacancies.size() + " вакансий по альтернативе: "
+                  + trimmedAlternative);
           vacancies.addAll(alternativeVacancies);
           break; // Выходим после первой успешной альтернативы
         }
       } catch (Exception e) {
-        System.err.println("Ошибка при поиске по альтернативе '" + trimmedAlternative + "': " + e.getMessage());
+        System.err.println(
+            "Ошибка при поиске по альтернативе '" + trimmedAlternative + "': " + e.getMessage());
       }
     }
 
@@ -101,15 +132,16 @@ public class ParserService {
     }
   }
 
-  private static List<RealVacancy> parseVacanciesForKeyword(String keyword, String area, int perPage) {
+  private static List<RealVacancy> parseVacanciesForKeyword(String keyword, String area,
+      int perPage) {
     List<RealVacancy> vacancies = new ArrayList<>();
 
     try {
       String apiUrl = String.format(
-              "https://api.hh.ru/vacancies?text=%s&area=%s&per_page=%d",
-              keyword.replace(" ", "+"),
-              area,
-              perPage
+          "https://api.hh.ru/vacancies?text=%s&area=%s&per_page=%d",
+          keyword.replace(" ", "+"),
+          area,
+          perPage
       );
       String jsonResponse = sendGetRequest(apiUrl);
       JSONObject jsonObject = new JSONObject(jsonResponse);
@@ -121,9 +153,11 @@ public class ParserService {
         String title = item.getString("name");
         String salary = parseSalary(item.optJSONObject("salary"));
         String experience = item.getJSONObject("experience").getString("name");
+        String age = item.getJSONObject("age_restriction").getString("name");
+        String employer = item.getJSONObject("employer").getString("name");
         List<String> keySkills = getKeySkillsForVacancy(item.optJSONObject("key_skills"));
 
-        vacancies.add(new RealVacancy(title, keySkills, salary, experience));
+        vacancies.add(new RealVacancy(title, keySkills, salary, experience, age, employer));
       }
     } catch (Exception e) {
       throw new RuntimeException("Ошибка парсинга для ключевого слова: " + keyword, e);
@@ -154,9 +188,9 @@ public class ParserService {
   private static List<String> getDefaultAlternativeKeywords(String searchText) {
     // Дефолтные альтернативы на случай ошибок
     return List.of(
-            searchText + " developer",
-            searchText + " QA",
-            searchText + " engineer"
+        searchText + " developer",
+        searchText + " QA",
+        searchText + " engineer"
     );
   }
 
@@ -197,7 +231,8 @@ public class ParserService {
         Исходная вакансия: "%s"
         """;
 
-    return gigaChatService.sendMessage(String.format(prompt, originalVacancy, context, originalVacancy, originalVacancy));
+    return gigaChatService.sendMessage(
+        String.format(prompt, originalVacancy, context, originalVacancy, originalVacancy));
   }
 
   private static String validateAndFixKeywordsFormat(String rawResponse, String originalVacancy) {
@@ -234,7 +269,8 @@ public class ParserService {
         ВАЖНО: Верни ТОЛЬКО исправленную строку в правильном формате!
         """;
 
-    return gigaChatService.sendMessage(String.format(validationPrompt, rawResponse, originalVacancy));
+    return gigaChatService.sendMessage(
+        String.format(validationPrompt, rawResponse, originalVacancy));
   }
 
   // Метод проверки формата
@@ -281,7 +317,9 @@ public class ParserService {
   private static int countCharacters(String str, char ch) {
     int count = 0;
     for (char c : str.toCharArray()) {
-      if (c == ch) count++;
+      if (c == ch) {
+        count++;
+      }
     }
     return count;
   }
@@ -289,7 +327,7 @@ public class ParserService {
 
   private static List<String> getKeySkillsForVacancy(JSONObject skillsObj) {
     List<String> skills = new ArrayList<>();
-    if (skillsObj == null){
+    if (skillsObj == null) {
       return null;
     }
     try {
@@ -301,7 +339,8 @@ public class ParserService {
           skills.add(skill.getString("name"));
         }
       }
-    } catch (Exception e) {}
+    } catch (Exception e) {
+    }
 
     return skills;
   }
@@ -327,6 +366,7 @@ public class ParserService {
     }
     return null;
   }
+
   private static String sendGetRequest(String urlString) throws Exception {
     URL url = new URL(urlString);
     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -334,22 +374,27 @@ public class ParserService {
     connection.setRequestMethod("GET");
     connection.setRequestProperty("User-Agent", "HH-Parser/1.0");
     connection.setRequestProperty("Accept", "application/json");
+    connection.setRequestProperty("Accept-Charset", "UTF-8");
 
     int responseCode = connection.getResponseCode();
 
     if (responseCode == HttpURLConnection.HTTP_OK) {
+      // Читаем ответ в UTF-8
+      BufferedReader in = new BufferedReader(
+          new InputStreamReader(connection.getInputStream(), "UTF-8")
+      );
+
       String inputLine;
       StringBuilder response = new StringBuilder();
 
-      BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
       while ((inputLine = in.readLine()) != null) {
         response.append(inputLine);
       }
       in.close();
+
       return response.toString();
     } else {
       throw new RuntimeException("HTTP error: " + responseCode);
     }
-
-    }
+  }
 }

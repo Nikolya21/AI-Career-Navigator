@@ -1,6 +1,9 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.ArrayList" %>
+<%@ page import="org.commonmark.node.*" %>
+<%@ page import="org.commonmark.parser.Parser" %>
+<%@ page import="org.commonmark.renderer.html.HtmlRenderer" %>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -37,6 +40,107 @@
         border-radius: 10px;
         transition: width 0.3s ease;
       }
+
+      /* Стили для Markdown контента в сообщениях AI */
+      .ai-message .message-content {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        line-height: 1.6;
+        color: #333;
+      }
+
+      .ai-message .message-content h1,
+      .ai-message .message-content h2,
+      .ai-message .message-content h3,
+      .ai-message .message-content h4 {
+        color: #2c3e50;
+        margin-top: 1.2em;
+        margin-bottom: 0.5em;
+        font-weight: 600;
+      }
+
+      .ai-message .message-content h1 {
+        font-size: 1.4em;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 0.3em;
+      }
+
+      .ai-message .message-content h2 {
+        font-size: 1.2em;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 0.3em;
+      }
+
+      .ai-message .message-content h3 {
+        font-size: 1.1em;
+      }
+
+      .ai-message .message-content p {
+        margin-bottom: 1em;
+      }
+
+      .ai-message .message-content ul,
+      .ai-message .message-content ol {
+        margin-bottom: 1em;
+        padding-left: 1.5em;
+      }
+
+      .ai-message .message-content li {
+        margin-bottom: 0.5em;
+      }
+
+      .ai-message .message-content code {
+        background-color: #f8f9fa;
+        padding: 0.2em 0.4em;
+        border-radius: 3px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9em;
+      }
+
+      .ai-message .message-content pre {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 1em;
+        overflow-x: auto;
+        margin: 1em 0;
+      }
+
+      .ai-message .message-content pre code {
+        background-color: transparent;
+        padding: 0;
+      }
+
+      .ai-message .message-content blockquote {
+        border-left: 4px solid #3498db;
+        padding-left: 1em;
+        margin: 1em 0;
+        color: #555;
+        font-style: italic;
+      }
+
+      .ai-message .message-content a {
+        color: #3498db;
+        text-decoration: none;
+      }
+
+      .ai-message .message-content a:hover {
+        text-decoration: underline;
+      }
+
+      .ai-message .message-content strong {
+        font-weight: 600;
+        color: #2c3e50;
+      }
+
+      .ai-message .message-content em {
+        font-style: italic;
+      }
+
+      /* Дополнительные стили для сообщений пользователя */
+      .user-message .message-content {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
     </style>
 </head>
 <body>
@@ -56,8 +160,8 @@
     </div>
 </div>
 <% } %>
+
 <div class="header">
-    <!-- Кнопка личного кабинета в левом верхнем углу -->
     <div class="header-left">
         <a href="${pageContext.request.contextPath}/personal-cabinet" class="cabinet-btn">
             👤 Личный кабинет
@@ -135,11 +239,13 @@
 
             if (i + 1 < messageHistory.size()) {
                 String aiResponse = messageHistory.get(i + 1);
+                // Конвертируем Markdown в HTML для ответов AI
+                String markdownHtml = convertMarkdownToHtml(aiResponse);
         %>
         <div class="message ai-message">
             <div class="message-sender">AI</div>
             <div class="message-content">
-                <%= aiResponse %>
+                <%= markdownHtml %>
             </div>
         </div>
         <%
@@ -171,23 +277,8 @@
     </div>
     <% } %>
 </div>
-<%-- Добавьте в конец DialogService.jsp перед закрывающими тегами --%>
-<div style="text-align: center; margin-top: 20px; padding: 20px;">
-    <form action="${pageContext.request.contextPath}/complete-dialog" method="post">
-        <button type="submit"
-                style="background: linear-gradient(135deg, #28a745, #20c997);
-                       color: white;
-                       padding: 15px 30px;
-                       border: none;
-                       border-radius: 10px;
-                       font-size: 16px;
-                       font-weight: 600;
-                       cursor: pointer;
-                       transition: all 0.3s ease;">
-            ✅ Завершить диалог и перейти к выбору вакансии
-        </button>
-    </form>
-</div>
+
+
 <script>
   // Автопрокрутка к последнему сообщению
   function scrollToBottom() {
@@ -208,7 +299,6 @@
     if (messageForm && messageInput) {
       messageForm.addEventListener('submit', function (e) {
         if (messageInput.value.trim() !== '') {
-          // Можно добавить индикатор загрузки здесь
           console.log('Sending message:', messageInput.value);
         }
       });
@@ -225,3 +315,40 @@
 </script>
 </body>
 </html>
+
+<%!
+    // Вспомогательный метод для конвертации Markdown в HTML
+    private String convertMarkdownToHtml(String markdown) {
+        if (markdown == null || markdown.trim().isEmpty()) {
+            return "";
+        }
+
+        try {
+            Parser parser = Parser.builder().build();
+            Node document = parser.parse(markdown);
+            HtmlRenderer renderer = HtmlRenderer.builder().build();
+            return renderer.render(document);
+        } catch (Exception e) {
+            // Если произошла ошибка, возвращаем текст как есть с базовой обработкой
+            return escapeHtml(markdown)
+                    .replace("\n", "<br>")
+                    .replace("### ", "<h3>").replace("\n", "</h3>")
+                    .replace("## ", "<h2>").replace("\n", "</h2>")
+                    .replace("# ", "<h1>").replace("\n", "</h1>")
+                    .replace("**", "<strong>").replace("**", "</strong>")
+                    .replace("*", "<em>").replace("*", "</em>")
+                    .replace("`", "<code>").replace("`", "</code>")
+                    .replace("```", "<pre><code>").replace("```", "</code></pre>");
+        }
+    }
+
+    // Метод для экранирования HTML
+    private String escapeHtml(String text) {
+        if (text == null) return "";
+        return text.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
+    }
+%>

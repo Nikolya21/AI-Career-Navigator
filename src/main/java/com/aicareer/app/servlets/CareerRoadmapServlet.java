@@ -53,10 +53,13 @@ public class CareerRoadmapServlet extends HttpServlet {
         session.setAttribute("generatedRoadmap", roadmap);
       }
 
+      // Экранируем Markdown для безопасного вывода
+      String safePersonalizedPlan = escapeHtmlForMarkdown(personalizedPlan);
+      session.setAttribute("personalizedVacancyPlan", safePersonalizedPlan);
+
       // Передаем данные в JSP
       request.setAttribute("roadmap", roadmap);
       request.setAttribute("selectedVacancy", selectedVacancy);
-      request.setAttribute("personalizedPlan", personalizedPlan);
 
       request.getRequestDispatcher("/jsp/CareerRoadmap.jsp").forward(request, response);
 
@@ -74,6 +77,21 @@ public class CareerRoadmapServlet extends HttpServlet {
           "Временные технические работы. Roadmap будет улучшен в ближайшее время.");
       request.getRequestDispatcher("/jsp/CareerRoadmap.jsp").forward(request, response);
     }
+  }
+
+  /**
+   * Экранирование HTML в Markdown тексте
+   */
+  private String escapeHtmlForMarkdown(String text) {
+    if (text == null) return "";
+
+    // Убираем потенциально опасные HTML теги, но оставляем Markdown синтаксис
+    return text
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace("\"", "&quot;")
+        .replace("'", "&#39;");
   }
 
   /**
