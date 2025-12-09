@@ -124,7 +124,7 @@ public class LoginServlet extends HttpServlet {
       session.setAttribute("authenticated", true);
 
       // Перенаправляем на страницу диалога
-      response.sendRedirect(request.getContextPath() + "/send-message");
+      response.sendRedirect(request.getContextPath() + "/personal-cabinet");
     } else {
       // Ошибки аутентификации - показываем форму снова
       System.out.println("❌ Login failed for: " + email + " - " + result.getErrors());
