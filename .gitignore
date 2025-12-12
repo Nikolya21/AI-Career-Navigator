@@ -3,6 +3,12 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+# Compiled class files
+*.class
+out/
+target/
+build/
+
 ### IntelliJ IDEA ###
 .idea/
 *.iws
