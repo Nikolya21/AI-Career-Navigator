@@ -121,7 +121,7 @@ C:\tomcat\bin\startup.bat
 /path/to/tomcat/bin/startup.sh
 
 # 3. Откройте в браузере
-http://localhost:8080/ai-career-navigator/
+http://localhost:8080/ai_career_navigator_war/
 6. Если возникли проблемы
 Ошибка БД: проверьте docker ps и пароль в application.properties
 
