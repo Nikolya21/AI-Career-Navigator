@@ -121,4 +121,4 @@ public class Main {
       System.err.println("- Проверьте настройки GigaChat API");
     }
   }
-}
+}// для любимого николи
