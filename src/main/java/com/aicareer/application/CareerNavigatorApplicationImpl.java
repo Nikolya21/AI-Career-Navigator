@@ -25,12 +25,15 @@ import com.aicareer.core.service.user.model.AuthenticationResult;
 import com.aicareer.core.service.user.model.RegistrationResult;
 import com.aicareer.repository.user.CVDataRepository;
 import com.aicareer.repository.user.UserPreferencesRepository;
-import com.aicareer.repository.user.UserSkillsRepository;
-
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.io.File;
 import java.util.List;
 import java.util.Scanner;
 
+@Service
+@RequiredArgsConstructor
 public class CareerNavigatorApplicationImpl implements CareerNavigatorApplication {
 
   private final UserService userService;
@@ -42,33 +45,9 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
   private final UserPreferencesRepository userPreferencesRepository;
   private final CVDataRepository cvDataRepository;
   private final LearningPlanAssembler learningPlanAssembler;
-  private final UserSkillsRepository userSkillsRepository;
-
-  public CareerNavigatorApplicationImpl(
-      UserService userService,
-      ChatWithAiBeforeDeterminingVacancyService chatBeforeVacancyService,
-      SelectVacancy selectVacancy,
-      ChatWithAiAfterDeterminingVacancyService chatAfterVacancyService,
-      RoadmapGenerateService roadmapGenerateService,
-      RoadmapService roadmapService, // ← ДОБАВИЛ
-      UserPreferencesRepository userPreferencesRepository,
-      CVDataRepository cvDataRepository, // ← ДОБАВИТЬ
-      UserSkillsRepository userSkillsRepository, // ← ДОБАВИТЬ
-      LearningPlanAssembler learningPlanAssembler
-  ) {
-    this.userService = userService;
-    this.chatBeforeVacancyService = chatBeforeVacancyService;
-    this.selectVacancy = selectVacancy;
-    this.chatAfterVacancyService = chatAfterVacancyService;
-    this.roadmapGenerateService = roadmapGenerateService;
-    this.roadmapService = roadmapService; // ← ДОБАВИЛ
-    this.userPreferencesRepository = userPreferencesRepository;
-    this.cvDataRepository = cvDataRepository;
-    this.userSkillsRepository = userSkillsRepository;
-    this.learningPlanAssembler = learningPlanAssembler;
-  }
 
   @Override
+  @Transactional
   public Long register(String email, String password, String name)
       throws AuthenticationException {
 
@@ -449,6 +428,7 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
   /**
    * НОВЫЙ МЕТОД: Получить сохраненную roadmap пользователя
    */
+  @Transactional(readOnly = true)
   public Roadmap getSavedRoadmap(Long userId) throws RoadmapGenerationException {
     try {
       return roadmapService.findFullRoadmapById((roadmapService.findRoadmapByUserId(userId)).get().getId())

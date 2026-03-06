@@ -3,19 +3,18 @@ package com.aicareer.core.service.course;
 import com.aicareer.core.dto.courseDto.CourseRequest;
 import com.aicareer.core.service.gigachat.GigaChatService;
 import com.aicareer.repository.course.GenerateCourseFromGpt;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Service
+@RequiredArgsConstructor
 public class ServiceGenerateCourse implements GenerateCourseFromGpt {
 
   private final ServicePrompt servicePrompt;
   private final GigaChatService gigaChatClient;
-
-  public ServiceGenerateCourse(ServicePrompt servicePrompt, GigaChatService gigaChatClient) {
-    this.servicePrompt = servicePrompt;
-    this.gigaChatClient = gigaChatClient;
-  }
 
   @Override
   public String generateCoursePlan(CourseRequest request) {
@@ -34,10 +33,5 @@ public class ServiceGenerateCourse implements GenerateCourseFromGpt {
       e.printStackTrace();
       throw new RuntimeException("Не удалось сгенерировать курс: " + e.getMessage(), e);
     }
-  }
-
-  private String validateAndFixResponse(String gigaChatAnswer) {
-    List<String> checkerArray = List.of(gigaChatAnswer.split(" "));
-    return checkerArray.get(0);
   }
 }

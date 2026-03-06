@@ -3,17 +3,22 @@ package com.aicareer.core.service.course;
 import com.aicareer.core.model.courseModel.Task;
 import com.aicareer.core.model.courseModel.Week;
 import com.aicareer.repository.course.CourseResponse;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Service
 public class ServiceWeek implements CourseResponse {
 
   // Для быстрой проверки плохих ответов
-  private static final Set<String> BAD_PHRASES = Set.of(
-    "к сожалению", "извините", "не могу", "превышено", "лимит"
-  );
+  @Value("${course.bad-phrases}")
+  private Set<String> badPhrases;
+
+  @Value("${course.default-weeks:8}")
+  private int defaultWeeks;
 
   @Override
   public List<Week> parseCourseResponse(String llmResponse) {
@@ -24,13 +29,9 @@ public class ServiceWeek implements CourseResponse {
       return createFallbackWeeks();
     }
 
-    // Логируем сырой ответ для отладки
-//    String preview = llmResponse.length() > 500 ? llmResponse.substring(0, 500) + "..." : llmResponse;
-//    System.out.println("🔍 Сырой ответ LLM (первыe 500 симв.):\n" + preview);
-
     // Быстрая проверка на плохой текст
     String lower = llmResponse.toLowerCase();
-    for (String bad : BAD_PHRASES) {
+    for (String bad : badPhrases) {
       if (lower.contains(bad)) {
         System.out.println("🚨 Обнаружен недопустимый текст: '" + bad + "'");
         return createFallbackWeeks();
@@ -54,11 +55,11 @@ public class ServiceWeek implements CourseResponse {
     }
 
     // Гарантируем 8 недель
-    while (weeks.size() < 8) {
+    while (weeks.size() < defaultWeeks) {
       weeks.add(createDefaultWeek(weeks.size() + 1));
     }
-    if (weeks.size() > 8) {
-      weeks = new ArrayList<>(weeks.subList(0, 8));
+    if (weeks.size() > defaultWeeks) {
+      weeks = new ArrayList<>(weeks.subList(0, defaultWeeks));
     }
 
     System.out.println("✅ Успешно распарсено: " + weeks.size() + " недель");
@@ -251,7 +252,7 @@ public class ServiceWeek implements CourseResponse {
       "Финальное закрепление"
     };
 
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < defaultWeeks; i++) {
       Week week = new Week();
       week.setNumber(i + 1);
       week.setGoal(goals[i]);

@@ -7,19 +7,23 @@ import com.aicareer.repository.course.AssemblePlan;
 import com.aicareer.repository.course.CourseResponse;
 import com.aicareer.repository.course.DistributionByWeek;
 import com.aicareer.repository.course.GenerateCourseFromGpt;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@Component
+@RequiredArgsConstructor
 public class LearningPlanAssembler implements AssemblePlan {
 
   private final GenerateCourseFromGpt courseGenerator;
   private final CourseResponse courseResponse;
   private final DistributionByWeek distributionByWeek;
 
-  public LearningPlanAssembler(GenerateCourseFromGpt courseGenerator, CourseResponse courseResponse, DistributionByWeek distributionByWeek) {
-    this.courseGenerator = courseGenerator;
-    this.courseResponse = courseResponse;
-    this.distributionByWeek = distributionByWeek;
+  @PostConstruct
+  public void init() {
+    System.out.println("🚀 LearningPlanAssembler инициализирован");
   }
 
   @Override

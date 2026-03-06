@@ -2,8 +2,11 @@ package com.aicareer.core.service.course;
 
 import com.aicareer.core.model.courseModel.Week;
 import com.aicareer.repository.course.DistributionByWeek;
+import org.springframework.stereotype.Service;
+
 import java.util.List;
 
+@Service
 public class WeekDistributionService implements DistributionByWeek {
 
   @Override
