@@ -9,10 +9,12 @@ import com.aicareer.repository.course.DistributionByWeek;
 import com.aicareer.repository.course.GenerateCourseFromGpt;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class LearningPlanAssembler implements AssemblePlan {
@@ -28,7 +30,7 @@ public class LearningPlanAssembler implements AssemblePlan {
 
   @Override
   public ResponseByWeek assemblePlan(CourseRequest request) {
-    System.out.println("🎯 Начало сборки учебного плана...");
+    log.info("🎯 Начало сборки учебного плана...");
 
     try {
       String rawLlmResponse = courseGenerator.generateCoursePlan(request);
@@ -36,12 +38,12 @@ public class LearningPlanAssembler implements AssemblePlan {
       List<Week> parsedWeeks = courseResponse.parseCourseResponse(rawLlmResponse);
 
       List<Week> distributedWeeks = distributionByWeek.distributionByWeek(parsedWeeks);
-      System.out.println("✅ Распределение по неделям завершено");
+      log.info("✅ Распределение по неделям завершено");
 
       return new ResponseByWeek(distributedWeeks);
 
     } catch (Exception e) {
-      System.err.println("❌ Ошибка при сборке учебного плана: " + e.getMessage());
+      log.error("❌ Ошибка при сборке учебного плана: " + e.getMessage());
       e.printStackTrace();
       throw new RuntimeException("Не удалось собрать учебный план: " + e.getMessage(), e);
     }
