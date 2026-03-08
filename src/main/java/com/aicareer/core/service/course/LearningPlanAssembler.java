@@ -25,7 +25,7 @@ public class LearningPlanAssembler implements AssemblePlan {
 
   @PostConstruct
   public void init() {
-    System.out.println("🚀 LearningPlanAssembler инициализирован");
+    log.info("🚀 LearningPlanAssembler инициализирован");
   }
 
   @Override

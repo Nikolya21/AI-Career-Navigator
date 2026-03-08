@@ -47,7 +47,6 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
   private final RoadmapService roadmapService;
   private final UserPreferencesRepository userPreferencesRepository;
   private final CVDataRepository cvDataRepository;
-  private final UserSkillsRepository userSkillsRepository;
   private final LearningPlanAssembler learningPlanAssembler;
   @Override
   @Transactional

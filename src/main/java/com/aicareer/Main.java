@@ -101,7 +101,6 @@ public class Main {
           roadmapService,
           userPreferencesRepository,
           cvDataRepository,
-          userSkillsRepository,
           learningPlanAssembler
       );
 

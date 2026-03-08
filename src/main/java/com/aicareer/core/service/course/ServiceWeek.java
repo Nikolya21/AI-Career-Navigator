@@ -3,6 +3,7 @@ package com.aicareer.core.service.course;
 import com.aicareer.core.model.courseModel.Task;
 import com.aicareer.core.model.courseModel.Week;
 import com.aicareer.repository.course.CourseResponse;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -15,12 +16,26 @@ import java.util.regex.Pattern;
 @Service
 public class ServiceWeek implements CourseResponse {
 
-  // Для быстрой проверки плохих ответов
   @Value("${course.bad-phrases}")
   private Set<String> badPhrases;
 
   @Value("${course.default-weeks:8}")
   private int defaultWeeks;
+
+  @PostConstruct
+  public void init() {
+    log.info("ServiceWeek инициализирован:");
+    log.info("   - Загружено bad-phrases: {} шт.", badPhrases.size());
+    log.info("   - default-weeks: {}", defaultWeeks);
+
+    if (badPhrases == null || badPhrases.isEmpty()) {
+      log.warn("Список bad-phrases пуст! Проверь application.yml");
+    }
+
+    if (defaultWeeks < 1) {
+      log.error("❌ default-weeks должен быть больше 0");
+    }
+  }
 
   @Override
   public List<Week> parseCourseResponse(String llmResponse) {
