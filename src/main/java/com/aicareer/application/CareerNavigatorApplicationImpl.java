@@ -16,8 +16,7 @@ import com.aicareer.core.model.roadmap.Roadmap;
 import com.aicareer.core.model.vacancy.SelectedPotentialVacancy;
 import com.aicareer.core.service.course.LearningPlanAssembler;
 import com.aicareer.core.service.parserOfVacancy.SelectVacancy;
-import com.aicareer.core.service.information.ChatWithAiAfterDeterminingVacancyService;
-import com.aicareer.core.service.information.ChatWithAiBeforeDeterminingVacancyService;
+import com.aicareer.core.service.information.AdaptationCourseChat;
 import com.aicareer.core.service.roadmap.RoadmapGenerateService;
 import com.aicareer.core.service.roadmap.RoadmapService;
 import com.aicareer.core.service.user.UserService;
@@ -34,9 +33,9 @@ import java.util.Scanner;
 public class CareerNavigatorApplicationImpl implements CareerNavigatorApplication {
 
   private final UserService userService;
-  private final ChatWithAiBeforeDeterminingVacancyService chatBeforeVacancyService;
+  private final AdaptationCourseChat chatBeforeVacancyService;
   private final SelectVacancy selectVacancy;
-  private final ChatWithAiAfterDeterminingVacancyService chatAfterVacancyService;
+  private final Example chatAfterVacancyService;
   private final RoadmapGenerateService roadmapGenerateService;
   private final RoadmapService roadmapService;
   private final UserPreferencesRepository userPreferencesRepository;
@@ -46,9 +45,9 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
 
   public CareerNavigatorApplicationImpl(
       UserService userService,
-      ChatWithAiBeforeDeterminingVacancyService chatBeforeVacancyService,
+      AdaptationCourseChat chatBeforeVacancyService,
       SelectVacancy selectVacancy,
-      ChatWithAiAfterDeterminingVacancyService chatAfterVacancyService,
+      Example chatAfterVacancyService,
       RoadmapGenerateService roadmapGenerateService,
       RoadmapService roadmapService, // ← ДОБАВИЛ
       UserPreferencesRepository userPreferencesRepository,

@@ -10,6 +10,7 @@ import com.aicareer.core.service.gigachat.GigaChatService;
 import com.aicareer.core.service.roadmap.prompts.RoadmapPrompts;
 import com.aicareer.repository.roadmap.RoadmapGenerate;
 import lombok.Data;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Data
+@Service
 public class RoadmapGenerateService implements RoadmapGenerate {
 
   private final GigaChatService gigaChatApiService;

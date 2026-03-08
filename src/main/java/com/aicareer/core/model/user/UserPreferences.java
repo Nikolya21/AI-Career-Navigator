@@ -12,5 +12,7 @@ import lombok.NoArgsConstructor;
 public class UserPreferences {
   private Long id;
   private Long userId;
-  private String infoAboutPerson;
+  private String infoAboutPerson; // пока оставил, чтобы красных полей не было - потом уберем)
+
+  private UserLearningProfile userLearningProfile; //todo из-за этого нужно будет изменить структуру БД
 }
