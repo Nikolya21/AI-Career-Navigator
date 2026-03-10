@@ -1,6 +1,7 @@
 package com.aicareer.core.service.user;
 
 import com.aicareer.core.dto.user.*;
+import com.aicareer.core.model.user.CVData;
 import com.aicareer.core.model.user.User;
 import com.aicareer.core.model.user.UserPreferences;
 import com.aicareer.core.model.user.UserSkills;
@@ -24,6 +25,9 @@ public interface UserService {
   UpdateResult updateUserPreferencesInfo(Long userId, String newInfoAboutPerson);
 
   boolean hasUserPreferences(Long userId);
+
+  CVData getCVDataByUserId(Long userId);
+  UserPreferences saveUserPreferences(UserPreferences preferences, Long userId);
 
   UpdateResult updateVacancy(String vacancy, Long userId);
   UpdateResult updateRoadmap(Long roadmapId, Long userId);

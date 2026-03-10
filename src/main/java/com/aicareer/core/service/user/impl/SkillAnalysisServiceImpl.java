@@ -1,13 +1,19 @@
 package com.aicareer.core.service.user.impl;
 
 import com.aicareer.core.service.user.SkillAnalysisService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
 import java.util.*;
 
+@Slf4j
+@Service
 public class SkillAnalysisServiceImpl implements SkillAnalysisService {
 
   @Override
   public Map<String, Object> analyzeSkillLevel(Long userId, String targetPosition) {
+    log.info("Analyzing skill level for user {} for target position: {}", userId, targetPosition);
 
     Map<String, Object> analysis = new HashMap<>();
     analysis.put("compliancePercentage", calculateCompliance(targetPosition));
