@@ -2,7 +2,9 @@ package com.aicareer.core.service.course;
 
 import com.aicareer.core.dto.courseDto.CourseRequest;
 import com.aicareer.repository.course.PromptGenerator;
+import org.springframework.stereotype.Service;
 
+@Service
 public class ServicePrompt implements PromptGenerator {
 
   @Override

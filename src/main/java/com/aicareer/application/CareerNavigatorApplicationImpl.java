@@ -26,11 +26,17 @@ import com.aicareer.core.service.user.model.RegistrationResult;
 import com.aicareer.repository.user.CVDataRepository;
 import com.aicareer.repository.user.UserPreferencesRepository;
 import com.aicareer.repository.user.UserSkillsRepository;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.io.File;
 import java.util.List;
 import java.util.Scanner;
 
+@Slf4j
+@Service
+@RequiredArgsConstructor
 public class CareerNavigatorApplicationImpl implements CareerNavigatorApplication {
 
   private final UserService userService;
@@ -42,33 +48,8 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
   private final UserPreferencesRepository userPreferencesRepository;
   private final CVDataRepository cvDataRepository;
   private final LearningPlanAssembler learningPlanAssembler;
-  private final UserSkillsRepository userSkillsRepository;
-
-  public CareerNavigatorApplicationImpl(
-      UserService userService,
-      ChatWithAiBeforeDeterminingVacancyService chatBeforeVacancyService,
-      SelectVacancy selectVacancy,
-      ChatWithAiAfterDeterminingVacancyService chatAfterVacancyService,
-      RoadmapGenerateService roadmapGenerateService,
-      RoadmapService roadmapService, // ← ДОБАВИЛ
-      UserPreferencesRepository userPreferencesRepository,
-      CVDataRepository cvDataRepository, // ← ДОБАВИТЬ
-      UserSkillsRepository userSkillsRepository, // ← ДОБАВИТЬ
-      LearningPlanAssembler learningPlanAssembler
-  ) {
-    this.userService = userService;
-    this.chatBeforeVacancyService = chatBeforeVacancyService;
-    this.selectVacancy = selectVacancy;
-    this.chatAfterVacancyService = chatAfterVacancyService;
-    this.roadmapGenerateService = roadmapGenerateService;
-    this.roadmapService = roadmapService; // ← ДОБАВИЛ
-    this.userPreferencesRepository = userPreferencesRepository;
-    this.cvDataRepository = cvDataRepository;
-    this.userSkillsRepository = userSkillsRepository;
-    this.learningPlanAssembler = learningPlanAssembler;
-  }
-
   @Override
+  @Transactional
   public Long register(String email, String password, String name)
       throws AuthenticationException {
 
@@ -94,7 +75,7 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
       // сохранение резюме (пока из локального файла)
       File cvFile;
       while (true) {
-        System.out.println("\nВыберите вариант резюме:\n1 - PDF\n2 - DOCX\nВаш выбор: ");
+        log.info("\nВыберите вариант резюме:\n1 - PDF\n2 - DOCX\nВаш выбор: ");
         Scanner scanner = new Scanner(System.in);
         String choice = scanner.nextLine();
         if (choice.equals("1")) {
@@ -104,7 +85,7 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
           cvFile = new File("TestCV.docx");
           break;
         } else {
-          System.out.println("❌ Неверный выбор. Попробуйте снова.");
+          log.info("❌ Неверный выбор. Попробуйте снова.");
         }
       }
       userService.uploadCV(cvFile, userId);
@@ -118,17 +99,17 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
       CourseRequirements courseRequirements = handleCourseDefinition(vacancyRequirements);
       if (courseRequirements == null) return userId;
 
-      System.out.println("\n📚 Передаём требования в генератор курса...");
+      log.info("\n📚 Передаём требования в генератор курса...");
       CourseRequest courseRequest = new CourseRequest(courseRequirements);
       ResponseByWeek responseByWeek = getLearningPlanAssembler().assemblePlan(courseRequest);
-      System.out.println("✅ Курс сгенерирован: " + responseByWeek.getWeeks().size() + " недель");
+      log.info("✅ Курс сгенерирован: " + responseByWeek.getWeeks().size() + " недель");
 
       Roadmap roadmap = handleRoadmapGeneration(responseByWeek, currentUser);
       if (roadmap == null) return userId;
       userService.updateRoadmap(roadmap.getId(), userId);
 
 
-      System.out.println("\n✅ УСПЕХ: полный цикл завершён!");
+      log.info("\n✅ УСПЕХ: полный цикл завершён!");
 
       return userId;
     } catch (Exception e) {
@@ -249,64 +230,64 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
         );
       }
       try {
-        System.out.println("🔍 Начало процесса подбора вакансий...");
+        log.info("🔍 Начало процесса подбора вакансий...");
 
         // 1. Извлечение трех вакансий
         List<String> threeVacancies = selectVacancy.extractThreeVacancies(analysisResult, 0);
         if (threeVacancies.isEmpty()){
           threeVacancies = selectVacancy.extractThreeVacancies(analysisResult, 0);
         }
-        System.out.println("✅ Извлечено вакансий: " + threeVacancies.size());
+        log.info("✅ Извлечено вакансий: " + threeVacancies.size());
 
         // 2. Выбор вакансии (пока заглушка)
         SelectedPotentialVacancy selectedPotentialVacancy = selectVacancy.choosenVacansy(
             threeVacancies);
-        System.out.println("✅ Выбрана вакансия: " + selectedPotentialVacancy.getNameOfVacancy());
+        log.info("✅ Выбрана вакансия: " + selectedPotentialVacancy.getNameOfVacancy());
         // сохранение вакансии
         userService.updateVacancy(selectedPotentialVacancy.getNameOfVacancy(),
             preferences.getUserId());
 
         // 3. Парсинг вакансии
         String parsingResult = selectVacancy.formingByParsing(selectedPotentialVacancy);
-        System.out.println("✅ Парсинг завершен, длина результатa: " + parsingResult.length());
+        log.info("✅ Парсинг завершен, длина результатa: " + parsingResult.length());
 
         // 4. Формирование финальных требований
         FinalVacancyRequirements finalVacancyRequirements = selectVacancy.formingFinalVacancyRequirements(
             parsingResult);
-        System.out.println("✅ Финальные требования сформированы");
+        log.info("✅ Финальные требования сформированы");
 
         return finalVacancyRequirements;
       } catch (NullPointerException e) {
-        System.err.println("❌ Ошибка NullPointerException в процессе подбора вакансий:");
-        System.err.println("   Возможные причины:");
-        System.err.println("   - analysisResult = null");
-        System.err.println("   - selectVacancy = null");
-        System.err.println("   - selectedPotentialVacancy = null");
+        log.error("❌ Ошибка NullPointerException в процессе подбора вакансий:");
+        log.error("   Возможные причины:");
+        log.error("   - analysisResult = null");
+        log.error("   - selectVacancy = null");
+        log.error("   - selectedPotentialVacancy = null");
         e.printStackTrace();
         throw new RuntimeException("Ошибка инициализации данных для подбора вакансий", e);
 
       } catch (IllegalArgumentException e) {
-        System.err.println("❌ Ошибка IllegalArgumentException в процессе подбора вакансий:");
-        System.err.println("   Неверные параметры методов");
+        log.error("❌ Ошибка IllegalArgumentException в процессе подбора вакансий:");
+        log.error("   Неверные параметры методов");
         e.printStackTrace();
         throw new RuntimeException("Некорректные параметры для обработки вакансий", e);
 
       } catch (IllegalStateException e) {
-        System.err.println("❌ Ошибка IllegalStateException в процессе подбора вакансий:");
-        System.err.println("   Некорректное состояние объекта selectVacancy");
+        log.error("❌ Ошибка IllegalStateException в процессе подбора вакансий:");
+        log.error("   Некорректное состояние объекта selectVacancy");
         e.printStackTrace();
         throw new RuntimeException("Некорректное состояние системы для обработки вакансий", e);
 
       } catch (Exception e) {
-        System.err.println("❌ Неожиданная ошибка в процессе подбора вакансий:");
-        System.err.println("🔍 Детали ошибки:");
-        System.err.println("   - Класс ошибки: " + e.getClass().getName());
-        System.err.println("   - Сообщение: " + e.getMessage());
-        System.err.println("📋 Контекст выполнения:");
-        System.err.println(
+        log.error("❌ Неожиданная ошибка в процессе подбора вакансий:");
+        log.error("🔍 Детали ошибки:");
+        log.error("   - Класс ошибки: " + e.getClass().getName());
+        log.error("   - Сообщение: " + e.getMessage());
+        log.error("📋 Контекст выполнения:");
+        log.error(
             "   - Analysis Result length: " + (analysisResult != null ? analysisResult.length()
                 : "null"));
-        System.err.println(
+        log.error(
             "   - SelectVacancy: " + (selectVacancy != null ? "initialized" : "null"));
 
         e.printStackTrace();
@@ -368,9 +349,9 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
       String weeksInfo = null;
       try {
         weeksInfo = roadmapGenerateService.gettingWeeksInformation(responseByWeek);
-//        System.out.println("✅ weeksInfo успешно получен: " + (weeksInfo != null ? weeksInfo.substring(0, Math.min(weeksInfo.length(), 100)) + "..." : "null"));
+//        log.info("✅ weeksInfo успешно получен: " + (weeksInfo != null ? weeksInfo.substring(0, Math.min(weeksInfo.length(), 100)) + "..." : "null"));
       } catch (Exception e) {
-        System.out.println("❌ Ошибка в gettingWeeksInformation: " + e.getMessage());
+        log.info("❌ Ошибка в gettingWeeksInformation: " + e.getMessage());
         e.printStackTrace();
         throw new RuntimeException("Ошибка при получении информации о неделях", e);
       }
@@ -380,7 +361,7 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
         zonesAnalysis = roadmapGenerateService.informationComplexityAndQuantityAnalyzeAndCreatingZone(weeksInfo);
 
       } catch (Exception e) {
-        System.out.println("❌ Ошибка в informationComplexityAndQuantityAnalyzeAndCreatingZone: " + e.getMessage());
+        log.info("❌ Ошибка в informationComplexityAndQuantityAnalyzeAndCreatingZone: " + e.getMessage());
         e.printStackTrace();
         throw new RuntimeException("Ошибка при анализе сложности и создании зон", e);
       }
@@ -388,14 +369,14 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
       List<RoadmapZone> zones = null;
       try {
         zones = roadmapGenerateService.splittingWeeksIntoZones(zonesAnalysis, responseByWeek.getWeeks());
-        System.out.println("✅ zones успешно созданы, количество: " + (zones != null ? zones.size() : 0));
+        log.info("✅ zones успешно созданы, количество: " + (zones != null ? zones.size() : 0));
 //        if (zones != null) {
 //          for (int i = 0; i < zones.size(); i++) {
-//            System.out.println("Зона " + i + ": " + zones.get(i));
+//            log.info("Зона " + i + ": " + zones.get(i));
 //          }
 //        }
       } catch (Exception e) {
-        System.out.println("❌ Ошибка в splittingWeeksIntoZones: " + e.getMessage());
+        log.info("❌ Ошибка в splittingWeeksIntoZones: " + e.getMessage());
         e.printStackTrace();
         throw new RuntimeException("Ошибка при разделении недель по зонам", e);
       }
@@ -405,9 +386,9 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
       try {
         generatedRoadmap = roadmapGenerateService.identifyingThematicallySimilarZones(zones);
         generatedRoadmap.setUserId(user.getId());
-        System.out.println("✅ Roadmap успешно сгенерирован: " + (generatedRoadmap != null ? generatedRoadmap.toString() : "null"));
+        log.info("✅ Roadmap успешно сгенерирован: " + (generatedRoadmap != null ? generatedRoadmap.toString() : "null"));
       } catch (Exception e) {
-        System.out.println("❌ Ошибка в identifyingThematicallySimilarZones: " + e.getMessage());
+        log.info("❌ Ошибка в identifyingThematicallySimilarZones: " + e.getMessage());
         e.printStackTrace();
         throw new RuntimeException("Ошибка при идентификации тематически схожих зон", e);
       }
@@ -418,30 +399,30 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
         // Нужно установить userId (можно передавать через параметры или контекст)
         // generatedRoadmap.setUserId(userId);
         savedRoadmap = roadmapService.saveCompleteRoadmap(generatedRoadmap);
-        System.out.println("✅ Roadmap успешно сохранен в БД с ID: " + (savedRoadmap != null ? savedRoadmap.getId() : "null"));
+        log.info("✅ Roadmap успешно сохранен в БД с ID: " + (savedRoadmap != null ? savedRoadmap.getId() : "null"));
 
         // Возвращаем результат если все успешно
         return savedRoadmap;
 
       } catch (Exception e) {
-        System.out.println("❌ Ошибка при сохранении roadmap в БД: " + e.getMessage());
+        log.info("❌ Ошибка при сохранении roadmap в БД: " + e.getMessage());
         e.printStackTrace();
         throw new RuntimeException("Ошибка при сохранении roadmap в базу данных", e);
       }
 
     } catch (RuntimeException e) {
       // Перехватываем уже обернутые исключения
-      System.out.println("💥 Критическая ошибка в процессе создания roadmap: " + e.getMessage());
+      log.info("💥 Критическая ошибка в процессе создания roadmap: " + e.getMessage());
       e.printStackTrace();
       throw e;
     } catch (Exception e) {
       // На всякий случай перехватываем все остальные исключения
-      System.out.println("💥 Неожиданная ошибка в процессе создания roadmap: " + e.getMessage());
+      log.info("💥 Неожиданная ошибка в процессе создания roadmap: " + e.getMessage());
       e.printStackTrace();
       throw new RuntimeException("Неожиданная ошибка при создании roadmap", e);
     } finally {
       // Блок finally выполнится в любом случае - успех или ошибка
-      System.out.println("🔚 Завершение процесса создания roadmap");
+      log.info("🔚 Завершение процесса создания roadmap");
       // Здесь можно добавить очистку ресурсов, если нужно
     }
   }
@@ -449,6 +430,7 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
   /**
    * НОВЫЙ МЕТОД: Получить сохраненную roadmap пользователя
    */
+  @Transactional(readOnly = true)
   public Roadmap getSavedRoadmap(Long userId) throws RoadmapGenerationException {
     try {
       return roadmapService.findFullRoadmapById((roadmapService.findRoadmapByUserId(userId)).get().getId())
@@ -525,42 +507,42 @@ public class CareerNavigatorApplicationImpl implements CareerNavigatorApplicatio
   }
 
   private UserPreferences handleUserPreferences(User user) {
-    System.out.println("\n💬 Цикл: Знакомство с пользователем (AI-чат)");
+    log.info("\n💬 Цикл: Знакомство с пользователем (AI-чат)");
     String cvText = cvDataRepository.findByUserId(user.getId()).orElseThrow().getInformation();
     try {
       return gatherUserPreferences(user, cvText);
     } catch (Exception e) {
-      System.err.println("❌ Ошибка в AI-знакомстве: " + e.getMessage());
+      log.error("❌ Ошибка в AI-знакомстве: " + e.getMessage());
       return null;
     }
   }
 
   private FinalVacancyRequirements handleVacancySelection(UserPreferences preferences) {
-    System.out.println("\n🎯 Цикл: Подбор и анализ вакансии");
+    log.info("\n🎯 Цикл: Подбор и анализ вакансии");
     try {
       return selectVacancy(preferences);
     } catch (Exception e) {
-      System.err.println("❌ Ошибка при подборе вакансии: " + e.getMessage());
+      log.error("❌ Ошибка при подборе вакансии: " + e.getMessage());
       return null;
     }
   }
 
   private CourseRequirements handleCourseDefinition(FinalVacancyRequirements vacancyRequirements) {
-    System.out.println("\n🎓 Цикл: Формирование требований к курсу");
+    log.info("\n🎓 Цикл: Формирование требований к курсу");
     try {
       return defineCourseRequirements(vacancyRequirements);
     } catch (Exception e) {
-      System.err.println("❌ Ошибка при формировании CourseRequirements: " + e.getMessage());
+      log.error("❌ Ошибка при формировании CourseRequirements: " + e.getMessage());
       return null;
     }
   }
 
   private Roadmap handleRoadmapGeneration(ResponseByWeek responseByWeek, User user) {
-    System.out.println("\n🗺️ Цикл: Генерация учебного плана и дорожной карты");
+    log.info("\n🗺️ Цикл: Генерация учебного плана и дорожной карты");
     try {
       return generateRoadmap(responseByWeek, user);
     } catch (Exception e) {
-      System.err.println("❌ Ошибка при генерации Roadmap: " + e.getMessage());
+      log.error("❌ Ошибка при генерации Roadmap: " + e.getMessage());
       return null;
     }
   }
