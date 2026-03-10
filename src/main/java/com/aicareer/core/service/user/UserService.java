@@ -23,6 +23,8 @@ public interface UserService {
 
   UpdateResult updateUserPreferencesInfo(Long userId, String newInfoAboutPerson);
 
+  UpdateResult saveUserPreferences(UserPreferences preferences);
+
   boolean hasUserPreferences(Long userId);
 
   UpdateResult updateVacancy(String vacancy, Long userId);

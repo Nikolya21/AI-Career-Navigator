@@ -9,8 +9,7 @@ import com.aicareer.core.service.course.ServiceWeek;
 import com.aicareer.core.service.course.WeekDistributionService;
 import com.aicareer.core.service.parserOfVacancy.SelectVacancy;
 import com.aicareer.core.service.gigachat.GigaChatService;
-import com.aicareer.core.service.information.ChatWithAiAfterDeterminingVacancyService;
-import com.aicareer.core.service.information.ChatWithAiBeforeDeterminingVacancyService;
+import com.aicareer.core.service.information.AdaptationCourseChat;
 import com.aicareer.core.service.information.DialogService;
 import com.aicareer.core.service.roadmap.RoadmapGenerateService;
 import com.aicareer.core.service.roadmap.RoadmapService;
@@ -86,9 +85,9 @@ public class Main {
 
       // 6. Сервисы бизнес-логики
       System.out.println("🔧 Инициализация бизнес-сервисов...");
-      var chatBeforeVacancyService = new ChatWithAiBeforeDeterminingVacancyService(gigaChatService, dialogService);
+      var chatBeforeVacancyService = new AdaptationCourseChat(gigaChatService, dialogService);
       var selectVacancy = new SelectVacancy(gigaChatService);
-      var chatAfterVacancyService = new ChatWithAiAfterDeterminingVacancyService(gigaChatService, dialogService);
+      var chatAfterVacancyService = new Example(gigaChatService, dialogService);
       var roadmapGenerateService = new RoadmapGenerateService(gigaChatService);
 
       // 7. Приложение

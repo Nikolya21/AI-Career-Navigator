@@ -2,6 +2,7 @@ package com.aicareer.repository.roadmap.impl;
 
 import com.aicareer.core.model.roadmap.RoadmapZone;
 import com.aicareer.repository.roadmap.RoadmapZoneRepository;
+import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Repository
 public class RoadmapZoneRepositoryImpl implements RoadmapZoneRepository {
 
     private final DataSource dataSource;

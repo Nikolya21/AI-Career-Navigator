@@ -1,12 +1,15 @@
 package com.aicareer.core.model.courseModel;
 
+import com.aicareer.core.model.user.UserPreferences;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class CourseRequirements {
-    private String courseRequirements;
+  private UserPreferences userPreferences;  // содержит и цель, и профиль обучения
 }

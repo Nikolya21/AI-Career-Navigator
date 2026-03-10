@@ -8,107 +8,81 @@ import com.aicareer.repository.roadmap.RoadmapRepository;
 import com.aicareer.repository.roadmap.RoadmapZoneRepository;
 import com.aicareer.repository.roadmap.WeekRepository;
 import com.aicareer.repository.roadmap.TaskRepository;
-import com.aicareer.repository.roadmap.impl.RoadmapRepositoryImpl;
-import com.aicareer.repository.roadmap.impl.RoadmapZoneRepositoryImpl;
-import com.aicareer.repository.roadmap.impl.TaskRepositoryImpl;
-import com.aicareer.repository.roadmap.impl.WeekRepositoryImpl;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
-
-import javax.sql.DataSource;
 import java.util.List;
 import java.util.Optional;
 
+@Service
+@RequiredArgsConstructor
 public class RoadmapService {
 
-    private final RoadmapRepository roadmapRepository;
-    private final RoadmapZoneRepository zoneRepository;
-    private final WeekRepository weekRepository;
-    private final TaskRepository taskRepository;
+  private final RoadmapRepository roadmapRepository;
+  private final RoadmapZoneRepository zoneRepository;
+  private final WeekRepository weekRepository;
+  private final TaskRepository taskRepository;
 
-    public RoadmapService(DataSource dataSource) {
-        this.roadmapRepository = new RoadmapRepositoryImpl(dataSource);
-        this.zoneRepository = new RoadmapZoneRepositoryImpl(dataSource);
-        this.weekRepository = new WeekRepositoryImpl(dataSource);
-        this.taskRepository = new TaskRepositoryImpl(dataSource);
-    }
+  public Roadmap saveCompleteRoadmap(Roadmap roadmap) {
+    // Сохраняем основную roadmap
+    Roadmap savedRoadmap = roadmapRepository.save(roadmap);
 
-    /**
-     * Сохранить всю иерархию Roadmap (с зонами, неделями и задачами)
-     */
-    public Roadmap saveCompleteRoadmap(Roadmap roadmap) {
-        // Сохраняем основную roadmap
-        Roadmap savedRoadmap = roadmapRepository.save(roadmap);
+    // Сохраняем зоны
+    if (roadmap.getRoadmapZones() != null) {
+      for (RoadmapZone zone : roadmap.getRoadmapZones()) {
+        zone.setRoadmapId(savedRoadmap.getId());
+        RoadmapZone savedZone = zoneRepository.save(zone);
 
-        // Сохраняем зоны
-        if (roadmap.getRoadmapZones() != null) {
-            for (RoadmapZone zone : roadmap.getRoadmapZones()) {
-                zone.setRoadmapId(savedRoadmap.getId());
-                RoadmapZone savedZone = zoneRepository.save(zone);
+        // Сохраняем недели
+        if (zone.getWeeks() != null) {
+          for (Week week : zone.getWeeks()) {
+            week.setRoadmapZoneId(savedZone.getId());
+            Week savedWeek = weekRepository.save(week);
 
-                // Сохраняем недели
-                if (zone.getWeeks() != null) {
-                    for (Week week : zone.getWeeks()) {
-                        week.setRoadmapZoneId(savedZone.getId());
-                        Week savedWeek = weekRepository.save(week);
-
-                        // Сохраняем задачи
-                        if (week.getTasks() != null) {
-                            for (Task task : week.getTasks()) {
-                                task.setWeekId(savedWeek.getId());
-                                taskRepository.save(task);
-                            }
-                        }
-                    }
-                }
+            // Сохраняем задачи
+            if (week.getTasks() != null) {
+              for (Task task : week.getTasks()) {
+                task.setWeekId(savedWeek.getId());
+                taskRepository.save(task);
+              }
             }
+          }
         }
-
-        return savedRoadmap;
+      }
     }
 
-    /**
-     * Получить полную roadmap со всей иерархией
-     */
-    public Optional<Roadmap> findFullRoadmapById(Long roadmapId) {
-        Optional<Roadmap> roadmapOpt = roadmapRepository.findById(roadmapId);
+    return savedRoadmap;
+  }
 
-        if (roadmapOpt.isPresent()) {
-            Roadmap roadmap = roadmapOpt.get();
+  public Optional<Roadmap> findFullRoadmapById(Long roadmapId) {
+    Optional<Roadmap> roadmapOpt = roadmapRepository.findById(roadmapId);
 
-            // Загружаем зоны
-            List<RoadmapZone> zones = zoneRepository.findByRoadmapId(roadmapId);
-            roadmap.setRoadmapZones(zones);
+    if (roadmapOpt.isPresent()) {
+      Roadmap roadmap = roadmapOpt.get();
+      List<RoadmapZone> zones = zoneRepository.findByRoadmapId(roadmapId);
+      roadmap.setRoadmapZones(zones);
 
-            // Для каждой зоны загружаем недели и задачи
-            for (RoadmapZone zone : zones) {
-                List<Week> weeks = weekRepository.findByRoadmapZoneId(zone.getId());
-                zone.setWeeks(weeks);
+      for (RoadmapZone zone : zones) {
+        List<Week> weeks = weekRepository.findByRoadmapZoneId(zone.getId());
+        zone.setWeeks(weeks);
 
-                for (Week week : weeks) {
-                    List<Task> tasks = taskRepository.findByWeekId(week.getId());
-                    week.setTasks(tasks);
-                }
-            }
-
-            return Optional.of(roadmap);
+        for (Week week : weeks) {
+          List<Task> tasks = taskRepository.findByWeekId(week.getId());
+          week.setTasks(tasks);
         }
+      }
 
-        return Optional.empty();
+      return Optional.of(roadmap);
     }
 
-    /**
-     * Получить roadmap пользователя
-     */
-    public Optional<Roadmap> findRoadmapByUserId(Long userId) {
-        return roadmapRepository.findByUserId(userId);
-    }
+    return Optional.empty();
+  }
 
-    /**
-     * Удалить roadmap и все связанные данные
-     */
-    public boolean deleteRoadmap(Long roadmapId) {
-        // Каскадное удаление через репозитории
-        // (или настроить CASCADE DELETE в БД)
-        return roadmapRepository.delete(roadmapId);
-    }
+  public Optional<Roadmap> findRoadmapByUserId(Long userId) {
+    return roadmapRepository.findByUserId(userId);
+  }
+
+  public boolean deleteRoadmap(Long roadmapId) {
+    return roadmapRepository.delete(roadmapId);
+  }
 }

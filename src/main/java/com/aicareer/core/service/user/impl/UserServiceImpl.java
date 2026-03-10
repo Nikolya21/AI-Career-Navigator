@@ -26,7 +26,10 @@ import java.util.List;
 import java.util.Optional;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.springframework.stereotype.Service;
 
+
+@Service
 public class UserServiceImpl implements UserService {
 
   private final UserRepository userRepository;
@@ -352,6 +355,45 @@ public class UserServiceImpl implements UserService {
     } catch (Exception e) {
       System.err.println("Error checking user preferences existence: " + e.getMessage());
       return false;
+    }
+  }
+
+  @Override
+  public UpdateResult saveUserPreferences(UserPreferences preferences) {
+    if (preferences == null) {
+      return UpdateResult.error("Настройки не могут быть пустыми");
+    }
+
+    if (preferences.getUserId() == null || preferences.getUserId() <= 0) {
+      return UpdateResult.error("Неверный ID пользователя");
+    }
+
+    System.out.println("Saving user preferences for user: " + preferences.getUserId());
+
+    try {
+      // Проверяем существование пользователя
+      Optional<User> userOpt = userRepository.findById(preferences.getUserId());
+      if (userOpt.isEmpty()) {
+        return UpdateResult.error("Пользователь не найден");
+      }
+
+      // Если запись уже существует, обновляем её, иначе создаём новую
+      Optional<UserPreferences> existingOpt = userPreferencesRepository.findByUserId(preferences.getUserId());
+
+      if (existingOpt.isPresent()) {
+        UserPreferences existing = existingOpt.get();
+        existing.setInfoAboutPerson(preferences.getInfoAboutPerson());
+        existing.setUserLearningProfile(preferences.getUserLearningProfile()); // ← вот так правильно!
+        userPreferencesRepository.save(existing);
+      } else {
+        userPreferencesRepository.save(preferences);
+      }
+
+      System.out.println("User preferences saved successfully for user ID: " + preferences.getUserId());
+      return UpdateResult.success();
+
+    } catch (Exception e) {
+      return UpdateResult.error("Системная ошибка при сохранении настроек: " + e.getMessage());
     }
   }
 

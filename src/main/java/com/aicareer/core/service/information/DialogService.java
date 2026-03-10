@@ -3,6 +3,7 @@ package com.aicareer.core.service.information;
 import com.aicareer.core.service.gigachat.GigaChatService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.Scanner;
 
 @Data
 @RequiredArgsConstructor
+@Service
 public class DialogService {
 
     private final GigaChatService gigaChatService;
