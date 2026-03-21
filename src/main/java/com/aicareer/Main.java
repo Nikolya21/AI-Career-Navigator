@@ -33,9 +33,11 @@ import com.aicareer.repository.roadmap.impl.RoadmapRepositoryImpl;
 import com.aicareer.repository.roadmap.impl.RoadmapZoneRepositoryImpl;
 import com.aicareer.repository.roadmap.impl.WeekRepositoryImpl;
 import com.aicareer.repository.roadmap.impl.TaskRepositoryImpl;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import javax.sql.DataSource;
 
+@SpringBootApplication
 public class Main {
   public static void main(String[] args) {
     try {
@@ -120,4 +122,4 @@ public class Main {
       System.err.println("- Проверьте настройки GigaChat API");
     }
   }
-}// для любимого николи
+}
