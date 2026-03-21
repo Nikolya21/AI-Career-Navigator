@@ -4,6 +4,8 @@ import com.aicareer.core.model.courseModel.Task;
 import com.aicareer.core.model.courseModel.Week;
 import com.aicareer.repository.course.CourseResponse;
 import jakarta.annotation.PostConstruct;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,8 @@ import java.util.regex.Pattern;
 
 @Slf4j
 @Service
+@AllArgsConstructor
+@NoArgsConstructor
 public class ServiceWeek implements CourseResponse {
 
   @Value("${course.bad-phrases}")
