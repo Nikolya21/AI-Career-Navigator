@@ -3,36 +3,58 @@ package com.aicareer.core.service.course;
 import com.aicareer.core.model.courseModel.Task;
 import com.aicareer.core.model.courseModel.Week;
 import com.aicareer.repository.course.CourseResponse;
+import jakarta.annotation.PostConstruct;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
+@Service
+@AllArgsConstructor
+@NoArgsConstructor
 public class ServiceWeek implements CourseResponse {
 
-  // Для быстрой проверки плохих ответов
-  private static final Set<String> BAD_PHRASES = Set.of(
-    "к сожалению", "извините", "не могу", "превышено", "лимит"
-  );
+  @Value("${course.bad-phrases}")
+  private Set<String> badPhrases;
+
+  @Value("${course.default-weeks:8}")
+  private int defaultWeeks;
+
+  @PostConstruct
+  public void init() {
+    log.info("ServiceWeek инициализирован:");
+    log.info("   - Загружено bad-phrases: {} шт.", badPhrases.size());
+    log.info("   - default-weeks: {}", defaultWeeks);
+
+    if (badPhrases == null || badPhrases.isEmpty()) {
+      log.warn("Список bad-phrases пуст! Проверь application.yml");
+    }
+
+    if (defaultWeeks < 1) {
+      log.error("❌ default-weeks должен быть больше 0");
+    }
+  }
 
   @Override
   public List<Week> parseCourseResponse(String llmResponse) {
-    System.out.println("📋 Начало парсинга строгого формата");
+    log.info("📋 Начало парсинга строгого формата");
 
     if (llmResponse == null || llmResponse.trim().isEmpty()) {
-      System.out.println("❌ Ответ пуст");
+      log.info("❌ Ответ пуст");
       return createFallbackWeeks();
     }
 
-    // Логируем сырой ответ для отладки
-//    String preview = llmResponse.length() > 500 ? llmResponse.substring(0, 500) + "..." : llmResponse;
-//    System.out.println("🔍 Сырой ответ LLM (первыe 500 симв.):\n" + preview);
-
     // Быстрая проверка на плохой текст
     String lower = llmResponse.toLowerCase();
-    for (String bad : BAD_PHRASES) {
+    for (String bad : badPhrases) {
       if (lower.contains(bad)) {
-        System.out.println("🚨 Обнаружен недопустимый текст: '" + bad + "'");
+        log.info("🚨 Обнаружен недопустимый текст: '" + bad + "'");
         return createFallbackWeeks();
       }
     }
@@ -41,27 +63,27 @@ public class ServiceWeek implements CourseResponse {
     String cleanResponse = extractStrictFormat(llmResponse);
 
     if (cleanResponse.isEmpty()) {
-      System.out.println("❌ Не найден строгий формат");
-      System.out.println("📝 Полный ответ:\n" + llmResponse);
+      log.info("❌ Не найден строгий формат");
+      log.info("📝 Полный ответ:\n" + llmResponse);
       return createFallbackWeeks();
     }
 
     List<Week> weeks = parseStrictFormat(cleanResponse);
 
     if (weeks.isEmpty()) {
-      System.out.println("❌ Ошибка парсинга строгого формата");
+      log.info("❌ Ошибка парсинга строгого формата");
       return createFallbackWeeks();
     }
 
     // Гарантируем 8 недель
-    while (weeks.size() < 8) {
+    while (weeks.size() < defaultWeeks) {
       weeks.add(createDefaultWeek(weeks.size() + 1));
     }
-    if (weeks.size() > 8) {
-      weeks = new ArrayList<>(weeks.subList(0, 8));
+    if (weeks.size() > defaultWeeks) {
+      weeks = new ArrayList<>(weeks.subList(0, defaultWeeks));
     }
 
-    System.out.println("✅ Успешно распарсено: " + weeks.size() + " недель");
+    log.info("✅ Успешно распарсено: " + weeks.size() + " недель");
     return weeks;
   }
 
@@ -101,7 +123,7 @@ public class ServiceWeek implements CourseResponse {
           weeks.add(week);
         }
       } catch (Exception e) {
-        System.out.println("❌ Ошибка парсинга недели: " + e.getMessage());
+        log.error("❌ Ошибка парсинга недели: " + e.getMessage());
       }
     }
 
@@ -116,7 +138,7 @@ public class ServiceWeek implements CourseResponse {
     Pattern numberPattern = Pattern.compile("NUMBER:(\\d+)");
     Matcher numberMatcher = numberPattern.matcher(weekContent);
     if (!numberMatcher.find()) {
-      System.out.println("❌ Не найден номер недели");
+      log.error("❌ Не найден номер недели");
       return null;
     }
 
@@ -237,7 +259,7 @@ public class ServiceWeek implements CourseResponse {
   }
 
   private List<Week> createFallbackWeeks() {
-    System.out.println("🔄 Создание запасного плана");
+    log.info("🔄 Создание запасного плана");
     List<Week> weeks = new ArrayList<>();
 
     String[] goals = {
@@ -251,7 +273,7 @@ public class ServiceWeek implements CourseResponse {
       "Финальное закрепление"
     };
 
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < defaultWeeks; i++) {
       Week week = new Week();
       week.setNumber(i + 1);
       week.setGoal(goals[i]);

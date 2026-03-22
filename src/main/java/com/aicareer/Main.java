@@ -33,9 +33,15 @@ import com.aicareer.repository.roadmap.impl.RoadmapRepositoryImpl;
 import com.aicareer.repository.roadmap.impl.RoadmapZoneRepositoryImpl;
 import com.aicareer.repository.roadmap.impl.WeekRepositoryImpl;
 import com.aicareer.repository.roadmap.impl.TaskRepositoryImpl;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import javax.sql.DataSource;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
+@SpringBootApplication
 public class Main {
   public static void main(String[] args) {
     try {
@@ -63,7 +69,10 @@ public class Main {
       ServicePrompt servicePrompt = new ServicePrompt();
       GigaChatService gigaChatService = new GigaChatService();
       ServiceGenerateCourse courseGenerator = new ServiceGenerateCourse(servicePrompt, gigaChatService);
-      ServiceWeek courseResponseParser = new ServiceWeek();
+      Set<String> badPhrases = new HashSet<>(Arrays.asList(
+        "к сожалению", "извините", "не могу", "превышено", "лимит"
+      ));
+      ServiceWeek courseResponseParser = new ServiceWeek(badPhrases, 8);
       WeekDistributionService distributionService = new WeekDistributionService();
 
       LearningPlanAssembler learningPlanAssembler = new LearningPlanAssembler(
@@ -101,7 +110,6 @@ public class Main {
           roadmapService,
           userPreferencesRepository,
           cvDataRepository,
-          userSkillsRepository,
           learningPlanAssembler
       );
 
@@ -121,4 +129,4 @@ public class Main {
       System.err.println("- Проверьте настройки GigaChat API");
     }
   }
-}// для любимого николи
+}
