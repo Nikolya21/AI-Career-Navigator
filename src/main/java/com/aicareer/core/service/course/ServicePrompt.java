@@ -2,7 +2,11 @@ package com.aicareer.core.service.course;
 
 import com.aicareer.core.dto.courseDto.CourseRequest;
 import com.aicareer.repository.course.PromptGenerator;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
+@Slf4j
+@Service
 public class ServicePrompt implements PromptGenerator {
 
   @Override

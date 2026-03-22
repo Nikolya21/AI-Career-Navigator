@@ -1,31 +1,50 @@
 package com.aicareer.core.config;
 
-public class GigaChatConfig {
-  private final String clientId;
-  private final String clientSecret;
-  private final String scope;
-  private final int timeoutSeconds;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
 
-  public GigaChatConfig() {
-    this.clientId = System.getenv("GIGACHAT_CLIENT_ID");
-    this.clientSecret = System.getenv("GIGACHAT_CLIENT_SECRET");
-    this.scope = System.getenv("GIGACHAT_SCOPE");
-    this.timeoutSeconds = Integer.parseInt(
-            System.getenv().getOrDefault("GIGACHAT_TIMEOUT_SECONDS", "30") // дефолт 30 сек
-    );
+@Configuration
+@ConfigurationProperties(prefix = "gigachat")
+public class GigaChatConfig {
+  private String clientId;
+  private String clientSecret;
+  private String scope;
+  private int timeoutSeconds = 30; // значение по умолчанию
+
+  // геттеры и сеттеры (обязательны для @ConfigurationProperties)
+  public String getClientId() {
+    return clientId;
   }
 
-  public GigaChatConfig(String clientId, String clientSecret, String scope, int timeoutSeconds) {
+  public void setClientId(String clientId) {
     this.clientId = clientId;
+  }
+
+  public String getClientSecret() {
+    return clientSecret;
+  }
+
+  public void setClientSecret(String clientSecret) {
     this.clientSecret = clientSecret;
+  }
+
+  public String getScope() {
+    return scope;
+  }
+
+  public void setScope(String scope) {
     this.scope = scope;
+  }
+
+  public int getTimeoutSeconds() {
+    return timeoutSeconds;
+  }
+
+  public void setTimeoutSeconds(int timeoutSeconds) {
     this.timeoutSeconds = timeoutSeconds;
   }
 
-  // Геттеры
-  public String getClientId() { return clientId; }
-  public String getClientSecret() { return clientSecret; }
-  public String getScope() { return scope; }
-  public int getTimeoutSeconds() { return timeoutSeconds; } // ← НОВЫЙ ГЕТТЕР
-  public int getTimeoutMillis() { return timeoutSeconds * 1000; } // удобно для Java
+  public int getTimeoutMillis() {
+    return timeoutSeconds * 1000;
+  }
 }

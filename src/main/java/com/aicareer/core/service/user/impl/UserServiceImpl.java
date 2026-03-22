@@ -1,111 +1,214 @@
 package com.aicareer.core.service.user.impl;
 
 import com.aicareer.core.dto.user.*;
-import com.aicareer.core.model.user.UserPreferences;
+import com.aicareer.core.model.user.*;
+import com.aicareer.core.model.user.entity.*;
 import com.aicareer.core.service.user.UserService;
 import com.aicareer.core.service.user.model.AuthenticationResult;
 import com.aicareer.core.service.user.model.RegistrationResult;
 import com.aicareer.core.service.user.model.UpdateResult;
-import com.aicareer.core.service.user.util.*;
-import com.aicareer.core.model.user.CVData;
-import com.aicareer.core.model.user.User;
-import com.aicareer.core.model.user.UserSkills;
+import com.aicareer.core.service.user.util.PasswordEncoder;
 import com.aicareer.core.validator.user.AuthenticationValidator;
 import com.aicareer.core.validator.user.RegistrationValidator;
-import com.aicareer.repository.user.CVDataRepository;
-import com.aicareer.repository.user.UserRepository;
-import com.aicareer.repository.user.UserSkillsRepository;
-import com.aicareer.repository.user.UserPreferencesRepository; // ← ДОБАВИЛ
-
-import java.io.FileInputStream;
-import java.io.IOException;
+import com.aicareer.repository.user.jpa.*;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
-import java.io.File;
-import java.util.List;
-import java.util.Optional;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+@Transactional
 public class UserServiceImpl implements UserService {
 
-  private final UserRepository userRepository;
-  private final CVDataRepository cvDataRepository;
-  private final UserSkillsRepository userSkillsRepository;
-  private final UserPreferencesRepository userPreferencesRepository; // ← ДОБАВИЛ
+  private final UserJpaRepository userJpaRepository;
+  private final CVDataJpaRepository cvDataJpaRepository;
+  private final UserSkillsJpaRepository userSkillsJpaRepository;
+  private final UserPreferencesJpaRepository userPreferencesJpaRepository;
 
-  public UserServiceImpl(UserRepository userRepository,
-                         CVDataRepository cvDataRepository,
-                         UserSkillsRepository userSkillsRepository,
-                         UserPreferencesRepository userPreferencesRepository) { // ← ОБНОВИЛ КОНСТРУКТОР
-    this.userRepository = userRepository;
-    this.cvDataRepository = cvDataRepository;
-    this.userSkillsRepository = userSkillsRepository;
-    this.userPreferencesRepository = userPreferencesRepository; // ← ДОБАВИЛ
+  // ========== Вспомогательные методы конвертации ==========
+
+  private User toUser(UserEntity entity) {
+    if (entity == null) return null;
+    return User.builder()
+        .id(entity.getId())
+        .name(entity.getName())
+        .email(entity.getEmail())
+        .passwordHash(entity.getPasswordHash())
+        .vacancyNow(entity.getVacancyNow())
+        .roadmapId(entity.getRoadmapId())
+        .createdAt(entity.getCreatedAt())
+        .updatedAt(entity.getUpdatedAt())
+        .build();
   }
 
-  // ========== СУЩЕСТВУЮЩИЕ МЕТОДЫ (без изменений) ==========
+  private UserEntity toUserEntity(User user) {
+    if (user == null) return null;
+    return UserEntity.builder()
+        .id(user.getId())
+        .name(user.getName())
+        .email(user.getEmail())
+        .passwordHash(user.getPasswordHash())
+        .vacancyNow(user.getVacancyNow())
+        .roadmapId(user.getRoadmapId())
+        .createdAt(user.getCreatedAt())
+        .updatedAt(user.getUpdatedAt())
+        .build();
+  }
+
+  private CVData toCVData(CVDataEntity entity) {
+    if (entity == null) return null;
+    // Файл не восстанавливаем из байт, оставляем null
+    return CVData.builder()
+        .id(entity.getId())
+        .userId(entity.getUser().getId())
+        .file(null)
+        .information(entity.getInformation())
+        .uploadedAt(entity.getUploadedAt())
+        .build();
+  }
+
+  private CVDataEntity toCVDataEntity(CVData data, UserEntity user) {
+    if (data == null) return null;
+    return CVDataEntity.builder()
+        .id(data.getId())
+        .user(user)
+        .information(data.getInformation())
+        .uploadedAt(data.getUploadedAt())
+        .build();
+  }
+
+  private UserPreferences toUserPreferences(UserPreferencesEntity entity) {
+    if (entity == null) return null;
+    return UserPreferences.builder()
+        .id(entity.getId())
+        .userId(entity.getUser().getId())
+        .infoAboutPerson(entity.getInfoAboutPerson())
+        .build();
+  }
+
+  private UserPreferencesEntity toUserPreferencesEntity(UserPreferences preferences, UserEntity user) {
+    if (preferences == null) return null;
+    return UserPreferencesEntity.builder()
+        .id(preferences.getId())
+        .user(user)
+        .infoAboutPerson(preferences.getInfoAboutPerson())
+        .build();
+  }
+
+  private UserSkills toUserSkills(UserSkillsEntity entity) {
+    if (entity == null) return null;
+    UserSkills skills = UserSkills.builder()
+        .id(entity.getId())
+        .userId(entity.getUser().getId())
+        .fullCompliancePercentage(entity.getFullCompliancePercentage())
+        .skillGaps(entity.getSkillGaps())
+        .calculatedAt(entity.getCalculatedAt())
+        .build();
+    return skills;
+  }
+
+  private UserSkillsEntity toUserSkillsEntity(UserSkills skills, UserEntity user) {
+    if (skills == null) return null;
+    return UserSkillsEntity.builder()
+        .id(skills.getId())
+        .user(user)
+        .fullCompliancePercentage(skills.getFullCompliancePercentage())
+        .skillGaps(skills.getSkillGaps())
+        .calculatedAt(skills.getCalculatedAt())
+        .build();
+  }
+
+  // ========== Методы интерфейса ==========
+
   @Override
   public RegistrationResult registerUser(UserRegistrationDto registrationDto) {
     List<String> validationErrors = RegistrationValidator.validate(
-            registrationDto,
-            this::isEmailAvailable
+        registrationDto,
+        this::isEmailAvailable
     );
 
     if (!validationErrors.isEmpty()) {
       return RegistrationResult.error(validationErrors);
     }
 
-    System.out.println("Registering user without errors with email: " + registrationDto.getEmail());
+    log.info("Registering user with email: {}", registrationDto.getEmail());
 
     try {
-      User user = User.builder()
-              .name(registrationDto.getName())
-              .email(registrationDto.getEmail())
-              .passwordHash(PasswordEncoder.encode(registrationDto.getPassword()))
-              .vacancyNow(null)
-              .roadmapId(null)
-              .build();
+      UserEntity userEntity = UserEntity.builder()
+          .name(registrationDto.getName())
+          .email(registrationDto.getEmail())
+          .passwordHash(PasswordEncoder.encode(registrationDto.getPassword()))
+          .vacancyNow(null)
+          .roadmapId(null)
+          .build();
 
-      user.updateTimestamps();
-      User savedUser = userRepository.save(user); // здесь также присваивается ID
+      UserEntity savedEntity = userJpaRepository.save(userEntity);
+      log.info("User registered successfully with ID: {}", savedEntity.getId());
 
-      System.out.println("User registered successfully. ID: " + savedUser.getId());
-      return RegistrationResult.success(savedUser);
+      return RegistrationResult.success(toUser(savedEntity));
 
     } catch (Exception e) {
+      log.error("Error during registration", e);
       return RegistrationResult.error(List.of("Системная ошибка: " + e.getMessage()));
     }
   }
 
   @Override
+  public CVData getCVDataByUserId(Long userId) {
+    CVDataEntity entity = cvDataJpaRepository.findByUser_Id(userId)
+        .orElseThrow(() -> new IllegalArgumentException("CV not found for user " + userId));
+    return toCVData(entity);
+  }
+
+  @Override
+  public UserPreferences saveUserPreferences(UserPreferences preferences, Long userId) {
+    UserEntity user = userJpaRepository.findById(userId)
+        .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    UserPreferencesEntity entity = toUserPreferencesEntity(preferences, user);
+    UserPreferencesEntity saved = userPreferencesJpaRepository.save(entity);
+    return toUserPreferences(saved);
+  }
+
+  @Override
   public AuthenticationResult authenticateUser(LoginRequestDto loginRequest) {
     List<String> validationErrors = AuthenticationValidator.validate(loginRequest);
-
     if (!validationErrors.isEmpty()) {
       return AuthenticationResult.error(validationErrors);
     }
 
-    System.out.println("Authentication attempt for email: " + loginRequest.getEmail());
+    log.info("Authentication attempt for email: {}", loginRequest.getEmail());
 
     try {
-      Optional<User> userOpt = userRepository.findByEmail(loginRequest.getEmail());
-
+      Optional<UserEntity> userOpt = userJpaRepository.findByEmail(loginRequest.getEmail());
       if (userOpt.isEmpty()) {
-        return AuthenticationResult.error(List.of("Неверный email или пароль"));
+        return AuthenticationResult.error("Неверный email или пароль");
       }
 
-      User user = userOpt.get();
-
-      if (!PasswordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
-        return AuthenticationResult.error(List.of("Неверный email или пароль"));
+      UserEntity userEntity = userOpt.get();
+      if (!PasswordEncoder.matches(loginRequest.getPassword(), userEntity.getPasswordHash())) {
+        return AuthenticationResult.error("Неверный email или пароль");
       }
 
-      System.out.println("User authenticated successfully: " + user.getEmail());
-      return AuthenticationResult.success(user);
+      log.info("User authenticated successfully: {}", userEntity.getEmail());
+      return AuthenticationResult.success(toUser(userEntity));
 
     } catch (Exception e) {
-      return AuthenticationResult.error(List.of("Системная ошибка: " + e.getMessage()));
+      log.error("Authentication error", e);
+      return AuthenticationResult.error("Системная ошибка: " + e.getMessage());
     }
   }
 
@@ -115,20 +218,29 @@ public class UserServiceImpl implements UserService {
       throw new IllegalArgumentException("Invalid user ID");
     }
 
-    Optional<User> userOpt = userRepository.findById(userId);
-    if (userOpt.isEmpty()) {
-      throw new IllegalArgumentException("User not found with ID: " + userId);
-    }
+    UserEntity userEntity = userJpaRepository.findById(userId)
+        .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
 
-    User user = userOpt.get();
-
+    // Возвращаем только нужные поля
     User profile = new User();
-    profile.setId(user.getId());
-    profile.setEmail(user.getEmail());
-    profile.setName(user.getName());
-    profile.setVacancyNow(user.getVacancyNow());
-    profile.setRoadmapId(user.getRoadmapId());
+    profile.setId(userEntity.getId());
+    profile.setEmail(userEntity.getEmail());
+    profile.setName(userEntity.getName());
+    profile.setVacancyNow(userEntity.getVacancyNow());
+    profile.setRoadmapId(userEntity.getRoadmapId());
     return profile;
+  }
+
+  @Override
+  public List<User> getAllUsers() {
+    return userJpaRepository.findAll().stream()
+        .map(this::toUser)
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public boolean isEmailAvailable(String email) {
+    return !userJpaRepository.existsByEmail(email);
   }
 
   @Override
@@ -143,23 +255,19 @@ public class UserServiceImpl implements UserService {
       return UpdateResult.error("Неверный ID пользователя");
     }
 
-    System.out.println("Vacancy update for user: " + userId);
+    log.info("Updating vacancy for user: {}", userId);
 
     try {
-      Optional<User> userOpt = userRepository.findById(userId);
-      if (userOpt.isEmpty()) {
-        return UpdateResult.error("Пользователь не найден");
-      }
+      UserEntity userEntity = userJpaRepository.findById(userId)
+          .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
 
-      User user = userOpt.get();
-      user.setVacancyNow(vacancy.trim());
-      user.updateTimestamps();
-      userRepository.save(user);
-
-      System.out.println("Vacancy updated to: " + vacancy);
+      userEntity.setVacancyNow(vacancy.trim());
+      userJpaRepository.save(userEntity);
+      log.info("Vacancy updated to: {}", vacancy);
       return UpdateResult.success();
 
     } catch (Exception e) {
+      log.error("Error updating vacancy", e);
       return UpdateResult.error("Системная ошибка: " + e.getMessage());
     }
   }
@@ -173,23 +281,19 @@ public class UserServiceImpl implements UserService {
       return UpdateResult.error("Неверный ID пользователя");
     }
 
-    System.out.println("Roadmap update for user: " + userId);
+    log.info("Updating roadmap for user: {}", userId);
 
     try {
-      Optional<User> userOpt = userRepository.findById(userId);
-      if (userOpt.isEmpty()) {
-        return UpdateResult.error("Пользователь не найден");
-      }
+      UserEntity userEntity = userJpaRepository.findById(userId)
+          .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
 
-      User user = userOpt.get();
-      user.setRoadmapId(roadmapId);
-      user.updateTimestamps();
-      userRepository.save(user);
-
-      System.out.println("Roadmap updated to ID: " + roadmapId);
+      userEntity.setRoadmapId(roadmapId);
+      userJpaRepository.save(userEntity);
+      log.info("Roadmap updated to ID: {}", roadmapId);
       return UpdateResult.success();
 
     } catch (Exception e) {
+      log.error("Error updating roadmap", e);
       return UpdateResult.error("Системная ошибка: " + e.getMessage());
     }
   }
@@ -202,27 +306,25 @@ public class UserServiceImpl implements UserService {
     if (userId == null || userId <= 0) {
       return UpdateResult.error("Неверный ID пользователя");
     }
-
     if (skills.getFullCompliancePercentage() < 0 || skills.getFullCompliancePercentage() > 100) {
       return UpdateResult.error("Общий процент соответствия должен быть от 0 до 100");
     }
 
-    System.out.println("Skills update for user: " + userId);
+    log.info("Updating skills for user: {}", userId);
 
     try {
-      Optional<User> userOpt = userRepository.findById(userId);
-      if (userOpt.isEmpty()) {
-        return UpdateResult.error("Пользователь не найден");
-      }
+      UserEntity userEntity = userJpaRepository.findById(userId)
+          .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
 
-      skills.setUserId(userId);
-      skills.updateTimestamps();
-      userSkillsRepository.save(skills);
+      UserSkillsEntity skillsEntity = toUserSkillsEntity(skills, userEntity);
+      skillsEntity.setCalculatedAt(skills.getCalculatedAt()); // уже установлено
+      userSkillsJpaRepository.save(skillsEntity);
 
-      System.out.println("Skills updated successfully for user ID: " + userId);
+      log.info("Skills updated for user ID: {}", userId);
       return UpdateResult.success();
 
     } catch (Exception e) {
+      log.error("Error updating skills", e);
       return UpdateResult.error("Системная ошибка: " + e.getMessage());
     }
   }
@@ -242,45 +344,33 @@ public class UserServiceImpl implements UserService {
       return UpdateResult.error("Неверный ID пользователя");
     }
 
-    System.out.println("CV upload for user: " + userId);
+    log.info("Uploading CV for user: {}", userId);
 
     try {
-      Optional<User> userOpt = userRepository.findById(userId);
-      if (userOpt.isEmpty()) {
-        return UpdateResult.error("Пользователь не найден");
-      }
+      UserEntity userEntity = userJpaRepository.findById(userId)
+          .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
 
-      String extractedText = UniversalTextExtractor(cvFile);
+      String extractedText = extractTextFromFile(cvFile);
+//      byte[] fileContent = Files.readAllBytes(cvFile.toPath());
 
-      CVData cvData = CVData.builder()
-              .userId(userId)
-              .file(cvFile)
-              .information(extractedText)
-              .build();
+      CVDataEntity cvDataEntity = CVDataEntity.builder()
+          .user(userEntity)
+//          .fileContent(fileContent)
+          .information(extractedText)
+          .build();
 
-      cvData.updateTimestamps();
-      cvDataRepository.save(cvData);
-
-      System.out.println("CV uploaded successfully for user ID: " + userId);
+      cvDataJpaRepository.save(cvDataEntity);
+      log.info("CV uploaded successfully for user ID: {}", userId);
       return UpdateResult.success();
 
+    } catch (IOException e) {
+      log.error("IO error reading CV file", e);
+      return UpdateResult.error("Ошибка чтения файла: " + e.getMessage());
     } catch (Exception e) {
+      log.error("Error uploading CV", e);
       return UpdateResult.error("Системная ошибка: " + e.getMessage());
     }
   }
-
-  @Override
-  public boolean isEmailAvailable(String email) {
-    return !userRepository.existsByEmail(email);
-  }
-
-  @Override
-  public List<User> getAllUsers() {
-    return userRepository.findAll();
-  }
-
-  // ========== НОВЫЕ МЕТОДЫ ДЛЯ USER PREFERENCES ==========
-
 
   @Override
   public UserPreferences getUserPreferences(Long userId) {
@@ -288,20 +378,12 @@ public class UserServiceImpl implements UserService {
       throw new IllegalArgumentException("Неверный ID пользователя");
     }
 
-    System.out.println("Getting user preferences for user: " + userId);
+    log.debug("Getting user preferences for user: {}", userId);
 
     try {
-      Optional<UserPreferences> preferencesOpt = userPreferencesRepository.findByUserId(userId);
-
-      if (preferencesOpt.isPresent()) {
-        UserPreferences preferences = preferencesOpt.get();
-        System.out.println("Found user preferences for user ID: " + userId);
-        return preferences;
-      } else {
-        System.out.println("No user preferences found for user ID: " + userId);
-        return null;
-      }
-
+      return userPreferencesJpaRepository.findByUser_Id(userId)
+          .map(this::toUserPreferences)
+          .orElse(null);
     } catch (Exception e) {
       throw new RuntimeException("Системная ошибка при получении настроек: " + e.getMessage());
     }
@@ -312,29 +394,27 @@ public class UserServiceImpl implements UserService {
     if (userId == null || userId <= 0) {
       return UpdateResult.error("Неверный ID пользователя");
     }
-
     if (newInfoAboutPerson == null || newInfoAboutPerson.trim().isEmpty()) {
       return UpdateResult.error("Новая информация о пользователе не может быть пустой");
     }
 
-    System.out.println("Updating user preferences info for user: " + userId);
+    log.info("Updating user preferences info for user: {}", userId);
 
     try {
-      Optional<UserPreferences> preferencesOpt = userPreferencesRepository.findByUserId(userId);
+      UserEntity userEntity = userJpaRepository.findById(userId)
+          .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
 
-      if (preferencesOpt.isEmpty()) {
-        return UpdateResult.error("Настройки пользователя не найдены");
-      }
+      UserPreferencesEntity preferencesEntity = userPreferencesJpaRepository.findByUser_Id(userId)
+          .orElseGet(() -> UserPreferencesEntity.builder().user(userEntity).build());
 
-      UserPreferences preferences = preferencesOpt.get();
-      preferences.setInfoAboutPerson(newInfoAboutPerson.trim());
+      preferencesEntity.setInfoAboutPerson(newInfoAboutPerson.trim());
+      userPreferencesJpaRepository.save(preferencesEntity);
 
-      userPreferencesRepository.save(preferences);
-
-      System.out.println("User preferences info updated successfully for user ID: " + userId);
+      log.info("User preferences info updated for user ID: {}", userId);
       return UpdateResult.success();
 
     } catch (Exception e) {
+      log.error("Error updating user preferences", e);
       return UpdateResult.error("Системная ошибка при обновлении настроек: " + e.getMessage());
     }
   }
@@ -346,42 +426,41 @@ public class UserServiceImpl implements UserService {
     }
 
     try {
-      boolean exists = userPreferencesRepository.existsByUserId(userId);
-      System.out.println("User preferences exist for user " + userId + ": " + exists);
-      return exists;
+      return userPreferencesJpaRepository.existsByUser_Id(userId);
     } catch (Exception e) {
-      System.err.println("Error checking user preferences existence: " + e.getMessage());
+      log.error("Error checking user preferences existence", e);
       return false;
     }
   }
 
-  // ========== СУЩЕСТВУЮЩИЕ ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ==========
-  private static String UniversalTextExtractor(File cvFile) throws IOException {
-    String fileName = cvFile.getName();
-    String fileExtension = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
+  // ========== Вспомогательные методы ==========
 
-    switch (fileExtension) {
-      case "pdf":
-        PDDocument documentPDF = PDDocument.load(cvFile);
-        PDFTextStripper pdfStripper = new PDFTextStripper();
-        String text = pdfStripper.getText(documentPDF);
-        if (documentPDF != null) {
-          documentPDF.close();
-        }
-        return text;
-      case "docx":
-        try (FileInputStream fis = new FileInputStream(cvFile);
-             XWPFDocument document = new XWPFDocument(fis)) {
-          List<XWPFParagraph> paragraphs = document.getParagraphs();
-          StringBuilder textDOCX = new StringBuilder();
-          for (XWPFParagraph para : paragraphs) {
-            textDOCX.append(para.getText());
-            textDOCX.append("\n");
-          }
-          return textDOCX.toString();
-        }
-      default:
-        throw new IllegalArgumentException("Неизвестный или неподдерживаемый формат файла: ." + fileExtension);
+  private String extractTextFromFile(File file) throws IOException {
+    String fileName = file.getName().toLowerCase();
+    if (fileName.endsWith(".pdf")) {
+      return extractTextFromPdf(file);
+    } else if (fileName.endsWith(".docx")) {
+      return extractTextFromDocx(file);
+    } else {
+      throw new IllegalArgumentException("Unsupported file format: " + fileName);
     }
+  }
+
+  private String extractTextFromPdf(File file) throws IOException {
+    try (PDDocument document = PDDocument.load(file)) {
+      PDFTextStripper stripper = new PDFTextStripper();
+      return stripper.getText(document);
+    }
+  }
+
+  private String extractTextFromDocx(File file) throws IOException {
+    StringBuilder sb = new StringBuilder();
+    try (FileInputStream fis = new FileInputStream(file);
+        XWPFDocument document = new XWPFDocument(fis)) {
+      for (XWPFParagraph para : document.getParagraphs()) {
+        sb.append(para.getText()).append("\n");
+      }
+    }
+    return sb.toString();
   }
 }
