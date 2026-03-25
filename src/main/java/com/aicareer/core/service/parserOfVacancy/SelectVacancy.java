@@ -5,32 +5,34 @@ import com.aicareer.core.model.vacancy.PotentialVacancy;
 import com.aicareer.core.model.vacancy.RealVacancy;
 import com.aicareer.core.model.vacancy.SelectedPotentialVacancy;
 import com.aicareer.core.model.user.UserPreferences;
-import com.aicareer.repository.parsing.SelectOfVacancy;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.ArrayList;
 import com.aicareer.core.service.gigachat.GigaChatService;
-import java.util.Scanner;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import com.aicareer.repository.parsing.SelectOfVacancy;
+import java.util.concurrent.atomic.AtomicReference;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
-@Data
-@AllArgsConstructor
-@RequiredArgsConstructor
+import java.util.*;
+
+@Slf4j
+@Service
 public class SelectVacancy implements SelectOfVacancy {
-  Scanner scan = new Scanner(System.in);
-  private List<String> listOfThreeVacancy = new ArrayList<>();
+
+  private final List<String> listOfThreeVacancy = new ArrayList<>();
   private SelectedPotentialVacancy selectedVacancy;
-  private List<RealVacancy> parsedVacancies = new ArrayList<>();
   private String analysisResult;
+
+  // Внедряем оба сервиса
+  private final ParserService parserService;
   private final GigaChatService gigaChatService;
 
+  public SelectVacancy(ParserService parserService, GigaChatService gigaChatService) {
+    this.parserService = parserService;
+    this.gigaChatService = gigaChatService;
+  }
 
   @Override
   public String analyzeUserPreference(UserPreferences infoAboutPerson) {
-    String promtAnalyze = (infoAboutPerson.toString() + "%s\n\nРоль: Ты — опытный HR-аналитик и карьерный психолог. Твоя задача — проанализировать диалог с пользователем, составить его детальный психологический портрет и на его основе подобрать три наиболее подходящие профессии.\n"
+    String promptAnalyze = (infoAboutPerson.toString() + "%s\n\nРоль: Ты — опытный HR-аналитик и карьерный психолог. Твоя задача — проанализировать диалог с пользователем, составить его детальный психологический портрет и на его основе подобрать три наиболее подходящие профессии.\n"
         + "\nКонтекст:\n"
         + "Пользователь прошел сессию карьерного консультирования. Тебе нужно глубоко проанализировать его ответы, чтобы понять его истинные мотивы, предпочтения и на основе этого предложить конкретные вакансии.\n"
         + "\nЗадача: Проведи комплексный анализ, а затем подбери профессии.\n"
@@ -46,7 +48,7 @@ public class SelectVacancy implements SelectOfVacancy {
         + "TeamLead -  \n"
         + "::: Javamiddle,Qa tester,TeamLead \n"
         + "после этих трех профессий ты должен закончить ответ и не добавлять больше символов!!!");
-    String gigachatAnswer = gigaChatService.sendMessage(promtAnalyze);
+    String gigachatAnswer = gigaChatService.sendMessage(promptAnalyze);
     this.analysisResult = gigachatAnswer;
     extractThreeVacancies(gigachatAnswer, 0);
     return gigachatAnswer;
@@ -54,10 +56,7 @@ public class SelectVacancy implements SelectOfVacancy {
 
   @Override
   public List<String> extractThreeVacancies(String gigachatAnswer, int count) {
-
-    if (gigachatAnswer.contains(":::")) { //todo тут беда с форматом - упало на тесте, когда gigachat вывел:
-                                          //::
-                                          //Data Scientist, Business Analyst, Analytics Manager
+    if (gigachatAnswer.contains(":::")) {
       String[] parts = gigachatAnswer.split(":::");
       if (parts.length < 3 && count < 5) {
         gigachatAnswer = validateAndFixResponse(gigachatAnswer);
@@ -73,7 +72,7 @@ public class SelectVacancy implements SelectOfVacancy {
         while (listOfThreeVacancy.size() < 3) {
           listOfThreeVacancy.add("Вакансия " + (listOfThreeVacancy.size() + 1));
         }
-      } else { //todo else (нужен нормальный рерол, если результата нет)
+      } else {
         String validateString = validateAndFixResponse(gigachatAnswer);
         extractThreeVacancies(validateString, ++count);
       }
@@ -81,47 +80,44 @@ public class SelectVacancy implements SelectOfVacancy {
       gigachatAnswer = validateAndFixResponse(gigachatAnswer);
       extractThreeVacancies(gigachatAnswer, ++count);
     }
-
-   return listOfThreeVacancy;
+    return listOfThreeVacancy;
   }
 
   public String validateAndFixResponse(String rawResponse) {
-    // Сначала проверим простые случаи которые можно починить без запроса к нейронке
     String simplified = preprocessResponse(rawResponse);
     if (isValidFormat(simplified)) {
       return simplified;
     }
 
-    // Если простые методы не помогли - используем нейронку для исправления
     String validationPrompt = """
-        КРИТИЧЕСКАЯ ЗАДАЧА: Исправь формат данных строго по шаблону
-        
-        ТВОЯ РОЛЬ: Форматировщик данных
-        ЦЕЛЬ: Привести данные к строгому шаблону
-        
-        ШАБЛОН (обязателен):
-        ":::Профессия1,Профессия2,Профессия3"
-        
-        ПРАВИЛА:
-        - Начало: ровно 3 двоеточия ":::"
-        - Затем 3 профессии через запятую
-        - Без переносов строк
-        - Без лишних символов
-        - Только латиница/кириллица, запятые и пробелы между словами
-        
-        ДАННЫЕ ДЛЯ ИСПРАВЛЕНИЯ:
-        %s
-        
-        КРИТИЧЕСКИЕ ТРЕБОВАНИЯ:
-        1. Если профессий > 3 - оставь первые 3
-        2. Если профессий < 3 - дополни до 3 (используй логику контекста)
-        3. Удали все лишние символы, кроме букв, запятых и пробелов в названиях
-        4. Убери все переносы строк
-        5. Убедись в начале ровно ":::"
-        
-        ВЕРНИ ТОЛЬКО ИСПРАВЛЕННУЮ СТРОКУ БЕЗ ОБЪЯСНЕНИЙ!
-        Пример: ":::Data Scientist,Business Analyst,Analytics Manager"
-        """;
+                КРИТИЧЕСКАЯ ЗАДАЧА: Исправь формат данных строго по шаблону
+
+                ТВОЯ РОЛЬ: Форматировщик данных
+                ЦЕЛЬ: Привести данные к строгому шаблону
+
+                ШАБЛОН (обязателен):
+                ":::Профессия1,Профессия2,Профессия3"
+
+                ПРАВИЛА:
+                - Начало: ровно 3 двоеточия ":::"
+                - Затем 3 профессии через запятую
+                - Без переносов строк
+                - Без лишних символов
+                - Только латиница/кириллица, запятые и пробелы между словами
+
+                ДАННЫЕ ДЛЯ ИСПРАВЛЕНИЯ:
+                %s
+
+                КРИТИЧЕСКИЕ ТРЕБОВАНИЯ:
+                1. Если профессий > 3 - оставь первые 3
+                2. Если профессий < 3 - дополни до 3 (используй логику контекста)
+                3. Удали все лишние символы, кроме букв, запятых и пробелов в названиях
+                4. Убери все переносы строк
+                5. Убедись в начале ровно ":::"
+
+                ВЕРНИ ТОЛЬКО ИСПРАВЛЕННУЮ СТРОКУ БЕЗ ОБЪЯСНЕНИЙ!
+                Пример: ":::Data Scientist,Business Analyst,Analytics Manager"
+                """;
 
     return gigaChatService.sendMessage(String.format(validationPrompt, rawResponse));
   }
@@ -129,10 +125,8 @@ public class SelectVacancy implements SelectOfVacancy {
   private String preprocessResponse(String raw) {
     if (raw == null) return ":::Программист,Аналитик,Менеджер";
 
-    // Убираем переносы строк и лишние пробелы
     String cleaned = raw.replace("\n", "").replace("\r", "").trim();
 
-    // Простая попытка почистить формат
     if (cleaned.startsWith("::") && !cleaned.startsWith(":::")) {
       cleaned = ":::" + cleaned.substring(2);
     } else if (cleaned.startsWith(":") && !cleaned.startsWith(":::")) {
@@ -146,9 +140,9 @@ public class SelectVacancy implements SelectOfVacancy {
 
   private boolean isValidFormat(String response) {
     return response != null &&
-            response.startsWith(":::") &&
-            response.length() > 3 &&
-            countCommas(response) >= 2; // Должно быть минимум 2 запятые для 3 профессий
+        response.startsWith(":::") &&
+        response.length() > 3 &&
+        countCommas(response) >= 2;
   }
 
   private int countCommas(String str) {
@@ -159,28 +153,25 @@ public class SelectVacancy implements SelectOfVacancy {
     return count;
   }
 
-
   @Override
   public SelectedPotentialVacancy choosenVacansy(List<String> listOfThreeVacancy) {
-      System.out.println("Выберите одну из трех предложенных вакансий:");
-      for (int i = 0; i < listOfThreeVacancy.size(); i++) {
-        System.out.println((i + 1) + ". " + listOfThreeVacancy.get(i));
-      }
+    System.out.println("Выберите одну из трех предложенных вакансий:");
+    for (int i = 0; i < listOfThreeVacancy.size(); i++) {
+      System.out.println((i + 1) + ". " + listOfThreeVacancy.get(i));
+    }
 
-      int chosenNumber = scan.nextInt();
-      scan.nextLine();
+    Scanner scan = new Scanner(System.in);
+    int chosenNumber = scan.nextInt();
+    scan.nextLine();
 
-      if (chosenNumber > 0 && chosenNumber <= listOfThreeVacancy.size()) {
-        String chosenVacancyName = listOfThreeVacancy.get(chosenNumber - 1);
+    if (chosenNumber > 0 && chosenNumber <= listOfThreeVacancy.size()) {
+      String chosenVacancyName = listOfThreeVacancy.get(chosenNumber - 1);
 
-        PotentialVacancy potentialVacancy = new PotentialVacancy();
-        potentialVacancy.setNameOfVacancy(chosenVacancyName);
+      PotentialVacancy potentialVacancy = new PotentialVacancy();
+      potentialVacancy.setNameOfVacancy(chosenVacancyName);
 
-        this.selectedVacancy = new SelectedPotentialVacancy(
-            potentialVacancy
-        );
-      }
-
+      this.selectedVacancy = new SelectedPotentialVacancy(potentialVacancy);
+    }
 
     System.out.println("Выбрана вакансия: " +
         (selectedVacancy != null ? selectedVacancy.getNameOfVacancy() : "не выбрана"));
@@ -190,42 +181,30 @@ public class SelectVacancy implements SelectOfVacancy {
 
   @Override
   public String formingByParsing(SelectedPotentialVacancy selectedVacancy) {
-
-    String selectedVacancy1 = this.selectedVacancy.getNameOfVacancy();
-    List<RealVacancy> vacancies = ParserService.getVacancies(selectedVacancy1, "1", 50);
-    String newPromt = "";
-    int neededCountOfVacancies = 0;
-    for (int i = 0; i < Math.min(50, vacancies.size()); i++) {
-      RealVacancy vacancy = vacancies.get(i);
-      if (vacancies.get(i).getVacancyRequirements() != null || vacancies.get(i).getSalary() != null) {
-
-        if (vacancy.getVacancyRequirements() != null) {
-          newPromt += (vacancy.getNameOfVacancy() + "\n" + vacancy.getSalary() + "\n");
-          for (int j = 0; j < vacancy.getVacancyRequirements().size(); j++) {
-            newPromt += vacancy.getVacancyRequirements().get(j);
-          }
-          neededCountOfVacancies++;
-        } else {
-          newPromt += (vacancy.getNameOfVacancy() + "\n" + vacancy.getSalary() + "\n");
-        }
-      }
-      if (neededCountOfVacancies == 3){
-        break;
+    String selectedVacancyName = this.selectedVacancy.getNameOfVacancy();
+    List<RealVacancy> vacancies = parserService.getVacancies(selectedVacancyName, "1", 50);
+    AtomicReference<String> newPrompt = new AtomicReference<>("");
+    vacancies.forEach(v -> {
+      if (!v.getVacancyRequirements().isEmpty()) {
+        System.out.println(v.getNameOfVacancy() + "   " + v.getVacancyRequirements());
       } else {
-        newPromt += vacancy.getNameOfVacancy() + " " + vacancy.getSalary() +" " + vacancy.getExperience();
+        String answer = gigaChatService.sendMessage(
+            "Ниже тебе будет дано описании вакансии, найди и вычлени только ключевые навыки связанные с айти и программированием напрямую, которые требуют : \n"
+                + v.getDescription()
+                + "в ответ дай только 5-10 основных навыков в формате [Python, SQL, Linux, OpenOffice, Java Spring] обязательно обернув в квадрантые скобочки и не добавляя кавычек, а также в одну строку");
+
+        newPrompt.set(answer);
       }
-    }
-
-
-
-    return newPromt;
+    });
+    return newPrompt.get();
   }
 
   @Override
-  public FinalVacancyRequirements formingFinalVacancyRequirements(String newPromt) {
-      String gigachatFinalRequirements = gigaChatService.sendMessage(newPromt);
+  public FinalVacancyRequirements formingFinalVacancyRequirements(String newPrompt) {
+    String gigachatFinalRequirements = gigaChatService.sendMessage(newPrompt);
     return new FinalVacancyRequirements(gigachatFinalRequirements);
   }
+
   public SelectedPotentialVacancy chooseVacancyManually(List<String> listOfThreeVacancy, String chosenVacancyName) {
     if (listOfThreeVacancy == null || !listOfThreeVacancy.contains(chosenVacancyName)) {
       return null;
