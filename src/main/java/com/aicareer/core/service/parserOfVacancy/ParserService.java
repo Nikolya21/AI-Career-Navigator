@@ -5,6 +5,7 @@ import com.aicareer.core.dto.hhDto.HhSalary;
 import com.aicareer.core.dto.hhDto.HhVacanciesResponse;
 import com.aicareer.core.dto.hhDto.HhVacancyItem;
 import com.aicareer.core.model.vacancy.RealVacancy;
+import java.util.ArrayList;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
@@ -31,9 +32,38 @@ public class ParserService {
   public List<RealVacancy> getVacancies(String searchText, String area, int perPage) {
     log.info("Запрос вакансий: searchText={}, area={}, perPage={}", searchText, area, perPage);
     List<HhVacancyItem> items = fetchVacancies(searchText, area, perPage);
-    return items.stream()
+    List<HhVacancyItem> fullItems = new ArrayList<>();
+    int limit = Math.min(perPage,items.size());
+    for (int i = 0; i < limit; i++) {
+      HhVacancyItem basicItem = items.get(i);
+      HhVacancyItem fullItem = fetchVacancyDetails(basicItem.id());
+      if (fullItem != null) {
+        fullItems.add(fullItem);
+      }
+    }
+    return fullItems.stream()
         .map(this::mapToRealVacancy)
         .collect(Collectors.toList());
+  }
+
+  private HhVacancyItem fetchVacancyDetails(String vacancyId) {
+    try {
+      return hhWebClient.get()
+          .uri("/vacancies/{id}", vacancyId)
+          .header(HttpHeaders.USER_AGENT, "HH-Parser/1.0")
+          .retrieve()
+          .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
+              clientResponse.bodyToMono(String.class)
+                  .<Throwable>flatMap(error -> Mono.error(
+                      new RuntimeException("Client error: " + error))))
+          .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
+              Mono.error(new RuntimeException("Server error from hh.ru")))
+          .bodyToMono(HhVacancyItem.class)
+          .block();
+    } catch (Exception e) {
+      log.error("Ошибка при получении деталей вакансии {}: {}", vacancyId, e.getMessage());
+      return null;
+    }
   }
 
   private List<HhVacancyItem> fetchVacancies(String searchText, String area, int perPage) {
@@ -72,6 +102,7 @@ public class ParserService {
 
   private RealVacancy mapToRealVacancy(HhVacancyItem item) {
     String salary = formatSalary(item.salary());
+    String description = String.valueOf(item.description());
     String experience = item.experience() != null ? item.experience().name() : "Не указано";
     String age = item.ageRestriction() != null ? item.ageRestriction().name() : "Не указано";
     String employer = item.employer() != null ? item.employer().name() : "Не указано";
@@ -85,12 +116,15 @@ public class ParserService {
         salary,
         experience,
         age,
-        employer
+        employer,
+        description
     );
   }
 
   private String formatSalary(HhSalary salary) {
-    if (salary == null) return null;
+    if (salary == null) {
+      return null;
+    }
     if (salary.from() != null && salary.to() != null) {
       return salary.from() + " - " + salary.to() + " " + salary.currency();
     } else if (salary.from() != null) {

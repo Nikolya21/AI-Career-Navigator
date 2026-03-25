@@ -11,6 +11,7 @@ public record HhVacancyItem(String id,
                             HhEmployer employer,
                             HhExperience experience,
                             @JsonProperty("key_skills") List<HhKeySkill> keySkills,
-                            @JsonProperty("age_restriction") HhAgeRestriction ageRestriction) {
+                            @JsonProperty("age_restriction") HhAgeRestriction ageRestriction,
+                            String description) {
 
 }

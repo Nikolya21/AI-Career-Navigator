@@ -7,6 +7,7 @@ import com.aicareer.core.model.vacancy.SelectedPotentialVacancy;
 import com.aicareer.core.model.user.UserPreferences;
 import com.aicareer.core.service.gigachat.GigaChatService;
 import com.aicareer.repository.parsing.SelectOfVacancy;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +17,6 @@ import java.util.*;
 @Service
 public class SelectVacancy implements SelectOfVacancy {
 
-  private final Scanner scan = new Scanner(System.in);
   private final List<String> listOfThreeVacancy = new ArrayList<>();
   private SelectedPotentialVacancy selectedVacancy;
   private String analysisResult;
@@ -160,6 +160,7 @@ public class SelectVacancy implements SelectOfVacancy {
       System.out.println((i + 1) + ". " + listOfThreeVacancy.get(i));
     }
 
+    Scanner scan = new Scanner(System.in);
     int chosenNumber = scan.nextInt();
     scan.nextLine();
 
@@ -181,41 +182,26 @@ public class SelectVacancy implements SelectOfVacancy {
   @Override
   public String formingByParsing(SelectedPotentialVacancy selectedVacancy) {
     String selectedVacancyName = this.selectedVacancy.getNameOfVacancy();
-    // Используем parserService (нестатический метод)
     List<RealVacancy> vacancies = parserService.getVacancies(selectedVacancyName, "1", 50);
-    StringBuilder newPromt = new StringBuilder();
-    int neededCountOfVacancies = 0;
-    for (int i = 0; i < Math.min(50, vacancies.size()); i++) {
-      RealVacancy vacancy = vacancies.get(i);
-      if (vacancy.getVacancyRequirements() != null || vacancy.getSalary() != null) {
-
-        if (vacancy.getVacancyRequirements() != null) {
-          newPromt.append(vacancy.getNameOfVacancy()).append("\n")
-              .append(vacancy.getSalary()).append("\n");
-          for (String req : vacancy.getVacancyRequirements()) {
-            newPromt.append(req);
-          }
-          neededCountOfVacancies++;
-        } else {
-          newPromt.append(vacancy.getNameOfVacancy()).append("\n")
-              .append(vacancy.getSalary()).append("\n");
-        }
-      }
-      if (neededCountOfVacancies == 3) {
-        break;
+    AtomicReference<String> newPrompt = new AtomicReference<>("");
+    vacancies.forEach(v -> {
+      if (!v.getVacancyRequirements().isEmpty()) {
+        System.out.println(v.getNameOfVacancy() + "   " + v.getVacancyRequirements());
       } else {
-        newPromt.append(vacancy.getNameOfVacancy()).append(" ")
-            .append(vacancy.getSalary()).append(" ")
-            .append(vacancy.getExperience());
-      }
-    }
+        String answer = gigaChatService.sendMessage(
+            "Ниже тебе будет дано описании вакансии, найди и вычлени только ключевые навыки связанные с айти и программированием напрямую, которые требуют : \n"
+                + v.getDescription()
+                + "в ответ дай только 5-10 основных навыков в формате [Python, SQL, Linux, OpenOffice, Java Spring] обязательно обернув в квадрантые скобочки и не добавляя кавычек, а также в одну строку");
 
-    return newPromt.toString();
+        newPrompt.set(answer);
+      }
+    });
+    return newPrompt.get();
   }
 
   @Override
-  public FinalVacancyRequirements formingFinalVacancyRequirements(String newPromt) {
-    String gigachatFinalRequirements = gigaChatService.sendMessage(newPromt);
+  public FinalVacancyRequirements formingFinalVacancyRequirements(String newPrompt) {
+    String gigachatFinalRequirements = gigaChatService.sendMessage(newPrompt);
     return new FinalVacancyRequirements(gigachatFinalRequirements);
   }
 
